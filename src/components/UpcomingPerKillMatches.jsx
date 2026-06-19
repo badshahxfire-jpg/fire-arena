@@ -175,7 +175,7 @@ export default function UpcomingPerKillMatches({
 
 
       {upcomingTournaments.length > 0 ? (
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8 justify-items-center">
           {upcomingTournaments.map((tournament) => {
             const joinedCount = joinedPlayers.filter(p => p.tournamentId === tournament.id).length;
             const alreadyJoined = joinedPlayers.some(p => p.tournamentId === tournament.id && p.userId === user?.uid);
@@ -183,7 +183,7 @@ export default function UpcomingPerKillMatches({
             return (
               <div 
                 key={tournament.id}
-                className="bg-glass rounded-2xl sm:rounded-[24px] p-3.5 sm:p-5 border border-glass-orange shadow-glass-glow hover:shadow-orange-500/10 hover:-translate-y-1 hover:border-orange-500/30 transition-all duration-300 flex flex-col justify-between"
+                className="w-full max-w-[360px] sm:max-w-none bg-glass rounded-2xl sm:rounded-[24px] p-3.5 sm:p-5 border border-glass-orange shadow-glass-glow hover:shadow-orange-500/10 hover:-translate-y-1 hover:border-orange-500/30 transition-all duration-300 flex flex-col justify-between"
               >
                 <div>
                   <div className="flex justify-between items-start mb-3 sm:mb-4">
@@ -235,18 +235,18 @@ export default function UpcomingPerKillMatches({
                       <span className="text-red-400 font-black">🪙 {tournament.perKillRate} per Kill</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">🏆 Booyah Bonus</span>
+                      <span className="text-gray-400">🏆 Booyah</span>
                       <span className="text-yellow-400 font-black">🪙 {tournament.booyahBonus} Bonus</span>
                     </div>
                     {Number(tournament.secondBonus || 0) > 0 && (
                       <div className="flex justify-between">
-                        <span className="text-gray-400">🥈 2nd Place Bonus</span>
+                        <span className="text-gray-400">🥈 2nd</span>
                         <span className="text-gray-300 font-black">🪙 {tournament.secondBonus} Bonus</span>
                       </div>
                     )}
                     {Number(tournament.thirdBonus || 0) > 0 && (
                       <div className="flex justify-between">
-                        <span className="text-gray-400">🥉 3rd Place Bonus</span>
+                        <span className="text-gray-400">🥉 3rd</span>
                         <span className="text-orange-400 font-black">🪙 {tournament.thirdBonus} Bonus</span>
                       </div>
                     )}
