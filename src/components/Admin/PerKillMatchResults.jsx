@@ -250,28 +250,42 @@ export default function PerKillMatchResults({
                 </div>
 
                 <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
-                  {result.results?.map((player, idx) => {
-                    const pos = Number(player.position || 0);
-                    const bonus = pos === 1 ? result.booyahBonus : pos === 2 ? result.secondBonus : pos === 3 ? result.thirdBonus : 0;
-                    const totalWin = (player.kills * result.perKillRate) + bonus;
-                    return (
-                      <div key={idx} className={`p-3 rounded-xl border text-sm flex justify-between items-center ${pos > 0 ? 'bg-yellow-500/10 border-yellow-500/30' : 'bg-black/40 border-gray-800'}`}>
-                        <div>
-                          <p className="font-bold flex items-center gap-1.5">
-                            {pos === 1 && <span>🥇</span>}
-                            {pos === 2 && <span>🥈</span>}
-                            {pos === 3 && <span>🥉</span>}
-                            {player.ingameName || player.name}
-                          </p>
-                          <p className="text-xs text-gray-400">Slot {player.selectedSlot} | UID: {player.gameUid || "N/A"}</p>
+                  {[...(result.results || [])]
+                    .sort((a, b) => {
+                      const posA = Number(a.position || 0);
+                      const posB = Number(b.position || 0);
+                      if (posA > 0 && posB > 0) return posA - posB;
+                      if (posA > 0) return -1;
+                      if (posB > 0) return 1;
+                      
+                      const killsA = Number(a.kills || 0);
+                      const killsB = Number(b.kills || 0);
+                      if (killsB !== killsA) return killsB - killsA;
+                      
+                      return Number(a.selectedSlot || 0) - Number(b.selectedSlot || 0);
+                    })
+                    .map((player, idx) => {
+                      const pos = Number(player.position || 0);
+                      const bonus = pos === 1 ? result.booyahBonus : pos === 2 ? result.secondBonus : pos === 3 ? result.thirdBonus : 0;
+                      const totalWin = (player.kills * result.perKillRate) + bonus;
+                      return (
+                        <div key={idx} className={`p-3 rounded-xl border text-sm flex justify-between items-center ${pos > 0 ? 'bg-yellow-500/10 border-yellow-500/30' : 'bg-black/40 border-gray-800'}`}>
+                          <div>
+                            <p className="font-bold flex items-center gap-1.5">
+                              {pos === 1 && <span>🥇</span>}
+                              {pos === 2 && <span>🥈</span>}
+                              {pos === 3 && <span>🥉</span>}
+                              {player.ingameName || player.name}
+                            </p>
+                            <p className="text-xs text-gray-400">Slot {player.selectedSlot} | UID: {player.gameUid || "N/A"}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-orange-400 font-bold text-xs">{player.kills} kills</p>
+                            <p className="text-green-400 font-black">🪙 {totalWin}</p>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-orange-400 font-bold text-xs">{player.kills} kills</p>
-                          <p className="text-green-400 font-black">🪙 {totalWin}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
                 </div>
               </div>
             ))}
