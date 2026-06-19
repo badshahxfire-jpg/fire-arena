@@ -1,0 +1,98 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "liveTournaments": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "joinedPlayers": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "withdrawRequests": {
+      ".read": "auth != null",
+      "$requestId": {
+        ".write": "auth != null && (auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1' || (!data.exists() && newData.child('userId').val() === auth.uid))"
+      }
+    },
+    "paymentRequests": {
+      ".read": "auth != null",
+      "$requestId": {
+        ".write": "auth != null && (auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1' || (!data.exists() && newData.child('userId').val() === auth.uid))"
+      }
+    },
+    "notifications": {
+      "$userId": {
+        ".read": "auth != null && (auth.uid === $userId || auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1')",
+        ".write": "auth != null"
+      }
+    },
+    "coinHistory": {
+      "$userId": {
+        ".read": "auth != null && (auth.uid === $userId || auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1')",
+        ".write": "auth != null"
+      }
+    },
+    "referrals": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "deviceRegistrations": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$deviceId": {
+        ".validate": "newData.hasChildren(['userId', 'email', 'registeredAt'])"
+      }
+    },
+    "userDevices": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$userId": {
+        ".validate": "newData.hasChildren(['deviceId'])"
+      }
+    },
+    "matchResults": {
+      ".read": "auth != null",
+      ".write": "auth != null && auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1'"
+    },
+    "playerResults": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "settings": {
+      ".read": "auth != null",
+      ".write": "auth != null && auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1'"
+    },
+    "tournaments": {
+      ".read": "auth != null",
+      ".write": "auth != null && auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1'"
+    },
+    "perKillTournaments": {
+      ".read": "auth != null",
+      ".write": "auth != null && auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1'"
+    },
+    "joinedPerKillPlayers": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "perKillResults": {
+      ".read": "auth != null",
+      ".write": "auth != null && auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1'"
+    },
+    "announcements": {
+      ".read": "auth != null",
+      ".write": "auth != null && auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1'"
+    },
+    "users": {
+      "$userId": {
+        ".read": "auth != null && (auth.uid === $userId || auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1')",
+        ".write": "auth != null && (auth.uid === $userId || auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1')"
+      }
+    },
+    "loyalBonuses": {
+      ".read": "auth != null",
+      ".write": "auth != null && auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1'"
+    }
+  }
+}
