@@ -68,10 +68,11 @@ export function useNotifications(user) {
             playNotificationSound();
           }
           
-          // Show browser notification for latest
+          // Show browser notification for latest (only if supported by browser/webview)
           const latest = sortedData[0];
-          if (!latest.seen && Notification.permission === "granted") {
-            new Notification(latest.title, {
+          const hasNotificationSupport = typeof window !== "undefined" && "Notification" in window;
+          if (!latest.seen && hasNotificationSupport && window.Notification.permission === "granted") {
+            new window.Notification(latest.title, {
               body: latest.message,
               icon: "/logo.png",
             });
@@ -83,9 +84,10 @@ export function useNotifications(user) {
       }
     });
     
-    // Request notification permission
-    if (Notification.permission !== "granted" && Notification.permission !== "denied") {
-      Notification.requestPermission();
+    // Request notification permission (only if supported)
+    const hasNotificationSupport = typeof window !== "undefined" && "Notification" in window;
+    if (hasNotificationSupport && window.Notification.permission !== "granted" && window.Notification.permission !== "denied") {
+      window.Notification.requestPermission();
     }
     
     return () => unsubscribe();
