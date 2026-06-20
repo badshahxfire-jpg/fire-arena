@@ -1,8 +1,9 @@
 import "./App.css";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ref, update, remove, push, get } from "firebase/database";
 import { database, db } from "./firebase";
 import { doc, updateDoc, increment, getDoc } from "firebase/firestore";
+import { App as CapApp } from "@capacitor/app";
 
 // Hooks
 import { useAuth } from "./hooks/useAuth";
@@ -95,6 +96,75 @@ export default function FireBaadshahArena() {
   const [selectedPublishTournament, setSelectedPublishTournament] = useState(null);
   const [currentSystemMode, setCurrentSystemMode] = useState("classic"); // "classic" or "perkill"
   const [selectedPerKillMode, setSelectedPerKillMode] = useState("SOLO");
+
+  // Ref to hold the latest UI states for the back button listener
+  const stateRef = useRef();
+  stateRef.current = {
+    showLogin,
+    showRegister,
+    showWallet,
+    showWithdrawPopup,
+    showCoinHistory,
+    showProfile,
+    showHistory,
+    showPerKillHistory,
+    showContact,
+    showTutorial,
+    showNotifications,
+    showReferral,
+    showLoyal,
+    showBonusWinners,
+    showJoinPopup,
+    showUpcomingGames,
+    showTopupAdminPopup,
+    showWithdrawAdminPopup,
+    showResultPopup,
+    selectedTournament,
+    selectedPublishTournament
+  };
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.Capacitor) {
+      const handlerPromise = CapApp.addListener("backButton", (data) => {
+        const s = stateRef.current;
+        if (!s) return;
+
+        // Close popups one by one if they are open
+        if (s.showLogin) { setShowLogin(false); return; }
+        if (s.showRegister) { setShowRegister(false); return; }
+        if (s.showWallet) { setShowWallet(false); return; }
+        if (s.showWithdrawPopup) { setShowWithdrawPopup(false); return; }
+        if (s.showCoinHistory) { setShowCoinHistory(false); return; }
+        if (s.showProfile) { setShowProfile(false); return; }
+        if (s.showHistory) { setShowHistory(false); return; }
+        if (s.showPerKillHistory) { setShowPerKillHistory(false); return; }
+        if (s.showContact) { setShowContact(false); return; }
+        if (s.showTutorial) { setShowTutorial(false); return; }
+        if (s.showNotifications) { setShowNotifications(false); return; }
+        if (s.showReferral) { setShowReferral(false); return; }
+        if (s.showLoyal) { setShowLoyal(false); return; }
+        if (s.showBonusWinners) { setShowBonusWinners(false); return; }
+        if (s.showJoinPopup) { setShowJoinPopup(false); return; }
+        if (s.showUpcomingGames) { setShowUpcomingGames(false); return; }
+        if (s.showTopupAdminPopup) { setShowTopupAdminPopup(false); return; }
+        if (s.showWithdrawAdminPopup) { setShowWithdrawAdminPopup(false); return; }
+        if (s.showResultPopup) { setShowResultPopup(false); return; }
+        if (s.selectedTournament) { setSelectedTournament(null); return; }
+        if (s.selectedPublishTournament) { setSelectedPublishTournament(null); return; }
+
+        // If no modal/popup is open, try to navigate back or close
+        if (data.canGoBack) {
+          window.history.back();
+        } else {
+          CapApp.exitApp();
+        }
+      });
+
+      return () => {
+        handlerPromise.then((h) => h.remove());
+      };
+    }
+  }, []);
 
 
   // ================= Custom Hooks =================
