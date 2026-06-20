@@ -3,6 +3,7 @@ import { ref, onValue, push, update, remove, get } from "firebase/database";
 import { doc, updateDoc, increment, getDoc } from "firebase/firestore";
 import { database, db } from "../firebase";
 import { logCoinTransaction } from "../utils/coinHistory";
+import { secureFetch } from "../utils/backendApi";
 
 const deductUserCoins = async (userId, amount, tournamentId = "", tournamentTitle = "", isRefund = false) => {
   const userRef = doc(db, "users", userId);
@@ -151,8 +152,11 @@ export function usePerKillTournaments() {
         return false;
       }
 
-      // Deduct coins
-      await deductUserCoins(user.uid, entryFee, tournament.id, tournament.tournamentTitle, false);
+      // Deduct coins securely via backend transaction
+      await secureFetch("/api/join-tournament", {
+        tournamentId: tournament.id,
+        entryFee: entryFee
+      });
 
       // Register player
       await push(ref(database, "joinedPerKillPlayers"), {
