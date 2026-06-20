@@ -3,8 +3,6 @@ import { useState, useEffect, useRef } from "react";
 import { ref, update, remove, push, get, onValue } from "firebase/database";
 import { database, db } from "./firebase";
 import { doc, updateDoc, increment, getDoc } from "firebase/firestore";
-import { App as CapApp } from "@capacitor/app";
-import { PushNotifications } from "@capacitor/push-notifications";
 import AppUpdatePopup from "./components/Popups/AppUpdatePopup";
 import AppUpdateAdmin from "./components/Admin/AppUpdateAdmin";
 
@@ -155,6 +153,7 @@ export default function FireBaadshahArena() {
 
       if (typeof window !== "undefined" && window.Capacitor) {
         try {
+          const { App: CapApp } = await import("@capacitor/app");
           const info = await CapApp.getInfo();
           const currentVersion = info.version; // e.g. "1.0.0"
           
@@ -274,53 +273,65 @@ export default function FireBaadshahArena() {
   }, []);
 
   useEffect(() => {
+    let handlerPromise = null;
     if (typeof window !== "undefined" && window.Capacitor) {
-      const handlerPromise = CapApp.addListener("backButton", (data) => {
-        const s = stateRef.current;
-        if (!s) return;
+      const initBackButton = async () => {
+        try {
+          const { App: CapApp } = await import("@capacitor/app");
+          handlerPromise = CapApp.addListener("backButton", (data) => {
+            const s = stateRef.current;
+            if (!s) return;
 
-        const anyOpen = !!(
-          s.showLogin ||
-          s.showRegister ||
-          s.showWallet ||
-          s.showWithdrawPopup ||
-          s.showCoinHistory ||
-          s.showProfile ||
-          s.showHistory ||
-          s.showPerKillHistory ||
-          s.showContact ||
-          s.showTutorial ||
-          s.showNotifications ||
-          s.showReferral ||
-          s.showLoyal ||
-          s.showBonusWinners ||
-          s.showJoinPopup ||
-          s.showUpcomingGames ||
-          s.showTopupAdminPopup ||
-          s.showWithdrawAdminPopup ||
-          s.showResultPopup ||
-          s.selectedTournament ||
-          s.selectedPublishTournament ||
-          s.showUpdatePopup
-        );
+            const anyOpen = !!(
+              s.showLogin ||
+              s.showRegister ||
+              s.showWallet ||
+              s.showWithdrawPopup ||
+              s.showCoinHistory ||
+              s.showProfile ||
+              s.showHistory ||
+              s.showPerKillHistory ||
+              s.showContact ||
+              s.showTutorial ||
+              s.showNotifications ||
+              s.showReferral ||
+              s.showLoyal ||
+              s.showBonusWinners ||
+              s.showJoinPopup ||
+              s.showUpcomingGames ||
+              s.showTopupAdminPopup ||
+              s.showWithdrawAdminPopup ||
+              s.showResultPopup ||
+              s.selectedTournament ||
+              s.selectedPublishTournament ||
+              s.showUpdatePopup
+            );
 
-        if (anyOpen) {
-          if (s.showUpdatePopup && s.isForceUpdate) {
-            CapApp.exitApp();
-          } else {
-            window.history.back();
-          }
-        } else if (data.canGoBack) {
-          window.history.back();
-        } else {
-          CapApp.exitApp();
+            if (anyOpen) {
+              if (s.showUpdatePopup && s.isForceUpdate) {
+                CapApp.exitApp();
+              } else {
+                window.history.back();
+              }
+            } else if (data.canGoBack) {
+              window.history.back();
+            } else {
+              CapApp.exitApp();
+            }
+          });
+        } catch (err) {
+          console.error("Failed to add back button listener:", err);
         }
-      });
-
-      return () => {
-        handlerPromise.then((h) => h.remove());
       };
+
+      initBackButton();
     }
+
+    return () => {
+      if (handlerPromise) {
+        handlerPromise.then((h) => h.remove());
+      }
+    };
   }, []);
 
 
@@ -330,6 +341,7 @@ export default function FireBaadshahArena() {
     if (typeof window !== "undefined" && window.Capacitor) {
       const registerPush = async () => {
         try {
+          const { PushNotifications } = await import("@capacitor/push-notifications");
           let permStatus = await PushNotifications.checkPermissions();
           
           if (permStatus.receive === "prompt") {
