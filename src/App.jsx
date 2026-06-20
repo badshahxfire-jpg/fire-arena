@@ -144,6 +144,131 @@ export default function FireBaadshahArena() {
     return false;
   }
 
+
+
+  // ================= Custom Hooks =================
+  const {
+    user,
+    isAdmin,
+    loginUser,
+    registerUser,
+    logoutUser,
+    forgotPassword,
+    changePlayerName,
+    loginLoading,
+    registerLoading,
+    registerBlocked,  // Add this for device registration block
+  } = useAuth(ADMIN_UID);
+
+  const {
+    liveTournaments: livePerKillTournaments,
+    joinedPlayers: joinedPerKillPlayers,
+    matchResults: perKillMatchResults,
+    joinLoading: perKillJoinLoading,
+    createPerKillTournament,
+    joinTournament: joinPerKillTournament,
+    cancelTournament: cancelPerKillTournament,
+    publishRoomDetails: publishPerKillRoomDetails,
+    updateTournamentTime: updatePerKillTournamentTime,
+    updateTournamentSlots: updatePerKillTournamentSlots,
+    publishResults: publishPerKillResults,
+    deletePerKillMatchHistory,
+    deleteAllPerKillMatchHistory
+  } = usePerKillTournaments();
+
+  const {
+    liveTournaments,
+    joinedPlayers,
+    joinedHistory,
+    matchResults,
+    leaderboard,
+    joinLoading,
+    joinTournament,
+    publishRoomDetails,
+    cancelTournament,
+    updateTournamentTime,
+    updateTournamentSlots,
+    cancelLoading,
+    deleteMatchHistory,
+    deleteAllUserMatchHistory,
+  } = useTournaments();
+
+
+  const {
+    coins,
+    winCoins,
+    playerData,
+    buttonLoading,
+    withdrawLoading,
+    paymentRequests,
+    withdrawRequests,
+    addCoins,
+    withdrawCoins,
+    transferCoins,
+    verifyRecipient,
+  } = useWallet(user);
+
+  const {
+    notifications,
+    unseenCount,
+    markAsRead,
+    markAllAsRead,
+    clearAllNotifications,
+    isSoundMuted,
+    toggleMute,
+  } = useNotifications(user);
+
+  const {
+    analytics,
+    allUsers,
+    maintenanceMode,
+    maintenanceDuration,
+    maintenanceEndsAt,
+    searchedUser,
+    approvePayment,
+    rejectPayment,
+    deletePaymentRequests,
+    approveWithdraw,
+    rejectWithdraw,
+    deleteWithdrawRequests,
+    addManualCoins,
+    giveLoyalBonus,
+    deductManualCoins,
+    blockUser,
+    searchUser,
+    toggleMaintenance,
+    createTournament,
+    migrateWinnings,
+    migrateSingleUserWinnings,
+  } = useAdminData(isAdmin);
+
+  const {
+    playerResults,
+    resultAnalytics,
+    resultLoading,
+    submitResult,
+    approveResult,
+    rejectResult,
+    publishFinalResults,
+  } = useResults();
+
+  // ================= User Stats for History =================
+  const userStats = {
+    matchesPlayed: joinedHistory.filter((item) => item.userEmail === user?.email).length,
+    wins: playerData?.wins || 0,
+    top3: playerData?.top3 || 0,
+    winRate: joinedHistory.filter((item) => item.userEmail === user?.email).length > 0
+      ? ((playerData?.wins || 0) / joinedHistory.filter((item) => item.userEmail === user?.email).length * 100).toFixed(1)
+      : 0,
+    totalEarnings: (playerData?.wins || 0) * 500 + (playerData?.top3 || 0) * 100,
+    totalCoinsWon: (playerData?.wins || 0) * 500 + (playerData?.top3 || 0) * 100,
+    avgPlacement: joinedHistory.filter((item) => item.userEmail === user?.email).length > 0
+      ? (((playerData?.wins || 0) * 1 + (playerData?.top3 || 0) * 3) / joinedHistory.filter((item) => item.userEmail === user?.email).length).toFixed(1)
+      : 0,
+    kd: ((playerData?.wins || 0) * 3 + (playerData?.top3 || 0) / (joinedHistory.filter((item) => item.userEmail === user?.email).length || 1)).toFixed(2),
+    mvp: Math.floor((playerData?.wins || 0) / 2),
+  };
+
   useEffect(() => {
     const updateRef = ref(database, "settings/appUpdate");
     const unsubscribe = onValue(updateRef, async (snapshot) => {
@@ -334,7 +459,6 @@ export default function FireBaadshahArena() {
     };
   }, []);
 
-
   useEffect(() => {
     if (!user) return;
 
@@ -383,129 +507,6 @@ export default function FireBaadshahArena() {
       registerPush();
     }
   }, [user]);
-
-  // ================= Custom Hooks =================
-  const {
-    user,
-    isAdmin,
-    loginUser,
-    registerUser,
-    logoutUser,
-    forgotPassword,
-    changePlayerName,
-    loginLoading,
-    registerLoading,
-    registerBlocked,  // Add this for device registration block
-  } = useAuth(ADMIN_UID);
-
-  const {
-    liveTournaments: livePerKillTournaments,
-    joinedPlayers: joinedPerKillPlayers,
-    matchResults: perKillMatchResults,
-    joinLoading: perKillJoinLoading,
-    createPerKillTournament,
-    joinTournament: joinPerKillTournament,
-    cancelTournament: cancelPerKillTournament,
-    publishRoomDetails: publishPerKillRoomDetails,
-    updateTournamentTime: updatePerKillTournamentTime,
-    updateTournamentSlots: updatePerKillTournamentSlots,
-    publishResults: publishPerKillResults,
-    deletePerKillMatchHistory,
-    deleteAllPerKillMatchHistory
-  } = usePerKillTournaments();
-
-  const {
-    liveTournaments,
-    joinedPlayers,
-    joinedHistory,
-    matchResults,
-    leaderboard,
-    joinLoading,
-    joinTournament,
-    publishRoomDetails,
-    cancelTournament,
-    updateTournamentTime,
-    updateTournamentSlots,
-    cancelLoading,
-    deleteMatchHistory,
-    deleteAllUserMatchHistory,
-  } = useTournaments();
-
-
-  const {
-    coins,
-    winCoins,
-    playerData,
-    buttonLoading,
-    withdrawLoading,
-    paymentRequests,
-    withdrawRequests,
-    addCoins,
-    withdrawCoins,
-    transferCoins,
-    verifyRecipient,
-  } = useWallet(user);
-
-  const {
-    notifications,
-    unseenCount,
-    markAsRead,
-    markAllAsRead,
-    clearAllNotifications,
-    isSoundMuted,
-    toggleMute,
-  } = useNotifications(user);
-
-  const {
-    analytics,
-    allUsers,
-    maintenanceMode,
-    maintenanceDuration,
-    maintenanceEndsAt,
-    searchedUser,
-    approvePayment,
-    rejectPayment,
-    deletePaymentRequests,
-    approveWithdraw,
-    rejectWithdraw,
-    deleteWithdrawRequests,
-    addManualCoins,
-    giveLoyalBonus,
-    deductManualCoins,
-    blockUser,
-    searchUser,
-    toggleMaintenance,
-    createTournament,
-    migrateWinnings,
-    migrateSingleUserWinnings,
-  } = useAdminData(isAdmin);
-
-  const {
-    playerResults,
-    resultAnalytics,
-    resultLoading,
-    submitResult,
-    approveResult,
-    rejectResult,
-    publishFinalResults,
-  } = useResults();
-
-  // ================= User Stats for History =================
-  const userStats = {
-    matchesPlayed: joinedHistory.filter((item) => item.userEmail === user?.email).length,
-    wins: playerData?.wins || 0,
-    top3: playerData?.top3 || 0,
-    winRate: joinedHistory.filter((item) => item.userEmail === user?.email).length > 0
-      ? ((playerData?.wins || 0) / joinedHistory.filter((item) => item.userEmail === user?.email).length * 100).toFixed(1)
-      : 0,
-    totalEarnings: (playerData?.wins || 0) * 500 + (playerData?.top3 || 0) * 100,
-    totalCoinsWon: (playerData?.wins || 0) * 500 + (playerData?.top3 || 0) * 100,
-    avgPlacement: joinedHistory.filter((item) => item.userEmail === user?.email).length > 0
-      ? (((playerData?.wins || 0) * 1 + (playerData?.top3 || 0) * 3) / joinedHistory.filter((item) => item.userEmail === user?.email).length).toFixed(1)
-      : 0,
-    kd: ((playerData?.wins || 0) * 3 + (playerData?.top3 || 0) / (joinedHistory.filter((item) => item.userEmail === user?.email).length || 1)).toFixed(2),
-    mvp: Math.floor((playerData?.wins || 0) / 2),
-  };
 
   // ================= Handler Functions =================
   const handleJoinTournament = async (tournament, joinData) => {
