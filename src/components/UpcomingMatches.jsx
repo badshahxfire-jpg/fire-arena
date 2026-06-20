@@ -17,15 +17,21 @@ export default function UpcomingMatches({
   const [selectedViewTournament, setSelectedViewTournament] = useState(null);
   const [loadingAction, setLoadingAction] = useState(null);
 
-  const upcomingTournaments = tournaments.filter((item) => {
-    const now = new Date();
-    const tournamentTime = new Date(`${item.matchDate}T${item.matchTime}`);
-    const diff = (tournamentTime - now) / 1000 / 60;
-    return (
-      diff > 10 &&
-      item.tournamentType?.trim().toUpperCase() === selectedMode?.trim().toUpperCase()
-    );
-  });
+  const upcomingTournaments = tournaments
+    .filter((item) => {
+      const now = new Date();
+      const tournamentTime = new Date(`${item.matchDate}T${item.matchTime}`);
+      const diff = (tournamentTime - now) / 1000 / 60;
+      return (
+        diff > 10 &&
+        item.tournamentType?.trim().toUpperCase() === selectedMode?.trim().toUpperCase()
+      );
+    })
+    .sort((a, b) => {
+      const dateA = new Date(`${a.matchDate}T${a.matchTime}`);
+      const dateB = new Date(`${b.matchDate}T${b.matchTime}`);
+      return dateA - dateB;
+    });
 
   // Get team size based on tournament type
   const getTeamSizeForType = (tournamentType) => {

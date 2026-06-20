@@ -72,12 +72,18 @@ export default function UpcomingPerKillMatches({
     };
   }, [joinedPlayers, matchResults, user]);
 
-  const upcomingTournaments = tournaments.filter((item) => {
-    const now = new Date();
-    const tournamentTime = new Date(`${item.matchDate}T${item.matchTime}`);
-    const diff = (tournamentTime - now) / 1000 / 60;
-    return diff > 10 && item.tournamentType === selectedMode;
-  });
+  const upcomingTournaments = tournaments
+    .filter((item) => {
+      const now = new Date();
+      const tournamentTime = new Date(`${item.matchDate}T${item.matchTime}`);
+      const diff = (tournamentTime - now) / 1000 / 60;
+      return diff > 10 && item.tournamentType === selectedMode;
+    })
+    .sort((a, b) => {
+      const dateA = new Date(`${a.matchDate}T${a.matchTime}`);
+      const dateB = new Date(`${b.matchDate}T${b.matchTime}`);
+      return dateA - dateB;
+    });
 
   const handleOpenJoin = (tournament) => {
     if (!user) {
