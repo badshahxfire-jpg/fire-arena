@@ -212,8 +212,8 @@ export default function UpcomingMatches({
                       <div className="text-center text-orange-400 font-bold text-[10px] mb-2 uppercase tracking-wider">
                         🏆 TOP {winnerCount} WINNERS
                       </div>
-                      <div className="space-y-1">
-                        {rewards.slice(0, 10).map((reward, idx) => (
+                      <div className="max-h-[140px] overflow-y-auto pr-1 space-y-1.5 custom-scrollbar">
+                        {rewards.map((reward, idx) => (
                           <div key={idx} className="flex justify-between items-center text-[10px] md:text-xs">
                             <span className="flex items-center gap-1 font-semibold text-gray-300">
                               <span className="text-xs">{reward.medal || (idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : "🏅")}</span>
@@ -222,11 +222,6 @@ export default function UpcomingMatches({
                             <span className="text-yellow-400 font-black">🪙 {reward.coins}</span>
                           </div>
                         ))}
-                        {rewards.length > 10 && (
-                          <div className="text-center text-gray-500 text-[9px] mt-1">
-                            +{rewards.length - 10} more positions
-                          </div>
-                        )}
                       </div>
                     </div>
                   )}

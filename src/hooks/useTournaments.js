@@ -3,6 +3,7 @@ import { ref, onValue, push, update, remove, get } from "firebase/database";
 import { doc, updateDoc, increment, getDoc } from "firebase/firestore";
 import { database, db } from "../firebase";
 import { logCoinTransaction } from "../utils/coinHistory";
+import { secureFetch } from "../utils/backendApi";
 
 const deductUserCoins = async (userId, amount, tournamentId = "", tournamentTitle = "", isRefund = false) => {
   const userRef = doc(db, "users", userId);
@@ -204,34 +205,55 @@ export function useTournaments() {
       const tournamentType = tournament.tournamentType || "SOLO";
       const entryFee = Number(tournament.entryFee);
       const teamMembers = joinData.teamMembers || [];
+
+      // Fetch latest joined players from database to prevent race conditions
+      const playersSnapshot = await get(ref(database, "joinedPlayers"));
+      const playersVal = playersSnapshot.val() || {};
+      const latestJoinedPlayers = Object.keys(playersVal).map(key => ({ id: key, ...playersVal[key] }));
       
       // ================= SOLO MODE =================
       if (tournamentType === "SOLO" || tournamentType === "1V1") {
         if (!joinData.mobileNumber || !joinData.gameUid || !joinData.ingameName || !joinData.gameLevel || !joinData.selectedSlot) {
           alert("Fill All Details");
+          setJoinLoading(false);
           return false;
         }
 
         if (Number(joinData.gameLevel) < 45) {
           alert("Minimum Level 45 Required ❌");
+          setJoinLoading(false);
           return false;
         }
 
-        const alreadyJoined = joinedPlayers.find(
+        const slotBooked = latestJoinedPlayers.some(
+          (player) => player.tournamentId === tournament.id && Number(player.selectedSlot) === Number(joinData.selectedSlot)
+        );
+        if (slotBooked) {
+          alert("This slot is already booked! Please select another one ❌");
+          setJoinLoading(false);
+          return false;
+        }
+
+        const alreadyJoined = latestJoinedPlayers.find(
           (player) => player.tournamentId === tournament.id && player.userEmail === user.email
         );
 
         if (alreadyJoined) {
           alert("You Already Joined This Tournament ❌");
+          setJoinLoading(false);
           return false;
         }
 
         if (Number(coins) < entryFee) {
           alert("Insufficient Coins ❌");
+          setJoinLoading(false);
           return false;
         }
 
-        await deductUserCoins(user.uid, entryFee, tournament.id, tournament.tournamentTitle, false);
+        await secureFetch("/api/join-tournament", {
+          tournamentId: tournament.id,
+          entryFee: entryFee
+        });
 
         await push(ref(database, "joinedPlayers"), {
           tournamentId: tournament.id,
@@ -282,32 +304,47 @@ export function useTournaments() {
         
         if (!teamMembers || teamMembers.length !== teamSize) {
           alert(`❌ Team must have ${teamSize} members!`);
+          setJoinLoading(false);
           return false;
         }
         
         if (!joinData.mobileNumber || !joinData.gameUid || !joinData.ingameName || !joinData.gameLevel || !joinData.selectedSlot) {
           alert("Please fill all your details!");
+          setJoinLoading(false);
           return false;
         }
         
         if (Number(joinData.gameLevel) < 45) {
           alert("Minimum Level 45 Required for Leader ❌");
+          setJoinLoading(false);
           return false;
         }
         
         if (!joinData.teamName) {
           alert("Please enter a team name!");
+          setJoinLoading(false);
+          return false;
+        }
+
+        const slotBooked = latestJoinedPlayers.some(
+          (player) => player.tournamentId === tournament.id && Number(player.selectedSlot) === Number(joinData.selectedSlot)
+        );
+        if (slotBooked) {
+          alert("This slot is already booked! Please select another one ❌");
+          setJoinLoading(false);
           return false;
         }
         
         const alreadyJoined = await isUserAlreadyInTeam(tournament.id, user.uid);
         if (alreadyJoined) {
           alert("You or your teammate already joined this tournament ❌");
+          setJoinLoading(false);
           return false;
         }
         
         if (Number(coins) < entryFee) {
           alert(`❌ You (Leader) need ${entryFee} coins to join!`);
+          setJoinLoading(false);
           return false;
         }
         
@@ -317,12 +354,14 @@ export function useTournaments() {
             const teammateAlreadyJoined = await isUserAlreadyInTeam(tournament.id, member.userId);
             if (teammateAlreadyJoined) {
               alert(`❌ Teammate ${member.ingameName} already joined this tournament!`);
+              setJoinLoading(false);
               return false;
             }
             
             const coinCheck = await checkTeammateCoins(member.userId, entryFee, member.ingameName);
             if (!coinCheck.hasEnough) {
               alert(`❌ ${coinCheck.error}`);
+              setJoinLoading(false);
               return false;
             }
           }
@@ -333,31 +372,23 @@ export function useTournaments() {
           if (!member.isLeader) {
             if (!member.gameUid || !member.ingameName || !member.gameLevel) {
               alert(`❌ Please fill all details for Teammate ${i}`);
+              setJoinLoading(false);
               return false;
             }
             if (Number(member.gameLevel) < 45) {
               alert(`❌ Teammate ${member.ingameName} must have minimum Level 45!`);
+              setJoinLoading(false);
               return false;
             }
           }
         }
         
-        // Deduct coins from all team members
-        const deductions = [];
-        const deductionDetails = [];
-        
-        deductions.push(deductUserCoins(user.uid, entryFee, tournament.id, tournament.tournamentTitle, false));
-        deductionDetails.push({ name: joinData.ingameName, userId: user.uid, amount: entryFee });
-        
-        for (let i = 0; i < teamMembers.length; i++) {
-          const member = teamMembers[i];
-          if (!member.isLeader) {
-            deductions.push(deductUserCoins(member.userId, entryFee, tournament.id, tournament.tournamentTitle, false));
-            deductionDetails.push({ name: member.ingameName, userId: member.userId, amount: entryFee });
-          }
-        }
-        
-        await Promise.all(deductions);
+        // Deduct coins from all team members securely via backend transaction
+        await secureFetch("/api/join-tournament", {
+          tournamentId: tournament.id,
+          entryFee: entryFee,
+          teamMembers: teamMembers
+        });
         
         // ========== FIX: Save ALL team members in joinedPlayers ==========
         const allTeamMembers = [...teamMembers];

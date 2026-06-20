@@ -423,18 +423,13 @@ export default function LiveMatches({ tournaments, joinedPlayers, user, isAdmin,
                   </div>
                   
                   {item.tournamentType === "SOLO" && (
-                    <div className="space-y-1">
-                      {rewards.slice(0, 5).map((reward, idx) => (
+                    <div className="max-h-[140px] overflow-y-auto pr-1 space-y-1.5 custom-scrollbar">
+                      {rewards.map((reward, idx) => (
                         <div key={idx} className="flex justify-between items-center text-sm">
                           <span className="text-gray-300">{reward.label}</span>
                           <span className="text-yellow-400 font-black">🪙 {reward.coins}</span>
                         </div>
                       ))}
-                      {rewards.length > 5 && (
-                        <div className="text-center text-gray-500 text-xs mt-2">
-                          +{rewards.length - 5} more positions
-                        </div>
-                      )}
                     </div>
                   )}
 

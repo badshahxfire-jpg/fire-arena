@@ -119,8 +119,13 @@ export function usePerKillTournaments() {
 
       const coins = userSnap.data().coins || 0;
 
-      // Verify slot is free
-      const alreadyBooked = joinedPlayers.some(
+      // Fetch latest joined players from database to prevent race conditions
+      const playersSnapshot = await get(ref(database, "joinedPerKillPlayers"));
+      const playersVal = playersSnapshot.val() || {};
+      const latestJoinedPlayers = Object.keys(playersVal).map(key => ({ id: key, ...playersVal[key] }));
+
+      // Verify slot is free using latest database snapshot
+      const alreadyBooked = latestJoinedPlayers.some(
         (player) => player.tournamentId === tournament.id && Number(player.selectedSlot) === Number(joinData.selectedSlot)
       );
 
@@ -130,7 +135,7 @@ export function usePerKillTournaments() {
         return false;
       }
 
-      const alreadyJoined = joinedPlayers.some(
+      const alreadyJoined = latestJoinedPlayers.some(
         (player) => player.tournamentId === tournament.id && (player.userId === user.uid || player.userEmail === user.email)
       );
 

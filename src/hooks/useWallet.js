@@ -3,6 +3,7 @@ import { doc, onSnapshot, updateDoc, increment, getDoc, collection, query as fir
 import { ref, push, update, onValue } from "firebase/database";
 import { db, database } from "../firebase";
 import { logCoinTransaction } from "../utils/coinHistory";
+import { secureFetch } from "../utils/backendApi";
 
 export function useWallet(user) {
   const [coins, setCoins] = useState(0);
@@ -307,67 +308,13 @@ export function useWallet(user) {
         return false;
       }
       
-      const requestRef = await push(ref(database, "withdrawRequests"), {
-        email: user.email,
-        name: withdrawName,
-        number: withdrawNumber,
-        amount: withdrawAmount,
-        upi: withdrawUpi,
-        userId: user.uid,
-        userUid: user.uid,
-        createdAt: new Date().toLocaleString(),
-        status: "PENDING",
-        requestTime: new Date().toLocaleString(),
-        completedTime: "",
-        requestId: `WITHDRAW-${Date.now()}`,
-        timestamp: Date.now(),
+      // Call secure backend server to process withdrawal and write requests/history
+      await secureFetch("/api/withdraw-coins", {
+        withdrawAmount,
+        withdrawName,
+        withdrawNumber,
+        withdrawUpi
       });
-      const requestKey = requestRef.key;
-      
-      // Auto deduct coins from both total and winning
-      await updateDoc(doc(db, "users", user.uid), {
-        coins: increment(-Number(withdrawAmount)),
-        winCoins: increment(-Number(withdrawAmount)),
-      });
-      await logCoinTransaction(user.uid, Number(withdrawAmount), "WITHDRAW", "Withdrawn to Bank/UPI", false);
-      
-      let telegramResult = "PENDING";
-      let telegramErrorMsg = "";
-
-      // Send Telegram Alert
-      try {
-        const response = await fetch(`https://dawn-firefly-d1ba.sohrabk502.workers.dev/bot8992852974:AAGlM5_2VojBzr8gRmQ9H3MYMz5-pffbTN8/sendMessage`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            chat_id: "5948674075",
-            text: `💸 NEW WITHDRAW REQUEST\n\n👤 User: ${user.email}\n🏷️ Name: ${withdrawName}\n📞 Phone: ${withdrawNumber}\n💰 Amount: ${withdrawAmount}\n🏦 UPI: ${withdrawUpi}`,
-          }),
-        });
-
-        const resData = await response.json();
-        if (resData.ok) {
-          telegramResult = "SUCCESS";
-        } else {
-          telegramResult = "FAILED";
-          telegramErrorMsg = `Telegram API Error: ${resData.description} (Code: ${resData.error_code})`;
-          console.error("Telegram API Error:", resData);
-        }
-      } catch (err) {
-        telegramResult = "FAILED";
-        telegramErrorMsg = `Network Error: ${err.message}`;
-        console.error("Telegram Error:", err);
-      }
-
-      // Update Firebase with Telegram status
-      try {
-        await update(ref(database, `withdrawRequests/${requestKey}`), {
-          telegramStatus: telegramResult,
-          telegramError: telegramErrorMsg
-        });
-      } catch (dbErr) {
-        console.error("Failed to update telegram status in Firebase:", dbErr);
-      }
       
       alert("Withdraw Request Submitted 🔥 Please wait 10 minutes for processing.");
       return true;
@@ -405,86 +352,16 @@ export function useWallet(user) {
         return { success: false, message: "You cannot transfer coins to yourself!" };
       }
 
-      // 1. Search for recipient in users collection
-      const usersRef = collection(db, "users");
-      let recipientDoc = null;
-
-      // Try searching by email
-      const emailQuery = firestoreQuery(usersRef, where("email", "==", idLower));
-      const emailSnap = await getDocs(emailQuery);
-
-      if (!emailSnap.empty) {
-        recipientDoc = emailSnap.docs[0];
-      } else {
-        // Try searching by referralCode
-        const refQuery = firestoreQuery(usersRef, where("referralCode", "==", idUpper));
-        const refSnap = await getDocs(refQuery);
-        if (!refSnap.empty) {
-          recipientDoc = refSnap.docs[0];
-        }
-      }
-
-      if (!recipientDoc) {
-        return { success: false, message: "Recipient not found! Check Email/Referral Code." };
-      }
-
-      const recipientUid = recipientDoc.id;
-      const recipientData = recipientDoc.data();
-      const recipientName = recipientData.name || "Player";
-
-      // Double-check recipient ID is not sender ID
-      if (recipientUid === user.uid) {
-        return { success: false, message: "You cannot transfer coins to yourself!" };
-      }
-
-      // 2. Perform database updates (sender deduction and receiver addition)
-      const senderRef = doc(db, "users", user.uid);
-      const recipientRef = doc(db, "users", recipientUid);
-
-      const senderSnap = await getDoc(senderRef);
-      const latestSenderCoins = senderSnap.exists() ? (senderSnap.data().coins || 0) : 0;
-      const latestSenderWinCoins = senderSnap.exists() ? (senderSnap.data().winCoins || 0) : 0;
-
-      if (amount > latestSenderCoins) {
-        return { success: false, message: `Insufficient coins balance! You have 🪙 ${latestSenderCoins} coins.` };
-      }
-
-      const newSenderCoins = latestSenderCoins - amount;
-      const newSenderWinCoins = Math.min(latestSenderWinCoins, newSenderCoins);
-
-      const recipientSnap = await getDoc(recipientRef);
-      const latestRecipientCoins = recipientSnap.exists() ? (recipientSnap.data().coins || 0) : 0;
-      const newRecipientCoins = latestRecipientCoins + amount;
-
-      // Update sender
-      await updateDoc(senderRef, {
-        coins: newSenderCoins,
-        winCoins: newSenderWinCoins
+      // Call secure backend server to process coin transfer
+      const res = await secureFetch("/api/transfer-coins", {
+        recipientIdentifier,
+        transferAmount
       });
 
-      // Update recipient
-      await updateDoc(recipientRef, {
-        coins: newRecipientCoins
-      });
+      const recipientUid = res.recipientUid;
+      const recipientName = res.recipientName;
 
-      // 3. Log transactions
-      await logCoinTransaction(
-        user.uid,
-        amount,
-        "COIN_TRANSFER_SENT",
-        `Sent coins to ${recipientName} (${recipientData.email || recipientIdentifier})`,
-        false
-      );
-
-      await logCoinTransaction(
-        recipientUid,
-        amount,
-        "COIN_TRANSFER_RECEIVED",
-        `Received coins from ${playerData?.name || user.email}`,
-        true
-      );
-
-      // 4. Send notifications
+      // Send notifications via Firebase RTDB
       try {
         await push(ref(database, `notifications/${recipientUid}`), {
           title: "🪙 COINS RECEIVED!",
