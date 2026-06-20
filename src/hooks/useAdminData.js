@@ -420,6 +420,15 @@ const searchUser = async (uid) => {
         lastUpdatedTime: Date.now()
       });
 
+      // Push notification to user's notifications tree
+      await push(ref(database, `notifications/${uid}`), {
+        title: "🎁 LOYAL BONUS ADDED",
+        message: `Congratulations! You received a loyal active bonus of 🪙 ${amount}.`,
+        time: new Date().toLocaleString(),
+        seen: false,
+        timestamp: Date.now()
+      });
+
       alert("Loyal Bonus Given Successfully 🔥");
       return true;
     } catch (error) {
