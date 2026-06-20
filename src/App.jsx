@@ -1,9 +1,11 @@
 import "./App.css";
 import { useState, useEffect, useRef } from "react";
-import { ref, update, remove, push, get } from "firebase/database";
+import { ref, update, remove, push, get, onValue } from "firebase/database";
 import { database, db } from "./firebase";
 import { doc, updateDoc, increment, getDoc } from "firebase/firestore";
 import { App as CapApp } from "@capacitor/app";
+import AppUpdatePopup from "./components/Popups/AppUpdatePopup";
+import AppUpdateAdmin from "./components/Admin/AppUpdateAdmin";
 
 // Hooks
 import { useAuth } from "./hooks/useAuth";
@@ -97,6 +99,11 @@ export default function FireBaadshahArena() {
   const [currentSystemMode, setCurrentSystemMode] = useState("classic"); // "classic" or "perkill"
   const [selectedPerKillMode, setSelectedPerKillMode] = useState("SOLO");
 
+  // App Update States
+  const [showUpdatePopup, setShowUpdatePopup] = useState(false);
+  const [isForceUpdate, setIsForceUpdate] = useState(false);
+  const [updateConfig, setUpdateConfig] = useState(null);
+
   // Ref to hold the latest UI states for the back button listener
   const stateRef = useRef();
   stateRef.current = {
@@ -120,8 +127,55 @@ export default function FireBaadshahArena() {
     showWithdrawAdminPopup,
     showResultPopup,
     selectedTournament,
-    selectedPublishTournament
+    selectedPublishTournament,
+    showUpdatePopup,
+    isForceUpdate
   };
+
+  const isVersionOlder = (current, latest) => {
+    if (!current || !latest) return false;
+    const cParts = current.split(".").map((x) => parseInt(x, 10) || 0);
+    const lParts = latest.split(".").map((x) => parseInt(x, 10) || 0);
+    for (let i = 0; i < Math.max(cParts.length, lParts.length); i++) {
+      const cVal = cParts[i] || 0;
+      const lVal = lParts[i] || 0;
+      if (cVal < lVal) return true;
+      if (cVal > lVal) return false;
+    }
+    return false;
+  };
+
+  useEffect(() => {
+    const updateRef = ref(database, "settings/appUpdate");
+    const unsubscribe = onValue(updateRef, async (snapshot) => {
+      const data = snapshot.val();
+      if (!data) return;
+      setUpdateConfig(data);
+
+      if (typeof window !== "undefined" && window.Capacitor) {
+        try {
+          const info = await CapApp.getInfo();
+          const currentVersion = info.version; // e.g. "1.0.0"
+          
+          if (isVersionOlder(currentVersion, data.latestVersion)) {
+            // Check if force update is required
+            if (isVersionOlder(currentVersion, data.minVersion)) {
+              setIsForceUpdate(true);
+            } else {
+              setIsForceUpdate(false);
+            }
+            setShowUpdatePopup(true);
+          } else {
+            setShowUpdatePopup(false);
+          }
+        } catch (err) {
+          console.error("Failed to check app version:", err);
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     if (typeof window !== "undefined" && window.Capacitor) {
@@ -130,6 +184,14 @@ export default function FireBaadshahArena() {
         if (!s) return;
 
         // Close popups one by one if they are open
+        if (s.showUpdatePopup) {
+          if (s.isForceUpdate) {
+            CapApp.exitApp();
+          } else {
+            setShowUpdatePopup(false);
+          }
+          return;
+        }
         if (s.showLogin) { setShowLogin(false); return; }
         if (s.showRegister) { setShowRegister(false); return; }
         if (s.showWallet) { setShowWallet(false); return; }
@@ -893,6 +955,7 @@ export default function FireBaadshahArena() {
               <button onClick={() => setAdminPage("coins")} className={`px-4 py-3 rounded-2xl font-black text-sm md:text-base cyber-btn transition-all flex-1 min-w-[140px] max-w-[200px] text-center ${adminPage === "coins" ? "bg-yellow-500 text-black" : "bg-black text-white border border-yellow-500/20"}`}>🪙 MANUAL COINS</button>
               <button onClick={() => setAdminPage("maintenance")} className={`px-4 py-3 rounded-2xl font-black text-sm md:text-base cyber-btn transition-all flex-1 min-w-[140px] max-w-[200px] text-center ${adminPage === "maintenance" ? "bg-red-500 text-black" : "bg-black text-white border border-red-500/20"}`}>🚧 MAINTENANCE</button>
               <button onClick={() => setAdminPage("announcements")} className={`px-4 py-3 rounded-2xl font-black text-sm md:text-base cyber-btn transition-all flex-1 min-w-[140px] max-w-[200px] text-center ${adminPage === "announcements" ? "bg-cyan-500 text-black" : "bg-black text-white border border-cyan-500/20"}`}>📢 ANNOUNCEMENTS</button>
+              <button onClick={() => setAdminPage("app_update")} className={`px-4 py-3 rounded-2xl font-black text-sm md:text-base cyber-btn transition-all flex-1 min-w-[140px] max-w-[200px] text-center ${adminPage === "app_update" ? "bg-blue-400 text-black" : "bg-black text-white border border-blue-400/20"}`}>🚀 APP UPDATE</button>
             </div>
           </div>
 
@@ -905,11 +968,13 @@ export default function FireBaadshahArena() {
           {adminPage === "coins" && <ManualCoins onAddCoins={addManualCoins} />}
           {adminPage === "maintenance" && <MaintenanceMode maintenanceMode={maintenanceMode} maintenanceDuration={maintenanceDuration} maintenanceEndsAt={maintenanceEndsAt} onToggle={toggleMaintenance} />}
           {adminPage === "announcements" && <AdminAnnouncements />}
+          {adminPage === "app_update" && <AppUpdateAdmin />}
 
         </>
       )}
 
       {/* Popups */}
+      {showUpdatePopup && <AppUpdatePopup updateConfig={updateConfig} isForceUpdate={isForceUpdate} onClose={() => setShowUpdatePopup(false)} />}
       {showLogin && <LoginPopup onClose={() => setShowLogin(false)} onLogin={loginUser} onForgotPassword={forgotPassword} loginLoading={loginLoading} />}
       {showRegister && <RegisterPopup onClose={() => setShowRegister(false)} onRegister={registerUser} registerLoading={registerLoading} registerBlocked={registerBlocked} />}
       {showWallet && <WalletPopup user={user} coins={coins} winCoins={winCoins} onClose={() => setShowWallet(false)} onTopup={handleTopup} onShowWithdraw={() => { setShowWallet(false); setShowWithdrawPopup(true); }} onShowCoinHistory={() => { setShowWallet(false); setShowCoinHistory(true); }} paymentRequests={paymentRequests} buttonLoading={buttonLoading} transferCoins={transferCoins} verifyRecipient={verifyRecipient} />}
