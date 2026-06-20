@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "501695322845",
+    "firebase_url": "https://fire-baadshah-arena-default-rtdb.firebaseio.com",
+    "project_id": "fire-baadshah-arena",
+    "storage_bucket": "fire-baadshah-arena.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:501695322845:android:b389a2addc3992669d5934",
+        "android_client_info": {
+          "package_name": "com.firebaadshah.arena"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "501695322845-21eth8cho69htpvd9c1hnpf3t0ttk3qj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCNjF6nzuC4kCdCX-nWlW0yw4GAO8OM8UE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "501695322845-21eth8cho69htpvd9c1hnpf3t0ttk3qj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

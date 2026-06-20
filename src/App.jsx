@@ -4,6 +4,7 @@ import { ref, update, remove, push, get, onValue } from "firebase/database";
 import { database, db } from "./firebase";
 import { doc, updateDoc, increment, getDoc } from "firebase/firestore";
 import { App as CapApp } from "@capacitor/app";
+import { PushNotifications } from "@capacitor/push-notifications";
 import AppUpdatePopup from "./components/Popups/AppUpdatePopup";
 import AppUpdateAdmin from "./components/Admin/AppUpdateAdmin";
 
@@ -322,6 +323,54 @@ export default function FireBaadshahArena() {
     }
   }, []);
 
+
+  useEffect(() => {
+    if (!user) return;
+
+    if (typeof window !== "undefined" && window.Capacitor) {
+      const registerPush = async () => {
+        try {
+          let permStatus = await PushNotifications.checkPermissions();
+          
+          if (permStatus.receive === "prompt") {
+            permStatus = await PushNotifications.requestPermissions();
+          }
+
+          if (permStatus.receive !== "granted") {
+            console.warn("Push notification permission not granted.");
+            return;
+          }
+
+          await PushNotifications.register();
+
+          PushNotifications.addListener("registration", async (token) => {
+            console.log("Push registration success, token: " + token.value);
+            try {
+              const userRef = doc(db, "users", user.uid);
+              await updateDoc(userRef, {
+                fcmToken: token.value,
+              });
+            } catch (err) {
+              console.error("Failed to save FCM token to Firestore:", err);
+            }
+          });
+
+          PushNotifications.addListener("registrationError", (error) => {
+            console.error("Push registration error: ", error);
+          });
+
+          PushNotifications.addListener("pushNotificationReceived", (notification) => {
+            console.log("Push received: ", notification);
+          });
+
+        } catch (err) {
+          console.error("Error setting up push notifications:", err);
+        }
+      };
+
+      registerPush();
+    }
+  }, [user]);
 
   // ================= Custom Hooks =================
   const {

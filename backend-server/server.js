@@ -319,6 +319,143 @@ app.post("/api/withdraw-coins", verifyToken, async (req, res) => {
   }
 });
 
+// -------------------------------------------------------------
+// Push Notifications Core Helpers & Listeners
+// -------------------------------------------------------------
+async function sendGlobalPushNotification(title, body) {
+  try {
+    const usersSnapshot = await db.collection("users").get();
+    const tokens = [];
+    usersSnapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      if (data.fcmToken) {
+        tokens.push(data.fcmToken);
+      }
+    });
+
+    if (tokens.length === 0) {
+      console.log("No registered FCM tokens found for global push.");
+      return;
+    }
+
+    console.log(`Sending global push notification to ${tokens.length} devices...`);
+
+    const message = {
+      notification: {
+        title: title,
+        body: body,
+      },
+      tokens: tokens,
+    };
+
+    const response = await admin.messaging().sendEachForMulticast(message);
+    console.log(`Successfully sent ${response.successCount} global messages; ${response.failureCount} failed.`);
+  } catch (error) {
+    console.error("Error sending global push notification:", error);
+  }
+}
+
+async function sendPersonalPushNotification(userId, title, body) {
+  try {
+    const userDoc = await db.collection("users").doc(userId).get();
+    if (!userDoc.exists) return;
+    const data = userDoc.data();
+    const token = data.fcmToken;
+    if (!token) {
+      console.log(`User ${userId} does not have a registered FCM token.`);
+      return;
+    }
+
+    const message = {
+      notification: {
+        title: title,
+        body: body,
+      },
+      token: token,
+    };
+
+    const response = await admin.messaging().send(message);
+    console.log(`Successfully sent personal notification to user ${userId}:`, response);
+  } catch (error) {
+    console.error(`Error sending personal push notification to user ${userId}:`, error);
+  }
+}
+
+const loadedNotificationIds = new Set();
+const loadedTournaments = new Set();
+const loadedPerKillTournaments = new Set();
+let isServerLive = false;
+
+// Activate notification listeners after 4 seconds to skip startup records
+setTimeout(() => {
+  isServerLive = true;
+  console.log("Push notification listener is now live and active! 🔥");
+}, 4000);
+
+// 1. Listen for personal user notifications
+rtdb.ref("notifications").on("child_added", (userSnap) => {
+  const userId = userSnap.key;
+  
+  rtdb.ref(`notifications/${userId}`).on("child_added", async (notifSnap) => {
+    const notifId = notifSnap.key;
+    const notif = notifSnap.val();
+    if (!notif) return;
+
+    if (!isServerLive) {
+      loadedNotificationIds.add(notifId);
+      return;
+    }
+
+    if (loadedNotificationIds.has(notifId)) return;
+    loadedNotificationIds.add(notifId);
+
+    console.log(`New notification detected for user ${userId}: ${notif.title}`);
+    await sendPersonalPushNotification(userId, notif.title, notif.message);
+  });
+});
+
+// 2. Listen for new classic matches
+rtdb.ref("liveTournaments").on("child_added", async (snapshot) => {
+  const id = snapshot.key;
+  const tournament = snapshot.val();
+  if (!tournament) return;
+
+  if (!isServerLive) {
+    loadedTournaments.add(id);
+    return;
+  }
+
+  if (loadedTournaments.has(id)) return;
+  loadedTournaments.add(id);
+
+  console.log("New tournament created! Sending global push...", tournament.tournamentTitle);
+  await sendGlobalPushNotification(
+    "New Match Created! 🎮",
+    `Join "${tournament.tournamentTitle}" now. Entry: 🪙 ${tournament.entryFee}, Map: ${tournament.selectedMap}.`
+  );
+});
+
+// 3. Listen for new per kill matches
+rtdb.ref("perKillTournaments").on("child_added", async (snapshot) => {
+  const id = snapshot.key;
+  const tournament = snapshot.val();
+  if (!tournament) return;
+
+  if (!isServerLive) {
+    loadedPerKillTournaments.add(id);
+    return;
+  }
+
+  if (loadedPerKillTournaments.has(id)) return;
+  loadedPerKillTournaments.add(id);
+
+  console.log("New Per Kill tournament created! Sending global push...", tournament.tournamentTitle);
+  await sendGlobalPushNotification(
+    "New Per Kill Match Created! ⚔️",
+    `Join "${tournament.tournamentTitle}" now. Entry: 🪙 ${tournament.entryFee}, Map: ${tournament.selectedMap}.`
+  );
+});
+
 // Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Secure Server running on port ${PORT}`));
