@@ -175,10 +175,7 @@ export default function UpcomingMatches({
                     <div className="flex justify-between">
                       <span>{teamSize === 1 ? "👥 Players" : "👥 Teams"}</span>
                       <span className="font-black">
-                        {teamSize === 1 
-                          ? `${item.joinedCount || 0}/${item.totalTeams}`
-                          : `${teamJoinedCount}/${totalSlots}`
-                        }
+                        {`${teamJoinedCount}/${totalSlots}`}
                       </span>
                     </div>
                     

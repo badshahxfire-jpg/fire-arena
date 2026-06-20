@@ -70,7 +70,7 @@ export default function TournamentCard({
         </div>
         <div className="flex justify-between">
           <span>👥 Players</span>
-          <span className="font-black">{tournament.joinedCount || 0}/{tournament.totalTeams}</span>
+          <span className="font-black">{joinedPlayers.filter(p => p.tournamentId === tournament.id).length}/{tournament.totalTeams}</span>
         </div>
         <div className="flex justify-between">
           <span>🏆 Prize Pool</span>

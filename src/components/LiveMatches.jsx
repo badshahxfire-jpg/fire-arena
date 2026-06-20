@@ -396,10 +396,7 @@ export default function LiveMatches({ tournaments, joinedPlayers, user, isAdmin,
                   <div className="flex justify-between">
                     <span>{teamSize === 1 ? "👥 Joined Players" : "👥 Joined Teams"}</span>
                     <span className="font-bold">
-                      {teamSize === 1 
-                        ? `${item.joinedCount || 0}/${item.totalTeams}`
-                        : `${teamJoinedCount}/${totalSlots}`
-                      }
+                      {`${teamJoinedCount}/${totalSlots}`}
                     </span>
                   </div>
                   
