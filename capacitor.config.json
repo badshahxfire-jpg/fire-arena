@@ -1,5 +1,9 @@
 {
   "appId": "com.firebaadshah.arena",
   "appName": "Fire Baadshah Arena",
-  "webDir": "dist"
+  "webDir": "dist",
+  "server": {
+    "url": "https://fire-baadshah-arena.vercel.app",
+    "cleartext": true
+  }
 }
