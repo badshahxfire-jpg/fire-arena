@@ -131,7 +131,7 @@ export default function FireBaadshahArena() {
     isForceUpdate
   };
 
-  const isVersionOlder = (current, latest) => {
+  function isVersionOlder(current, latest) {
     if (!current || !latest) return false;
     const cParts = current.split(".").map((x) => parseInt(x, 10) || 0);
     const lParts = latest.split(".").map((x) => parseInt(x, 10) || 0);
@@ -142,7 +142,7 @@ export default function FireBaadshahArena() {
       if (cVal > lVal) return false;
     }
     return false;
-  };
+  }
 
   useEffect(() => {
     const updateRef = ref(database, "settings/appUpdate");
