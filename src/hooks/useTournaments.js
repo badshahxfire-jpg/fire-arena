@@ -5,14 +5,22 @@ import { database, db } from "../firebase";
 import { logCoinTransaction } from "../utils/coinHistory";
 import { secureFetch } from "../utils/backendApi";
 
-const deductUserCoins = async (userId, amount, tournamentId = "", tournamentTitle = "", isRefund = false) => {
+const deductUserCoins = async (userId, amount, tournamentId = "", tournamentTitle = "", isRefund = false, winCoinsRefund = 0) => {
   const userRef = doc(db, "users", userId);
   const userSnap = await getDoc(userRef);
   if (userSnap.exists()) {
     const currentCoins = userSnap.data().coins || 0;
     const currentWinCoins = userSnap.data().winCoins || 0;
-    const newCoins = currentCoins - amount;
-    const newWinCoins = Math.min(currentWinCoins, newCoins);
+    
+    let newCoins, newWinCoins;
+    if (isRefund) {
+      newCoins = currentCoins - amount;
+      newWinCoins = currentWinCoins + winCoinsRefund;
+    } else {
+      newCoins = currentCoins - amount;
+      newWinCoins = Math.min(currentWinCoins, newCoins);
+    }
+    
     await updateDoc(userRef, { coins: newCoins, winCoins: newWinCoins });
     
     const displayTitle = tournamentTitle || `#${tournamentId}`;
@@ -250,10 +258,11 @@ export function useTournaments() {
           return false;
         }
 
-        await secureFetch("/api/join-tournament", {
+        const res = await secureFetch("/api/join-tournament", {
           tournamentId: tournament.id,
           entryFee: entryFee
         });
+        const winCoinsDeducted = res?.deductions?.[user.uid]?.winCoinsDeducted || 0;
 
         await push(ref(database, "joinedPlayers"), {
           tournamentId: tournament.id,
@@ -268,7 +277,8 @@ export function useTournaments() {
           selectedSlot: joinData.selectedSlot,
           createdAt: new Date().toLocaleString(),
           entryFeeDeducted: true,
-          coinsDeducted: entryFee
+          coinsDeducted: entryFee,
+          winCoinsDeducted: winCoinsDeducted
         });
 
         const joinedCount = joinedPlayers.filter(player => player.tournamentId === tournament.id).length + 1;
@@ -384,7 +394,7 @@ export function useTournaments() {
         }
         
         // Deduct coins from all team members securely via backend transaction
-        await secureFetch("/api/join-tournament", {
+        const res = await secureFetch("/api/join-tournament", {
           tournamentId: tournament.id,
           entryFee: entryFee,
           teamMembers: teamMembers
@@ -398,6 +408,7 @@ export function useTournaments() {
         // Save EACH team member as a separate record in joinedPlayers
         for (let i = 0; i < allTeamMembers.length; i++) {
           const member = allTeamMembers[i];
+          const winCoinsDeducted = res?.deductions?.[member.userId]?.winCoinsDeducted || 0;
           
           const memberJoinRecord = {
             tournamentId: tournament.id,
@@ -417,7 +428,8 @@ export function useTournaments() {
             joinedAt: new Date().toLocaleString(),
             entryFeeDeducted: true,
             entryFee: entryFee,
-            coinsDeducted: entryFee
+            coinsDeducted: entryFee,
+            winCoinsDeducted: winCoinsDeducted
           };
           
           await push(ref(database, "joinedPlayers"), memberJoinRecord);
@@ -614,7 +626,8 @@ export function useTournaments() {
       const tournamentPlayers = joinedPlayers.filter(player => player.tournamentId === tournament.id);
       
       for (const player of tournamentPlayers) {
-        await deductUserCoins(player.userId, -Number(tournament.entryFee || 0), tournament.id, tournament.tournamentTitle, true);
+        const winCoinsRefund = Number(player.winCoinsDeducted || 0);
+        await deductUserCoins(player.userId, -Number(tournament.entryFee || 0), tournament.id, tournament.tournamentTitle, true, winCoinsRefund);
         
         await push(ref(database, `notifications/${player.userId}`), {
           title: "❌ MATCH CANCELLED",
@@ -622,19 +635,16 @@ export function useTournaments() {
           time: new Date().toLocaleString(),
           seen: false,
         });
-        
-        if (player.teamMembers && Array.isArray(player.teamMembers)) {
-          for (const member of player.teamMembers) {
-            if (!member.isLeader && member.userId !== player.userId) {
-              await deductUserCoins(member.userId, -Number(tournament.entryFee || 0), tournament.id, tournament.tournamentTitle, true);
-              
-              await push(ref(database, `notifications/${member.userId}`), {
-                title: "❌ MATCH CANCELLED",
-                message: `${tournament.tournamentTitle} was cancelled. Your ${tournament.entryFee} coins refunded successfully.`,
-                time: new Date().toLocaleString(),
-                seen: false,
-              });
-            }
+      }
+      
+      // Delete registrations
+      const joinedRef = ref(database, "joinedPlayers");
+      const snapshot = await get(joinedRef);
+      const data = snapshot.val();
+      if (data) {
+        for (let key of Object.keys(data)) {
+          if (data[key].tournamentId === tournament.id) {
+            await remove(ref(database, `joinedPlayers/${key}`));
           }
         }
       }

@@ -72,6 +72,8 @@ app.post("/api/join-tournament", verifyToken, async (req, res) => {
     ? teamMembers.map(m => m.userId)
     : [uid];
 
+  const deductions = {};
+
   try {
     await db.runTransaction(async (transaction) => {
       const userDocs = [];
@@ -101,6 +103,12 @@ app.post("/api/join-tournament", verifyToken, async (req, res) => {
 
         const newCoins = currentCoins - fee;
         const newWinCoins = Math.min(currentWinCoins, newCoins);
+        const winCoinsDeducted = currentWinCoins - newWinCoins;
+
+        deductions[item.uid] = {
+          winCoinsDeducted,
+          coinsDeducted: fee
+        };
 
         transaction.update(item.ref, {
           coins: newCoins,
@@ -119,7 +127,7 @@ app.post("/api/join-tournament", verifyToken, async (req, res) => {
       );
     }
 
-    return res.json({ success: true, message: "Joined successfully and coins deducted" });
+    return res.json({ success: true, message: "Joined successfully and coins deducted", deductions });
   } catch (error) {
     console.error("Join tournament error:", error);
     return res.status(400).json({ error: error.message });

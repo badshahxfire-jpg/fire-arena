@@ -5,14 +5,22 @@ import { database, db } from "../firebase";
 import { logCoinTransaction } from "../utils/coinHistory";
 import { secureFetch } from "../utils/backendApi";
 
-const deductUserCoins = async (userId, amount, tournamentId = "", tournamentTitle = "", isRefund = false) => {
+const deductUserCoins = async (userId, amount, tournamentId = "", tournamentTitle = "", isRefund = false, winCoinsRefund = 0) => {
   const userRef = doc(db, "users", userId);
   const userSnap = await getDoc(userRef);
   if (userSnap.exists()) {
     const currentCoins = userSnap.data().coins || 0;
     const currentWinCoins = userSnap.data().winCoins || 0;
-    const newCoins = isRefund ? currentCoins + amount : currentCoins - amount;
-    const newWinCoins = isRefund ? currentWinCoins + amount : Math.min(currentWinCoins, newCoins);
+    
+    let newCoins, newWinCoins;
+    if (isRefund) {
+      newCoins = currentCoins + amount;
+      newWinCoins = currentWinCoins + winCoinsRefund;
+    } else {
+      newCoins = currentCoins - amount;
+      newWinCoins = Math.min(currentWinCoins, newCoins);
+    }
+    
     await updateDoc(userRef, { coins: newCoins, winCoins: newWinCoins });
     
     const displayTitle = tournamentTitle || `#${tournamentId}`;
@@ -153,10 +161,11 @@ export function usePerKillTournaments() {
       }
 
       // Deduct coins securely via backend transaction
-      await secureFetch("/api/join-tournament", {
+      const res = await secureFetch("/api/join-tournament", {
         tournamentId: tournament.id,
         entryFee: entryFee
       });
+      const winCoinsDeducted = res?.deductions?.[user.uid]?.winCoinsDeducted || 0;
 
       // Register player
       await push(ref(database, "joinedPerKillPlayers"), {
@@ -171,7 +180,8 @@ export function usePerKillTournaments() {
         selectedSlot: joinData.selectedSlot,
         createdAt: new Date().toLocaleString(),
         entryFeeDeducted: true,
-        coinsDeducted: entryFee
+        coinsDeducted: entryFee,
+        winCoinsDeducted: winCoinsDeducted
       });
 
       // Send Join Notification
@@ -202,7 +212,8 @@ export function usePerKillTournaments() {
       // Refund each player and send notification
       for (let player of tournamentPlayers) {
         if (player.entryFeeDeducted && player.coinsDeducted > 0) {
-          await deductUserCoins(player.userId, player.coinsDeducted, tournament.id, tournament.tournamentTitle, true);
+          const winCoinsRefund = Number(player.winCoinsDeducted || 0);
+          await deductUserCoins(player.userId, player.coinsDeducted, tournament.id, tournament.tournamentTitle, true, winCoinsRefund);
           
           await push(ref(database, `notifications/${player.userId}`), {
             title: "❌ MATCH CANCELLED",

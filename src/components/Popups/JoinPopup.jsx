@@ -679,65 +679,55 @@ export default function JoinPopup({ tournament, user, joinedPlayers, onJoin, joi
             </span>
           </h4>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {Array.from({ length: totalSlots }).map((_, index) => {
-              const slot = index + 1;
-              const bookedTeam = getBookedTeam(slot);
-              const isBooked = !!bookedTeam;
+          <div className="max-h-[350px] overflow-y-auto pr-2 border border-orange-500/10 rounded-2xl p-3 bg-black/40 scrollbar-thin scrollbar-thumb-orange-500/20 scrollbar-track-transparent">
+            <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+              {Array.from({ length: totalSlots }).map((_, index) => {
+                const slot = index + 1;
+                const bookedTeam = getBookedTeam(slot);
+                const isBooked = !!bookedTeam;
 
-              return (
-                <button
-                  key={slot}
-                  disabled={isBooked}
-                  onClick={() => {
-                    if (joinData.selectedSlot === slot) {
-                      handleJoin();
-                    } else {
-                      setJoinData({ ...joinData, selectedSlot: slot });
-                    }
-                  }}
-                  className={`min-h-[95px] rounded-2xl font-black text-sm border transition-all duration-300 p-2 flex items-center justify-center ${
-                    isBooked
-                      ? "bg-red-500/20 text-red-400 border-red-500/30 cursor-not-allowed"
-                      : joinData.selectedSlot === slot
-                      ? "bg-gradient-to-r from-orange-500 to-red-500 text-white border-orange-500 shadow-lg shadow-orange-500/30"
-                      : "bg-[#111] text-white border-orange-500/20 hover:border-orange-500/50"
-                  }`}
-                >
-                  {isBooked ? (
-                    <div className="flex flex-col items-center text-center">
-                      <span className="text-xs font-bold">❌ {isSoloOr1v1 ? "SLOT" : (tournamentType === "DUO" || tournamentType === "2V2" || tournamentType === "3V3") ? "TEAM" : "SQUAD"} {slot}</span>
-                      <span className="text-[11px] font-bold mt-1 text-yellow-400 truncate max-w-full">
-                        {bookedTeam.teamName || bookedTeam.ingameName}
-                      </span>
-                      <span className="text-[9px] text-gray-400 mt-0.5">
-                        {bookedTeam.teamMembers?.length || 1}P Team
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center text-center justify-between h-full w-full py-1">
-                      <span className="text-xs font-bold text-gray-300">
-                        {isSoloOr1v1 ? "SLOT" : (tournamentType === "DUO" || tournamentType === "2V2" || tournamentType === "3V3") ? "TEAM" : "SQUAD"} {slot}
-                      </span>
-                      {joinData.selectedSlot === slot ? (
-                        <span className="mt-1.5 px-3 py-1 bg-white text-orange-600 rounded-lg text-[10px] font-black uppercase tracking-wider animate-pulse shadow-md border border-white">
-                          JOIN NOW
+                return (
+                  <button
+                    key={slot}
+                    disabled={isBooked || joinLoading}
+                    onClick={() => {
+                      if (joinData.selectedSlot === slot) {
+                        handleJoin();
+                      } else {
+                        setJoinData({ ...joinData, selectedSlot: slot });
+                      }
+                    }}
+                    className={`h-[56px] rounded-xl font-bold border transition-all duration-300 p-1 flex items-center justify-center ${
+                      isBooked
+                        ? "bg-red-500/10 text-red-400 border-red-500/20 cursor-not-allowed"
+                        : joinData.selectedSlot === slot
+                        ? "bg-gradient-to-r from-orange-500 to-red-500 text-white border-orange-500 shadow-md shadow-orange-500/30"
+                        : "bg-[#111] text-white border-orange-500/10 hover:border-orange-500/30"
+                    } ${joinLoading && joinData.selectedSlot === slot ? "cursor-wait opacity-80" : ""}`}
+                  >
+                    {isBooked ? (
+                      <div className="flex flex-col items-center justify-center text-center w-full leading-tight">
+                        <span className="text-[10px] font-bold text-red-500">#{slot}</span>
+                        <span className="text-[9px] text-gray-400 truncate max-w-full mt-0.5">
+                          {bookedTeam.teamName || bookedTeam.ingameName}
                         </span>
-                      ) : (
-                        <span className="mt-1.5 px-3 py-1 bg-green-500/10 text-green-400 border border-green-500/20 rounded-lg text-[10px] font-black uppercase tracking-wider hover:bg-green-500/20 hover:text-green-300 transition-all">
-                          JOIN NOW
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center text-center w-full leading-tight">
+                        <span className={`text-[10px] font-bold ${joinData.selectedSlot === slot ? "text-white" : "text-gray-300"}`}>
+                          #{slot}
                         </span>
-                      )}
-                      {!isSoloOr1v1 && (
-                        <span className="text-[8px] text-gray-500 mt-1">
-                          {teamSize}P Team Slot
+                        <span className={`text-[8px] font-black uppercase tracking-wider mt-0.5 ${
+                          joinData.selectedSlot === slot ? "text-white animate-pulse" : "text-green-400"
+                        }`}>
+                          {joinLoading && joinData.selectedSlot === slot ? "JOINING..." : "JOIN NOW"}
                         </span>
-                      )}
-                    </div>
-                  )}
-                </button>
-              );
-            })}
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
