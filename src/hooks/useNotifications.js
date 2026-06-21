@@ -72,10 +72,22 @@ export function useNotifications(user) {
           const latest = sortedData[0];
           const hasNotificationSupport = typeof window !== "undefined" && "Notification" in window;
           if (!latest.seen && hasNotificationSupport && window.Notification.permission === "granted") {
-            new window.Notification(latest.title, {
-              body: latest.message,
-              icon: "/logo.png",
-            });
+            try {
+              new window.Notification(latest.title, {
+                body: latest.message,
+                icon: "/logo.png",
+              });
+            } catch (e) {
+              console.warn("Notification constructor failed, falling back to ServiceWorker:", e);
+              if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.ready.then((registration) => {
+                  registration.showNotification(latest.title, {
+                    body: latest.message,
+                    icon: "/logo.png",
+                  });
+                }).catch(err => console.error("ServiceWorker notification failed:", err));
+              }
+            }
           }
         }
       } else {
