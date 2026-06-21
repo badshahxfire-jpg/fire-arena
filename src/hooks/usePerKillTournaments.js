@@ -174,6 +174,14 @@ export function usePerKillTournaments() {
         coinsDeducted: entryFee
       });
 
+      // Send Join Notification
+      await push(ref(database, `notifications/${user.uid}`), {
+        title: "⚔️ MATCH JOINED",
+        message: `You have joined the Per Kill match "${tournament.tournamentTitle}"! Entry fee ${entryFee} coins deducted.`,
+        time: new Date().toLocaleString(),
+        seen: false,
+      });
+
       alert("Successfully Joined Tournament! 🎉");
       setJoinLoading(false);
       return true;
@@ -191,10 +199,17 @@ export function usePerKillTournaments() {
     try {
       const tournamentPlayers = joinedPlayers.filter(player => player.tournamentId === tournament.id);
       
-      // Refund each player
+      // Refund each player and send notification
       for (let player of tournamentPlayers) {
         if (player.entryFeeDeducted && player.coinsDeducted > 0) {
           await deductUserCoins(player.userId, player.coinsDeducted, tournament.id, tournament.tournamentTitle, true);
+          
+          await push(ref(database, `notifications/${player.userId}`), {
+            title: "❌ MATCH CANCELLED",
+            message: `Per Kill match "${tournament.tournamentTitle}" was cancelled. Your ${player.coinsDeducted} coins refunded successfully.`,
+            time: new Date().toLocaleString(),
+            seen: false,
+          });
         }
       }
 
@@ -226,7 +241,19 @@ export function usePerKillTournaments() {
         roomId,
         roomPassword
       });
-      alert("Room Details Published Successfully! 📡");
+
+      // Send notifications to all joined players
+      const joinedUsers = joinedPlayers.filter(player => player.tournamentId === tournamentId);
+      for (const player of joinedUsers) {
+        await push(ref(database, `notifications/${player.userId}`), {
+          title: "ROOM DETAILS AVAILABLE 🔥",
+          message: `Room ID: ${roomId} | Password: ${roomPassword}`,
+          time: new Date().toLocaleString(),
+          seen: false,
+        });
+      }
+
+      alert("Room Details Published & Notifications Sent 🔥");
       return true;
     } catch (error) {
       console.error(error);

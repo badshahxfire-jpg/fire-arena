@@ -456,6 +456,49 @@ rtdb.ref("perKillTournaments").on("child_added", async (snapshot) => {
   );
 });
 
+// 4. Listen for app updates to notify all users
+let initialUpdateConfigSkip = true;
+rtdb.ref("settings/appUpdate").on("value", async (snapshot) => {
+  const updateData = snapshot.val();
+  if (!updateData) return;
+
+  if (initialUpdateConfigSkip) {
+    initialUpdateConfigSkip = false;
+    return;
+  }
+
+  if (!isServerLive) return;
+
+  console.log("App update configuration changed! Sending global push...", updateData.latestVersion);
+  
+  // Send FCM Push Notification to all devices
+  await sendGlobalPushNotification(
+    "New App Update Available! 🚀",
+    `Version ${updateData.latestVersion} is now live! Please update your app to get the latest features.`
+  );
+
+  // Send In-app Notification to all users
+  try {
+    const usersSnapshot = await db.collection("users").get();
+    const promises = [];
+    usersSnapshot.forEach(docSnap => {
+      const userId = docSnap.id;
+      const userNotifRef = rtdb.ref(`notifications/${userId}`).push();
+      promises.push(userNotifRef.set({
+        title: "🚀 NEW APP UPDATE",
+        message: `Version ${updateData.latestVersion} is available. Release notes: ${updateData.releaseNotes || 'Bug fixes and performance improvements.'}`,
+        time: new Date().toLocaleString(),
+        seen: false,
+        timestamp: Date.now()
+      }));
+    });
+    await Promise.all(promises);
+    console.log("Global in-app notifications created successfully for update.");
+  } catch (err) {
+    console.error("Error creating global in-app notifications:", err);
+  }
+});
+
 // Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Secure Server running on port ${PORT}`));
