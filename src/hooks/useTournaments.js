@@ -465,6 +465,11 @@ export function useTournaments() {
           }
         }
         
+        const deductionDetails = allTeamMembers.map(member => ({
+          name: member.isLeader ? `${member.ingameName} (Leader)` : member.ingameName,
+          amount: entryFee
+        }));
+
         let deductionMessage = `✅ Team "${teamName}" successfully joined!\n\n`;
         deductionMessage += `💰 Entry fee: ${entryFee} coins deducted from each team member.\n`;
         deductionMessage += `👥 Total deducted: ${entryFee * teamSize} coins\n\n`;
