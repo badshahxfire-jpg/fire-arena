@@ -181,25 +181,47 @@ export default function UpcomingPerKillMatches({
 
 
       {upcomingTournaments.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8 justify-items-center">
-          {upcomingTournaments.map((tournament) => {
-            const joinedCount = joinedPlayers.filter(p => p.tournamentId === tournament.id).length;
-            const alreadyJoined = joinedPlayers.some(p => p.tournamentId === tournament.id && p.userId === user?.uid);
+        <div className="relative">
+          {/* Slide buttons only visible on desktop */}
+          <button
+            onClick={() => {
+              document.getElementById("upcomingPerKillSlider")?.scrollBy({ left: -350, behavior: "smooth" });
+            }}
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-orange-500/10 hover:bg-orange-500 border border-orange-500/30 hover:text-black text-orange-400 w-12 h-12 rounded-full font-bold shadow-lg hover:scale-105 active:scale-95 duration-300 transition-all hidden md:flex items-center justify-center"
+          >
+            ◀
+          </button>
+          <button
+            onClick={() => {
+              document.getElementById("upcomingPerKillSlider")?.scrollBy({ left: 350, behavior: "smooth" });
+            }}
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-orange-500/10 hover:bg-orange-500 border border-orange-500/30 hover:text-black text-orange-400 w-12 h-12 rounded-full font-bold shadow-lg hover:scale-105 active:scale-95 duration-300 transition-all hidden md:flex items-center justify-center"
+          >
+            ▶
+          </button>
 
-            return (
-              <div 
-                key={tournament.id}
-                className="w-full max-w-[360px] sm:max-w-none bg-glass rounded-2xl sm:rounded-[24px] p-3.5 sm:p-5 border border-glass-orange shadow-glass-glow hover:shadow-orange-500/10 hover:-translate-y-1 hover:border-orange-500/30 transition-all duration-300 flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex justify-between items-start mb-3 sm:mb-4">
-                    <h3 className="text-purple-400 text-base sm:text-lg font-black tracking-wider line-clamp-1 pr-2">
-                      {tournament.tournamentTitle}
-                    </h3>
-                    <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold tracking-widest flex-shrink-0 mt-0.5">
-                      UPCOMING
-                    </span>
-                  </div>
+          <div
+            id="upcomingPerKillSlider"
+            className="flex gap-4 md:gap-8 overflow-x-auto scroll-smooth pb-4 px-4 md:px-14 custom-scrollbar no-scrollbar snap-x snap-mandatory"
+          >
+            {upcomingTournaments.map((tournament) => {
+              const joinedCount = joinedPlayers.filter(p => p.tournamentId === tournament.id).length;
+              const alreadyJoined = joinedPlayers.some(p => p.tournamentId === tournament.id && p.userId === user?.uid);
+
+              return (
+                <div 
+                  key={tournament.id}
+                  className="w-[75vw] sm:w-[260px] md:w-[320px] max-w-[320px] md:max-w-[340px] flex-shrink-0 snap-center bg-glass rounded-[20px] md:rounded-[24px] p-3 md:p-5 border border-glass-orange shadow-glass-glow hover:shadow-orange-500/10 hover:-translate-y-1 hover:border-orange-500/30 transition-all duration-300 flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="flex justify-between items-start mb-3 sm:mb-4">
+                      <h3 className="text-purple-400 text-base sm:text-lg font-black tracking-wider line-clamp-1 pr-2">
+                        {tournament.tournamentTitle}
+                      </h3>
+                      <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold tracking-widest flex-shrink-0 mt-0.5">
+                        UPCOMING
+                      </span>
+                    </div>
 
                   <div className="flex items-center gap-2 mb-3 sm:mb-4">
                     <span className="text-orange-400 font-extrabold text-[10px] sm:text-xs bg-orange-500/10 px-2 py-1 rounded border border-orange-500/20">
@@ -217,6 +239,16 @@ export default function UpcomingPerKillMatches({
                         📅 {new Date(`${tournament.matchDate}T${tournament.matchTime}`).toLocaleString("en-IN", {
                           day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", hour12: true,
                         })}
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-end">
+                      <span className="text-gray-500 text-[9px] sm:text-[10px] uppercase tracking-wider mb-0.5">Room ID Live</span>
+                      <span className="text-yellow-400 font-bold text-glow-yellow">
+                        ⚡ {
+                          new Date(new Date(`${tournament.matchDate}T${tournament.matchTime}`).getTime() - 10 * 60 * 1000).toLocaleString("en-IN", {
+                            hour: "2-digit", minute: "2-digit", hour12: true,
+                          })
+                        }
                       </span>
                     </div>
                   </div>
@@ -370,6 +402,7 @@ export default function UpcomingPerKillMatches({
               </div>
             );
           })}
+          </div>
         </div>
       ) : (
         <div className="text-center py-20 bg-black/40 border border-orange-500/10 rounded-3xl text-gray-400">

@@ -268,10 +268,28 @@ export function usePerKillTournaments() {
       await update(ref(database, `perKillTournaments/${tournamentId}`), {
         matchTime: newDateTime
       });
-      alert("Match time updated successfully!");
+
+      // Find the tournament details
+      const tournament = liveTournaments.find(t => t.id === tournamentId);
+      const title = tournament ? tournament.tournamentTitle : `#${tournamentId}`;
+
+      // Notify all joined players
+      const joinedUsers = joinedPlayers.filter(player => player.tournamentId === tournamentId);
+      for (const player of joinedUsers) {
+        await push(ref(database, `notifications/${player.userId}`), {
+          title: "⏰ MATCH TIME UPDATED",
+          message: `The match time for "${title}" (Per Kill) has been updated to: ${newDateTime}.`,
+          time: new Date().toLocaleString(),
+          seen: false,
+        });
+      }
+
+      alert("Match time updated & notifications sent! ⏰");
+      return true;
     } catch (error) {
       console.error(error);
       alert("Error updating match time: " + error.message);
+      return false;
     }
   };
 

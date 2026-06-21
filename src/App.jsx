@@ -934,6 +934,7 @@ export default function FireBaadshahArena() {
         onShowReferral={() => setShowReferral(true)}
         onShowLoyal={() => setShowLoyal(true)}
         onShowBonusWinners={() => setShowBonusWinners(true)}
+        apkUrl={updateConfig?.updateUrl}
       />
 
       {/* Hero Section */}

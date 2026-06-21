@@ -18,7 +18,8 @@ export default function Navbar({
   onShowRegister,
   onShowReferral,
   onShowLoyal,
-  onShowBonusWinners
+  onShowBonusWinners,
+  apkUrl
 }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -45,7 +46,12 @@ export default function Navbar({
           
           {/* Hamburger Icon for Mobile */}
           {user && (
-            <div className="flex md:hidden items-center">
+            <div className="flex items-center gap-3 md:hidden">
+              {!window.Capacitor && apkUrl && (
+                <a href={apkUrl} target="_blank" rel="noopener noreferrer" className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white border border-blue-500/30 px-3 py-2 rounded-xl font-bold text-xs flex items-center gap-1 shadow-md shadow-blue-500/20">
+                  📲 APP
+                </a>
+              )}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 className="text-orange-400 p-2 border border-orange-500/30 rounded-xl hover:bg-orange-500/10 transition-all"
@@ -66,7 +72,12 @@ export default function Navbar({
         {user ? (
           <>
             {/* Desktop View: All buttons */}
-            <div className="hidden md:flex items-center justify-center gap-3 font-gaming text-sm">
+            <div className="hidden md:flex items-center justify-center gap-3 font-gaming text-sm flex-wrap">
+              {!window.Capacitor && apkUrl && (
+                <a href={apkUrl} target="_blank" rel="noopener noreferrer" className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white border border-blue-500/30 hover:from-blue-400 hover:to-indigo-500 px-4 py-2 rounded-2xl font-bold transition-all flex items-center gap-1 shadow-md shadow-blue-500/20">
+                  📲 DOWNLOAD APP
+                </a>
+              )}
               <button onClick={onShowTutorial} className="bg-red-500/10 text-red-400 border border-red-500/20 hover:border-red-500/50 hover:bg-red-500/20 px-4 py-2 rounded-2xl font-bold transition-all">📺 TUTORIAL</button>
               <button onClick={onShowWallet} className="bg-orange-500/10 text-orange-400 border border-orange-500/20 hover:border-orange-500/50 hover:bg-orange-500/20 px-4 py-2 rounded-2xl font-bold transition-all">🪙 {coins} WALLET</button>
               <button onClick={onShowContact} className="bg-green-500/10 text-green-400 border border-green-500/20 hover:border-green-500/50 hover:bg-green-500/20 px-4 py-2 rounded-2xl font-bold transition-all">CONTACT</button>
@@ -111,6 +122,11 @@ export default function Navbar({
             {/* Mobile Dropdown Menu */}
             {isMobileMenuOpen && (
               <div className="md:hidden absolute top-full left-0 right-0 bg-black/95 backdrop-blur-xl border-b border-orange-500/30 p-4 flex flex-col gap-3 font-gaming text-sm shadow-2xl z-50">
+                {!window.Capacitor && apkUrl && (
+                  <a href={apkUrl} target="_blank" rel="noopener noreferrer" className="w-full text-center bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-3 rounded-xl font-bold">
+                    📲 DOWNLOAD APP (APK)
+                  </a>
+                )}
                 <button onClick={() => { onShowTutorial(); setIsMobileMenuOpen(false); }} className="w-full text-left bg-red-500/10 text-red-400 border border-red-500/20 p-3 rounded-xl font-bold">📺 TUTORIAL</button>
                 <button onClick={() => { onShowContact(); setIsMobileMenuOpen(false); }} className="w-full text-left bg-green-500/10 text-green-400 border border-green-500/20 p-3 rounded-xl font-bold">CONTACT</button>
                 <button onClick={() => { onShowHistory(); setIsMobileMenuOpen(false); }} className="w-full text-left bg-blue-500/10 text-blue-400 border border-blue-500/20 p-3 rounded-xl font-bold">MATCHES HISTORY</button>
@@ -122,7 +138,12 @@ export default function Navbar({
             )}
           </>
         ) : (
-          <div className="flex gap-3 md:gap-4 font-gaming">
+          <div className="flex gap-3 md:gap-4 font-gaming items-center">
+            {!window.Capacitor && apkUrl && (
+              <a href={apkUrl} target="_blank" rel="noopener noreferrer" className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white border border-blue-500/30 hover:from-blue-400 hover:to-indigo-500 px-4 py-2 rounded-2xl font-bold transition-all flex items-center gap-1 shadow-md shadow-blue-500/20 text-sm md:text-base">
+                📲 DOWNLOAD APP
+              </a>
+            )}
             <button onClick={onShowLogin} className="border border-orange-500/30 text-orange-400 px-4 py-2 md:px-6 md:py-2.5 rounded-xl md:rounded-2xl hover:bg-orange-500/10 font-semibold text-sm md:text-base transition-all">LOGIN</button>
             <button onClick={onShowRegister} className="bg-gradient-to-r from-orange-500 to-red-600 text-black hover:from-orange-600 hover:to-red-700 px-4 py-2 md:px-6 md:py-2.5 rounded-xl md:rounded-2xl font-bold shadow-md text-sm md:text-base transition-all">REGISTER</button>
           </div>
