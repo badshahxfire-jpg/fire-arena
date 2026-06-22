@@ -53,12 +53,130 @@ const THEMES = [
 
 // Generate CSS override for a theme based on hue rotation
 function generateThemeCSS(theme) {
-  if (theme.id === "fire") return ""; // default — no overrides
-
   const hue = theme.hue;
 
-  // We use CSS hue-rotate on specific color-bearing elements
-  // and override the body background
+  // Structural aesthetic overrides per theme
+  let structuralCSS = "";
+
+  if (theme.id === "ocean") {
+    // Ocean Theme: Sleek Glassmorphism (Frosted glass, teal/blue glow, round organic corners)
+    structuralCSS = `
+      /* Font */
+      * {
+        font-family: 'Outfit', sans-serif !important;
+      }
+      /* Cards & Containers */
+      .cyber-card, 
+      .bg-black, 
+      .bg-\\[\\#111\\], 
+      .bg-black\\/40, 
+      .bg-black\\/60, 
+      .bg-\\[\\#1a1a2e\\] {
+        border-radius: 24px !important;
+        backdrop-filter: blur(16px) !important;
+        background-color: rgba(5, 12, 28, 0.75) !important;
+        border: 1.5px solid rgba(14, 165, 233, 0.2) !important;
+        box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.6), 0 0 20px rgba(14, 165, 233, 0.08) !important;
+      }
+      /* Buttons, Inputs, Selectors */
+      .cyber-btn, 
+      button, 
+      input, 
+      select, 
+      .rounded-3xl, 
+      .rounded-2xl, 
+      .rounded-xl {
+        border-radius: 14px !important;
+      }
+    `;
+  } else if (theme.id === "emerald") {
+    // Emerald Theme: Retro Terminal / Matrix (Sharp edges, monospace code styling, flat grid borders)
+    structuralCSS = `
+      @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+      /* Font */
+      * {
+        font-family: 'Share Tech Mono', monospace !important;
+      }
+      /* Cards & Containers */
+      .cyber-card, 
+      .bg-black, 
+      .bg-\\[\\#111\\], 
+      .bg-black\\/40, 
+      .bg-black\\/60, 
+      .bg-\\[\\#1a1a2e\\] {
+        border-radius: 0px !important;
+        background-color: #020805 !important;
+        border: 1px solid rgba(16, 185, 129, 0.5) !important;
+        box-shadow: 0 0 10px rgba(16, 185, 129, 0.1) !important;
+      }
+      /* Buttons, Inputs, Selectors */
+      .cyber-btn, 
+      button, 
+      input, 
+      select, 
+      .rounded-3xl, 
+      .rounded-2xl, 
+      .rounded-xl {
+        border-radius: 0px !important;
+        border: 1px solid rgba(16, 185, 129, 0.7) !important;
+      }
+    `;
+  } else if (theme.id === "royal") {
+    // Royal Theme: Premium Violet Neon Glow (Curved edges, intense purple drop shadows)
+    structuralCSS = `
+      /* Cards & Containers */
+      .cyber-card, 
+      .bg-black, 
+      .bg-\\[\\#111\\], 
+      .bg-black\\/40, 
+      .bg-black\\/60, 
+      .bg-\\[\\#1a1a2e\\] {
+        border-radius: 20px !important;
+        border: 1.5px solid rgba(168, 85, 247, 0.4) !important;
+        box-shadow: 0 15px 45px 0 rgba(0, 0, 0, 0.7), 0 0 25px rgba(168, 85, 247, 0.25) !important;
+      }
+      /* Buttons, Inputs, Selectors */
+      .cyber-btn, 
+      button, 
+      input, 
+      select, 
+      .rounded-3xl, 
+      .rounded-2xl, 
+      .rounded-xl {
+        border-radius: 12px !important;
+      }
+    `;
+  } else if (theme.id === "gold") {
+    // Gold Theme: Luxury Gold (Slightly rounded, sleek gold hairline borders)
+    structuralCSS = `
+      /* Font */
+      * {
+        font-family: 'Rajdhani', sans-serif !important;
+      }
+      /* Cards & Containers */
+      .cyber-card, 
+      .bg-black, 
+      .bg-\\[\\#111\\], 
+      .bg-black\\/40, 
+      .bg-black\\/60, 
+      .bg-\\[\\#1a1a2e\\] {
+        border-radius: 6px !important;
+        border: 1px solid rgba(234, 179, 8, 0.5) !important;
+        box-shadow: 0 4px 20px 0 rgba(0,0,0,0.8), 0 0 15px rgba(234, 179, 8, 0.15) !important;
+      }
+      /* Buttons, Inputs, Selectors */
+      .cyber-btn, 
+      button, 
+      input, 
+      select, 
+      .rounded-3xl, 
+      .rounded-2xl, 
+      .rounded-xl {
+        border-radius: 4px !important;
+      }
+    `;
+  }
+
   return `
     /* Theme: ${theme.name} */
     body {
@@ -103,6 +221,8 @@ function generateThemeCSS(theme) {
     .text-glow-orange {
       text-shadow: 0 0 8px hsla(${hue}, 90%, 53%, 0.5) !important;
     }
+
+    ${structuralCSS}
   `;
 }
 
