@@ -118,6 +118,9 @@ export default function Navbar({
                 <button onClick={onShowBonusWinners} className="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 py-2.5 rounded-xl font-bold flex-1 text-center truncate flex items-center justify-center gap-1">
                   🎁 BONUS WINNERS
                 </button>
+                <button onClick={onShowBlocked} className="bg-red-500/10 text-red-400 border border-red-500/20 py-2.5 rounded-xl font-bold flex-1 text-center truncate flex items-center justify-center gap-1">
+                  🚫 BLOCKED
+                </button>
               </div>
             </div>
 
@@ -133,7 +136,6 @@ export default function Navbar({
                 <button onClick={() => { onShowContact(); setIsMobileMenuOpen(false); }} className="w-full text-left bg-green-500/10 text-green-400 border border-green-500/20 p-3 rounded-xl font-bold">CONTACT</button>
                 <button onClick={() => { onShowHistory(); setIsMobileMenuOpen(false); }} className="w-full text-left bg-blue-500/10 text-blue-400 border border-blue-500/20 p-3 rounded-xl font-bold">MATCHES HISTORY</button>
                 <button onClick={() => { onShowPerKillHistory(); setIsMobileMenuOpen(false); }} className="w-full text-left bg-red-500/10 text-red-400 border border-red-500/20 p-3 rounded-xl font-bold">⚔️ PER KILL HISTORY</button>
-                <button onClick={() => { onShowBlocked(); setIsMobileMenuOpen(false); }} className="w-full text-left bg-red-500/10 text-red-400 border border-red-500/20 p-3 rounded-xl font-bold">🚫 BLOCKED PLAYERS</button>
                 <button onClick={() => { onShowProfile(); setIsMobileMenuOpen(false); }} className="w-full text-left bg-purple-500/10 text-purple-400 border border-purple-500/20 p-3 rounded-xl font-bold">PROFILE</button>
                 {isAdmin && <div className="w-full text-center bg-green-500/20 text-green-400 border border-green-500/30 p-3 rounded-xl font-bold">ADMIN</div>}
                 <button onClick={() => { onLogout(); setIsMobileMenuOpen(false); }} className="w-full bg-gradient-to-r from-red-600 to-rose-700 text-white p-3 rounded-xl font-bold text-center mt-2">LOGOUT</button>
