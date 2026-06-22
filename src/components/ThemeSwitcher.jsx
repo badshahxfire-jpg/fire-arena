@@ -266,6 +266,12 @@ export default function ThemeSwitcher() {
       style.textContent = css;
       document.head.appendChild(style);
     }
+
+    // Set attribute on body for other components to read (like background particles)
+    document.body.setAttribute("data-theme", theme.id);
+    
+    // Dispatch custom event
+    window.dispatchEvent(new CustomEvent("theme-change", { detail: theme.id }));
   };
 
   const handleSelect = (theme) => {

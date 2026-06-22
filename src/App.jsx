@@ -65,6 +65,7 @@ import LivePerKillMatches from "./components/LivePerKillMatches";
 import AnnouncementBanner from "./components/AnnouncementBanner";
 import AdminAnnouncements from "./components/Admin/AdminAnnouncements";
 import ThemeSwitcher from "./components/ThemeSwitcher";
+import ThemeParticles from "./components/ThemeParticles";
 
 const ADMIN_UID = "FAVc9zfAgoYs1d1BDr2EoDwSw0x1";
 
@@ -903,6 +904,9 @@ export default function FireBaadshahArena() {
 
   return (
     <div className="min-h-screen text-white overflow-x-hidden font-sans relative">
+      {/* Dynamic Theme Particles background */}
+      <ThemeParticles />
+
       {/* Animated Background */}
       <div className="fixed inset-0 -z-10">
         <div className="absolute inset-0 bg-gradient-main"></div>
