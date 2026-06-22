@@ -11,6 +11,15 @@ export default function TournamentWinners() {
   const [userNames, setUserNames] = useState({});
   const [playerResults, setPlayerResults] = useState([]);
 
+  useEffect(() => {
+    if (showDetails) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => { document.body.style.overflow = "unset"; };
+  }, [showDetails]);
+
   // Subscribe to Firestore users collection for real-time name resolution
   useEffect(() => {
     const usersRef = collection(db, "users");

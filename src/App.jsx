@@ -373,6 +373,18 @@ export default function FireBaadshahArena() {
       window.history.back();
       hasPushedStateRef.current = false;
     }
+
+    // Disable background scrolling when any popup is open
+    if (anyOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = "unset";
+    };
   }, [
     showLogin,
     showRegister,

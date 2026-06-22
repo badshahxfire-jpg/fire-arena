@@ -12,6 +12,15 @@ export default function Leaderboard() {
   const [perKillResults, setPerKillResults] = useState([]);
   const [leaderboardTab, setLeaderboardTab] = useState("classic"); // "classic" or "perkill"
 
+  useEffect(() => {
+    if (showDetailsPopup) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => { document.body.style.overflow = "unset"; };
+  }, [showDetailsPopup]);
+
   // Subscribe to Firestore users collection for real-time updates
   useEffect(() => {
     const usersRef = collection(db, "users");

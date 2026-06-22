@@ -6,6 +6,16 @@ export default function AdminMatchResults({ isAdmin }) {
   const [matchResults, setMatchResults] = useState([]);
   const [selectedTournament, setSelectedTournament] = useState(null);
   const [showDetailsPopup, setShowDetailsPopup] = useState(false);
+
+  useEffect(() => {
+    if (showDetailsPopup) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => { document.body.style.overflow = "unset"; };
+  }, [showDetailsPopup]);
+
   const [showUidPopup, setShowUidPopup] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [loading, setLoading] = useState(true);
