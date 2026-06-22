@@ -68,6 +68,7 @@ import AdminAnnouncements from "./components/Admin/AdminAnnouncements";
 import ThemeSwitcher from "./components/ThemeSwitcher";
 import ThemeParticles from "./components/ThemeParticles";
 import ZoomControl from "./components/ZoomControl";
+import PremiumLayout from "./components/Premium/PremiumLayout";
 
 const ADMIN_UID = "FAVc9zfAgoYs1d1BDr2EoDwSw0x1";
 
@@ -103,6 +104,15 @@ export default function FireBaadshahArena() {
   const [selectedPublishTournament, setSelectedPublishTournament] = useState(null);
   const [currentSystemMode, setCurrentSystemMode] = useState("classic"); // "classic" or "perkill"
   const [selectedPerKillMode, setSelectedPerKillMode] = useState("SOLO");
+
+  // UI Theme Mode
+  const [uiMode, setUiMode] = useState(() => {
+    return localStorage.getItem("uiMode") || "premium";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("uiMode", uiMode);
+  }, [uiMode]);
 
   // App Update States
   const [showUpdatePopup, setShowUpdatePopup] = useState(false);
@@ -929,8 +939,32 @@ export default function FireBaadshahArena() {
       {/* Dynamic Theme Particles background */}
       <ThemeParticles />
 
-      {/* Animated Background */}
-      <div className="fixed inset-0 -z-10">
+      {uiMode === "premium" ? (
+        <PremiumLayout 
+          user={user}
+          coins={coins}
+          unseenCount={unseenCount}
+          tournaments={currentSystemMode === "classic" ? liveTournaments : livePerKillTournaments}
+          analytics={analytics}
+          onLoginClick={() => setShowLogin(true)}
+          onRegisterClick={() => setShowRegister(true)}
+          onWalletClick={() => setShowWallet(true)}
+          onNotificationsClick={() => setShowNotifications(true)}
+          onProfileClick={() => setShowProfile(true)}
+          onWithdrawClick={() => setShowWithdrawPopup(true)}
+          onHistoryClick={() => setShowHistory(true)}
+          onReferralClick={() => setShowReferral(true)}
+          onJoinClick={(tournament) => {
+            setSelectedTournament(tournament);
+            setShowJoinPopup(true);
+          }}
+          onLeaderboardClick={() => {}} // Could scroll or link to leaderboard
+          onToggleUI={() => setUiMode("classic")}
+        />
+      ) : (
+        <>
+          {/* Animated Background */}
+          <div className="fixed inset-0 -z-10">
         <div className="absolute inset-0 bg-gradient-main"></div>
         <div className="absolute inset-0 bg-grid"></div>
         
@@ -971,8 +1005,16 @@ export default function FireBaadshahArena() {
         </div>
       </div>
 
-      {/* Navbar */}
-      <Navbar
+          {/* Toggle UI Button (Floating) */}
+          <button 
+            onClick={() => setUiMode("premium")}
+            className="fixed top-4 right-4 z-50 bg-gradient-to-r from-orange-500 to-yellow-500 text-black px-4 py-2 rounded-xl font-black shadow-lg hover:scale-105 transition"
+          >
+            🔥 PREMIUM UI
+          </button>
+
+          {/* Navbar */}
+          <Navbar
         user={user}
         coins={coins}
         notifications={notifications}
@@ -1218,6 +1260,8 @@ export default function FireBaadshahArena() {
           {adminPage === "app_update" && <AppUpdateAdmin />}
 
         </>
+      )}
+      </>
       )}
 
       {/* Popups */}
