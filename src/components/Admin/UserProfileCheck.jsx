@@ -1,14 +1,104 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import UserHistoryPopup from "./UserHistoryPopup";
 import CoinHistoryPopup from "../Popups/CoinHistoryPopup";
 
-export default function UserProfileCheck({ onSearchUser, searchedUser, onBlockUser, onAddCoins, onDeductCoins }) {
+export default function UserProfileCheck({ allUsers = [], onSearchUser, searchedUser, onBlockUser, onAddCoins, onDeductCoins }) {
   const [searchUid, setSearchUid] = useState("");
   const [manualCoins, setManualCoins] = useState("");
   const [localSearchedUser, setLocalSearchedUser] = useState(null);
   const [showHistoryPopup, setShowHistoryPopup] = useState(false);
   const [showCoinHistoryPopup, setShowCoinHistoryPopup] = useState(false);
   const [loadingAction, setLoadingAction] = useState(null);
+
+  // Users table state
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all"); // "all", "active", "blocked"
+  const [ageFilter, setAgeFilter] = useState("all"); // "all", "new", "old"
+  const [sortBy, setSortBy] = useState("coins_desc"); // "coins_desc", "coins_asc", "name_asc", "name_desc", "registered_desc", "registered_asc"
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+
+  // Helper to parse createdAt date strings or Firestore Timestamp objects
+  const parseCreatedAt = (createdAt) => {
+    if (!createdAt) return 0;
+    if (typeof createdAt === "object" && createdAt !== null) {
+      if (typeof createdAt.toDate === "function") {
+        return createdAt.toDate().getTime();
+      }
+      if (createdAt.seconds !== undefined) {
+        return createdAt.seconds * 1000;
+      }
+      return 0;
+    }
+
+    const dateStr = String(createdAt);
+    let time = Date.parse(dateStr);
+    if (!isNaN(time)) return time;
+    try {
+      const cleaned = dateStr.replace(/,/g, '').trim();
+      const parts = cleaned.split(/\s+/);
+      if (parts.length >= 1) {
+        const dateParts = parts[0].split('/');
+        if (dateParts.length === 3) {
+          const day = parseInt(dateParts[0], 10);
+          const month = parseInt(dateParts[1], 10) - 1;
+          const year = parseInt(dateParts[2], 10);
+          
+          let hours = 0, minutes = 0, seconds = 0;
+          if (parts[1]) {
+            const timeParts = parts[1].split(':');
+            hours = parseInt(timeParts[0] || '0', 10);
+            minutes = parseInt(timeParts[1] || '0', 10);
+            seconds = parseInt(timeParts[2] || '0', 10);
+          }
+          const d = new Date(year, month, day, hours, minutes, seconds);
+          if (!isNaN(d.getTime())) return d.getTime();
+        }
+      }
+    } catch (e) {}
+    return 0;
+  };
+
+  // Helper to format createdAt dates safely for React rendering
+  const formatCreatedAt = (createdAt) => {
+    if (!createdAt) return "";
+    if (typeof createdAt === "object" && createdAt !== null) {
+      if (typeof createdAt.toDate === "function") {
+        return createdAt.toDate().toLocaleString();
+      }
+      if (createdAt.seconds !== undefined) {
+        return new Date(createdAt.seconds * 1000).toLocaleString();
+      }
+      return "[Timestamp]";
+    }
+    return String(createdAt);
+  };
+
+  const isNewUser = (user) => {
+    if (!user.createdAt) return false;
+    const time = parseCreatedAt(user.createdAt);
+    if (time > 0) {
+      const diffMs = Date.now() - time;
+      const diffDays = diffMs / (1000 * 60 * 60 * 24);
+      return diffDays <= 7; // Consider new if registered in last 7 days
+    }
+    return false;
+  };
+
+  const isTodayUser = (user) => {
+    if (!user.createdAt) return false;
+    const time = parseCreatedAt(user.createdAt);
+    if (time > 0) {
+      const userDate = new Date(time);
+      const today = new Date();
+      return (
+        userDate.getDate() === today.getDate() &&
+        userDate.getMonth() === today.getMonth() &&
+        userDate.getFullYear() === today.getFullYear()
+      );
+    }
+    return false;
+  };
 
   const handleSearch = async () => {
     if (!searchUid) {
@@ -19,132 +109,445 @@ export default function UserProfileCheck({ onSearchUser, searchedUser, onBlockUs
     setLocalSearchedUser(result);
   };
 
-  const displayUser = searchedUser || localSearchedUser;
+  const displayUser = useMemo(() => {
+    const currentUid = searchUid || (searchedUser?.uid) || (localSearchedUser?.uid);
+    if (!currentUid) return null;
+    return allUsers.find(u => u.uid === currentUid) || searchedUser || localSearchedUser;
+  }, [searchUid, searchedUser, localSearchedUser, allUsers]);
+
+  // Filter and Sort Users
+  const filteredAndSortedUsers = useMemo(() => {
+    let result = [...allUsers];
+
+    // Search filter
+    if (searchTerm.trim()) {
+      const q = searchTerm.toLowerCase();
+      result = result.filter(
+        (u) =>
+          (u.name && u.name.toLowerCase().includes(q)) ||
+          (u.email && u.email.toLowerCase().includes(q)) ||
+          (u.uid && u.uid.toLowerCase().includes(q))
+      );
+    }
+
+    // Status filter
+    if (statusFilter === "active") {
+      result = result.filter((u) => !u.blocked);
+    } else if (statusFilter === "blocked") {
+      result = result.filter((u) => u.blocked);
+    }
+
+    // Age filter
+    if (ageFilter === "today") {
+      result = result.filter((u) => isTodayUser(u));
+    } else if (ageFilter === "new") {
+      result = result.filter((u) => isNewUser(u));
+    } else if (ageFilter === "old") {
+      result = result.filter((u) => !isNewUser(u));
+    }
+
+    // Sort
+    result.sort((a, b) => {
+      if (sortBy === "coins_desc") {
+        return (b.coins || 0) - (a.coins || 0);
+      } else if (sortBy === "coins_asc") {
+        return (a.coins || 0) - (b.coins || 0);
+      } else if (sortBy === "name_asc") {
+        return (a.name || "").localeCompare(b.name || "");
+      } else if (sortBy === "name_desc") {
+        return (b.name || "").localeCompare(a.name || "");
+      } else if (sortBy === "registered_desc") {
+        return parseCreatedAt(b.createdAt) - parseCreatedAt(a.createdAt);
+      } else if (sortBy === "registered_asc") {
+        return parseCreatedAt(a.createdAt) - parseCreatedAt(b.createdAt);
+      }
+      return 0;
+    });
+
+    return result;
+  }, [allUsers, searchTerm, statusFilter, ageFilter, sortBy]);
+
+  const totalPages = Math.ceil(filteredAndSortedUsers.length / itemsPerPage);
+  const paginatedUsers = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredAndSortedUsers.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredAndSortedUsers, currentPage]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, ageFilter, sortBy]);
+
+  const handleSelectUser = (user) => {
+    setSearchUid(user.uid);
+    setLocalSearchedUser(user);
+  };
 
   return (
-    <section className="max-w-5xl mx-auto px-6 py-10">
-      <div className="bg-[#111] rounded-[40px] p-10 border border-purple-500/10 cyber-card">
-        <h2 className="text-4xl font-black text-purple-400 mb-8 cyber-neon">👤 USER PROFILE CHECK</h2>
+    <section className="max-w-7xl mx-auto px-4 py-10">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        {/* Left Column: User Profile Check & Control */}
+        <div className="lg:col-span-5 flex flex-col gap-6">
+          <div className="bg-[#111] rounded-[30px] p-6 sm:p-8 border border-purple-500/10 cyber-card h-full flex flex-col justify-between">
+            <div>
+              <h2 className="text-3xl font-black text-purple-400 mb-6 cyber-neon">👤 USER CONTROL PANEL</h2>
 
-        {/* Search Box */}
-        <div className="flex gap-4">
-          <input
-            type="text"
-            placeholder="Enter User UID"
-            value={searchUid}
-            onChange={(e) => setSearchUid(e.target.value)}
-            className="flex-1 bg-black rounded-2xl px-5 py-4 outline-none border border-purple-500/20 focus:border-purple-500 text-white"
-          />
-          <button
-            onClick={async () => {
-              setLoadingAction("search");
-              await handleSearch();
-              setLoadingAction(null);
-            }}
-            disabled={loadingAction === "search"}
-            className="bg-purple-500 text-black px-8 py-4 rounded-2xl font-black cyber-btn hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-wait"
-          >
-            {loadingAction === "search" ? "⏳ SEARCHING..." : "🔍 SEARCH USER"}
-          </button>
-        </div>
-
-        {/* User Details - Shows User Name */}
-        {displayUser && (
-          <div className="bg-black rounded-3xl p-6 mt-8 border border-purple-500/20">
-            
-            {/* User Name - Added Here */}
-            <div className="flex items-center gap-3 mb-4 pb-3 border-b border-purple-500/20">
-              <span className="text-4xl">👤</span>
-              <div>
-                <p className="text-gray-400 text-sm">PLAYER NAME</p>
-                <p className="text-2xl font-black text-orange-500">{displayUser.name || "Not Set"}</p>
-              </div>
-            </div>
-            
-            {/* Email */}
-            <p className="text-orange-400 text-lg mb-2">📧 Email: {displayUser.email}</p>
-            
-            {/* UID */}
-            <p className="text-blue-400 mt-2 break-all">🆔 UID: {searchUid}</p>
-            
-            {/* Coins */}
-            <p className="text-green-400 mt-3 text-2xl font-black cyber-prize">🪙 Coins: {displayUser.coins || 0}</p>
-            
-            {/* Status */}
-            <p className={`mt-3 font-bold ${displayUser.blocked ? "text-red-400" : "text-green-400"}`}>
-              🚫 Status: {displayUser.blocked ? "BLOCKED" : "ACTIVE"}
-            </p>
-
-            {/* Button Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-6">
-              <button
-                onClick={async () => {
-                  setLoadingAction("block");
-                  await onBlockUser(searchUid, displayUser.blocked);
-                  setLoadingAction(null);
-                }}
-                disabled={loadingAction === "block"}
-                className={`w-full py-3 rounded-2xl font-black cyber-btn transition-all disabled:opacity-50 disabled:cursor-wait ${
-                  displayUser.blocked 
-                    ? "bg-green-500 hover:bg-green-600 text-black" 
-                    : "bg-red-500 hover:bg-red-600 text-white"
-                }`}
-              >
-                {loadingAction === "block" ? "⏳ PROCESSING..." : displayUser.blocked ? "🔓 UNBLOCK USER" : "🔒 BLOCK USER"}
-              </button>
-
-              <button
-                onClick={() => setShowHistoryPopup(true)}
-                className="bg-blue-500 text-white py-3 rounded-2xl font-black cyber-btn hover:bg-blue-600 transition-all"
-              >
-                📜 VIEW MATCH HISTORY
-              </button>
-
-              <button
-                onClick={() => setShowCoinHistoryPopup(true)}
-                className="bg-yellow-500 text-black py-3 rounded-2xl font-black cyber-btn hover:bg-yellow-600 transition-all"
-              >
-                🪙 VIEW COIN HISTORY
-              </button>
-            </div>
-
-            {/* Wallet Control */}
-            <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-orange-500/20 mt-6">
-              <h3 className="text-2xl font-black text-orange-400 mb-5">💰 WALLET CONTROL</h3>
-              <input
-                type="number"
-                placeholder="Coins Amount"
-                value={manualCoins}
-                onChange={(e) => setManualCoins(e.target.value)}
-                className="w-full bg-black rounded-2xl px-4 py-3 outline-none border border-orange-500/20 mb-4 text-white"
-              />
-              <div className="grid grid-cols-2 gap-4">
+              {/* Search Box */}
+              <div className="flex flex-col sm:flex-row gap-3 mb-6">
+                <input
+                  type="text"
+                  placeholder="Enter User UID"
+                  value={searchUid}
+                  onChange={(e) => setSearchUid(e.target.value)}
+                  className="flex-1 bg-black rounded-xl px-4 py-3 outline-none border border-purple-500/20 focus:border-purple-500 text-white text-sm"
+                />
                 <button
                   onClick={async () => {
-                    setLoadingAction("deduct");
-                    await onDeductCoins(searchUid, manualCoins);
+                    setLoadingAction("search");
+                    await handleSearch();
                     setLoadingAction(null);
                   }}
-                  disabled={loadingAction === "deduct"}
-                  className="bg-red-500 text-white py-4 rounded-2xl font-black cyber-btn hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-wait"
+                  disabled={loadingAction === "search"}
+                  className="bg-purple-500 text-black px-6 py-3 rounded-xl font-black text-sm cyber-btn hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-wait whitespace-nowrap text-center"
                 >
-                  {loadingAction === "deduct" ? "⏳ PROCESSING..." : "➖ DEDUCT COINS"}
-                </button>
-                <button
-                  onClick={async () => {
-                    setLoadingAction("add");
-                    await onAddCoins(searchUid, manualCoins);
-                    setLoadingAction(null);
-                  }}
-                  disabled={loadingAction === "add"}
-                  className="bg-green-500 text-black py-4 rounded-2xl font-black cyber-btn hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-wait"
-                >
-                  {loadingAction === "add" ? "⏳ PROCESSING..." : "➕ ADD COINS"}
+                  {loadingAction === "search" ? "⏳ SEARCHING..." : "🔍 SEARCH"}
                 </button>
               </div>
+
+              {/* User Details - Shows User Name */}
+              {displayUser ? (
+                <div className="bg-black rounded-2xl p-5 border border-purple-500/20">
+                  
+                  {/* User Name */}
+                  <div className="flex items-center gap-3 mb-4 pb-3 border-b border-purple-500/20">
+                    <span className="text-3xl">👤</span>
+                    <div>
+                      <p className="text-gray-400 text-xs">PLAYER NAME</p>
+                      <p className="text-xl font-black text-orange-500">{displayUser.name || "Not Set"}</p>
+                    </div>
+                  </div>
+                  
+                  {/* Email & UID */}
+                  <div className="space-y-1 text-xs">
+                    <p className="text-orange-400 font-medium break-all">📧 Email: {displayUser.email}</p>
+                    <p className="text-blue-400 break-all font-mono">🆔 UID: {displayUser.uid}</p>
+                  </div>
+                  
+                  {/* Coins & Status */}
+                  <div className="flex items-center justify-between mt-4 bg-[#111] p-3 rounded-xl border border-purple-500/10">
+                    <div>
+                      <p className="text-gray-400 text-[10px]">BALANCE</p>
+                      <p className="text-green-400 text-xl font-black cyber-prize">🪙 {displayUser.coins || 0}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-[10px] text-right">STATUS</p>
+                      <p className={`font-black text-sm text-right ${displayUser.blocked ? "text-red-400" : "text-green-400"}`}>
+                        {displayUser.blocked ? "🚫 BLOCKED" : "✅ ACTIVE"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Button Grid */}
+                  <div className="grid grid-cols-3 gap-2 mt-5">
+                    <button
+                      onClick={async () => {
+                        setLoadingAction("block");
+                        await onBlockUser(displayUser.uid, displayUser.blocked);
+                        setLoadingAction(null);
+                      }}
+                      disabled={loadingAction === "block"}
+                      className={`w-full py-2.5 rounded-xl font-black text-xs transition-all disabled:opacity-50 disabled:cursor-wait ${
+                        displayUser.blocked 
+                          ? "bg-green-500 hover:bg-green-600 text-black" 
+                          : "bg-red-500 hover:bg-red-600 text-white"
+                      }`}
+                    >
+                      {loadingAction === "block" ? "⏳ ..." : displayUser.blocked ? "🔓 UNBLOCK" : "🔒 BLOCK"}
+                    </button>
+
+                    <button
+                      onClick={() => setShowHistoryPopup(true)}
+                      className="bg-blue-500 text-white py-2.5 rounded-xl font-black text-xs hover:bg-blue-600 transition-all"
+                    >
+                      📜 MATCHES
+                    </button>
+
+                    <button
+                      onClick={() => setShowCoinHistoryPopup(true)}
+                      className="bg-yellow-500 text-black py-2.5 rounded-xl font-black text-xs hover:bg-yellow-600 transition-all"
+                    >
+                      🪙 COINS
+                    </button>
+                  </div>
+
+                  {/* Wallet Control */}
+                  <div className="bg-[#1a1a2e] rounded-xl p-4 border border-orange-500/20 mt-4">
+                    <h3 className="text-lg font-black text-orange-400 mb-3">💰 WALLET CONTROL</h3>
+                    <input
+                      type="number"
+                      placeholder="Coins Amount"
+                      value={manualCoins}
+                      onChange={(e) => setManualCoins(e.target.value)}
+                      className="w-full bg-black rounded-xl px-3 py-2 outline-none border border-orange-500/20 mb-3 text-white text-sm"
+                    />
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        onClick={async () => {
+                          setLoadingAction("deduct");
+                          await onDeductCoins(displayUser.uid, manualCoins);
+                          setManualCoins("");
+                          setLoadingAction(null);
+                        }}
+                        disabled={loadingAction === "deduct"}
+                        className="bg-red-500 text-white py-2.5 rounded-xl font-black text-xs hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-wait"
+                      >
+                        {loadingAction === "deduct" ? "⏳ ..." : "➖ DEDUCT"}
+                      </button>
+                      <button
+                        onClick={async () => {
+                          setLoadingAction("add");
+                          await onAddCoins(displayUser.uid, manualCoins);
+                          setManualCoins("");
+                          setLoadingAction(null);
+                        }}
+                        disabled={loadingAction === "add"}
+                        className="bg-green-500 text-black py-2.5 rounded-xl font-black text-xs hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-wait"
+                      >
+                        {loadingAction === "add" ? "⏳ ..." : "➕ ADD"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center p-8 bg-black/40 rounded-2xl border border-purple-500/10 text-center h-[300px]">
+                  <span className="text-5xl mb-3 opacity-50">👥</span>
+                  <p className="text-gray-400 text-sm">Select a user from the table or search by UID to view details & control wallet.</p>
+                </div>
+              )}
             </div>
           </div>
-        )}
+        </div>
+
+        {/* Right Column: All Users Table */}
+        <div className="lg:col-span-7">
+          <div className="bg-[#111] rounded-[30px] p-6 md:p-8 border border-purple-500/10 cyber-card">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+              <h3 className="text-2xl font-black text-pink-400 cyber-neon">👥 ALL REGISTERED USERS ({allUsers.length})</h3>
+              
+              {/* Sort Selector */}
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="bg-black text-white text-xs px-3 py-2 rounded-xl border border-purple-500/20 focus:outline-none focus:border-purple-500"
+              >
+                <option value="coins_desc">🪙 Coins: High to Low</option>
+                <option value="coins_asc">🪙 Coins: Low to High</option>
+                <option value="name_asc">🔤 Name: A-Z</option>
+                <option value="name_desc">🔤 Name: Z-A</option>
+                <option value="registered_desc">📅 Created: Newest First</option>
+                <option value="registered_asc">📅 Created: Oldest First</option>
+              </select>
+            </div>
+
+            {/* Search & Filters */}
+            <div className="flex flex-col gap-4 mb-6">
+              <input
+                type="text"
+                placeholder="Search by name, email or UID..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-black rounded-xl px-4 py-2.5 outline-none border border-purple-500/20 focus:border-purple-500 text-white text-sm"
+              />
+              
+              <div className="flex flex-wrap gap-4 items-center">
+                {/* Status Tabs */}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400 font-bold">Status:</span>
+                  <div className="flex bg-black rounded-xl p-1 border border-purple-500/20">
+                    {["all", "active", "blocked"].map((tab) => (
+                      <button
+                        key={tab}
+                        onClick={() => setStatusFilter(tab)}
+                        className={`px-3 py-1 rounded-lg text-xs font-black transition-all capitalize ${
+                          statusFilter === tab
+                            ? "bg-purple-500 text-black"
+                            : "text-gray-400 hover:text-white"
+                        }`}
+                      >
+                        {tab}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Age Tabs */}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400 font-bold">Created:</span>
+                  <div className="flex bg-black rounded-xl p-1 border border-purple-500/20">
+                    {[
+                      { value: "all", label: "All" },
+                      { value: "today", label: "Today" },
+                      { value: "new", label: "New (≤7d)" },
+                      { value: "old", label: "Old (>7d)" }
+                    ].map((tab) => (
+                      <button
+                        key={tab.value}
+                        onClick={() => setAgeFilter(tab.value)}
+                        className={`px-3 py-1 rounded-lg text-xs font-black transition-all ${
+                          ageFilter === tab.value
+                            ? "bg-pink-500 text-black"
+                            : "text-gray-400 hover:text-white"
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Desktop View (Table) */}
+            <div className="hidden md:block overflow-x-auto rounded-2xl border border-purple-500/10">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-black/80 text-gray-400 text-xs font-bold border-b border-purple-500/10">
+                    <th className="p-4">User</th>
+                    <th className="p-4">Coins</th>
+                    <th className="p-4">Status</th>
+                    <th className="p-4 text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-purple-500/5">
+                  {paginatedUsers.length > 0 ? (
+                    paginatedUsers.map((user) => {
+                      const isSelected = displayUser?.uid === user.uid;
+                      return (
+                        <tr 
+                          key={user.uid} 
+                          onClick={() => handleSelectUser(user)}
+                          className={`group text-sm hover:bg-purple-500/5 transition-all cursor-pointer ${
+                            isSelected ? "bg-purple-500/10" : ""
+                          }`}
+                        >
+                          <td className="p-4">
+                            <div className="flex flex-col">
+                              <span className="font-bold text-white group-hover:text-purple-400 transition-colors">
+                                {user.name || "No Name"}
+                              </span>
+                              <span className="text-[10px] text-gray-500 break-all">{user.email}</span>
+                              {user.createdAt && (
+                                <span className="text-[9px] text-purple-400/60 mt-0.5 font-mono">📅 {formatCreatedAt(user.createdAt)}</span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="p-4 font-bold text-yellow-400">🪙 {user.coins || 0}</td>
+                          <td className="p-4">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-black ${
+                              user.blocked 
+                                ? "bg-red-500/20 text-red-400 border border-red-500/30" 
+                                : "bg-green-500/20 text-green-400 border border-green-500/30"
+                            }`}>
+                              {user.blocked ? "BLOCKED" : "ACTIVE"}
+                            </span>
+                          </td>
+                          <td className="p-4 text-center">
+                            <button className="text-xs bg-purple-500/15 hover:bg-purple-500 text-purple-400 hover:text-black font-bold px-3 py-1.5 rounded-lg transition-all border border-purple-500/20">
+                              Manage
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan="4" className="text-center p-8 text-gray-500 text-sm">
+                        No users found matching your filters.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile View (Cards) */}
+            <div className="block md:hidden space-y-3">
+              {paginatedUsers.length > 0 ? (
+                paginatedUsers.map((user) => {
+                  const isSelected = displayUser?.uid === user.uid;
+                  return (
+                    <div
+                      key={user.uid}
+                      onClick={() => handleSelectUser(user)}
+                      className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col gap-2 ${
+                        isSelected
+                          ? "bg-purple-500/10 border-purple-500/50"
+                          : "bg-black/40 border-purple-500/10 hover:border-purple-500/30"
+                      }`}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex flex-col min-w-0">
+                          <span className="font-bold text-white text-sm truncate">
+                            {user.name || "No Name"}
+                          </span>
+                          <span className="text-[11px] text-gray-500 truncate">{user.email}</span>
+                          {user.createdAt && (
+                            <span className="text-[9px] text-purple-400/60 mt-1 font-mono">📅 {formatCreatedAt(user.createdAt)}</span>
+                          )}
+                        </div>
+                        <span className={`px-2 py-0.5 rounded text-[9px] font-black shrink-0 ${
+                          user.blocked 
+                            ? "bg-red-500/20 text-red-400 border border-red-500/30" 
+                            : "bg-green-500/20 text-green-400 border border-green-500/30"
+                        }`}>
+                          {user.blocked ? "BLOCKED" : "ACTIVE"}
+                        </span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center pt-2 border-t border-purple-500/5">
+                        <span className="font-bold text-yellow-400 text-xs">🪙 {user.coins || 0}</span>
+                        <button className="text-[10px] bg-purple-500/15 hover:bg-purple-500 text-purple-400 hover:text-black font-bold px-3 py-1 rounded-lg transition-all border border-purple-500/20">
+                          Manage
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-center p-6 bg-black/40 rounded-2xl border border-purple-500/10 text-gray-500 text-xs">
+                  No users found matching your filters.
+                </div>
+              )}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-between items-center mt-6">
+                <span className="text-xs text-gray-400">
+                  Showing {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredAndSortedUsers.length)} of {filteredAndSortedUsers.length}
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1.5 bg-black rounded-lg border border-purple-500/20 text-xs hover:border-purple-500 disabled:opacity-30 disabled:cursor-not-allowed text-white transition-all"
+                  >
+                    ◀ Prev
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1.5 bg-black rounded-lg border border-purple-500/20 text-xs hover:border-purple-500 disabled:opacity-30 disabled:cursor-not-allowed text-white transition-all"
+                  >
+                    Next ▶
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
       </div>
 
       {/* Match History Popup */}

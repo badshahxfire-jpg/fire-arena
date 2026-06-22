@@ -1121,7 +1121,7 @@ export default function FireBaadshahArena() {
           {adminPage === "results" && <MatchResults matchResults={matchResults} isAdmin={isAdmin} joinedPlayers={joinedPlayers} user={user} onDeleteMatchResult={deleteMatchHistory} onDeleteAllMatchResults={() => deleteMatchHistory("ALL")} playerResults={playerResults} />}
           {adminPage === "perkill_create" && <CreatePerKillTournament onCreateTournament={createPerKillTournament} />}
           {adminPage === "perkill_results" && <PerKillMatchResults isAdmin={isAdmin} liveTournaments={livePerKillTournaments} joinedPlayers={joinedPerKillPlayers} matchResults={perKillMatchResults} publishResults={publishPerKillResults} cancelTournament={cancelPerKillTournament} publishRoomDetails={publishPerKillRoomDetails} updateTournamentTime={updatePerKillTournamentTime} onDeleteMatchResult={deletePerKillMatchHistory} onDeleteAllMatchResults={deleteAllPerKillMatchHistory} />}
-          {adminPage === "users" && <UserProfileCheck onSearchUser={searchUser} searchedUser={searchedUser} onBlockUser={blockUser} onAddCoins={addManualCoins} onDeductCoins={deductManualCoins} />}
+          {adminPage === "users" && <UserProfileCheck allUsers={allUsers} onSearchUser={searchUser} searchedUser={searchedUser} onBlockUser={blockUser} onAddCoins={addManualCoins} onDeductCoins={deductManualCoins} />}
           {adminPage === "coins" && <ManualCoins onAddCoins={addManualCoins} />}
           {adminPage === "maintenance" && <MaintenanceMode maintenanceMode={maintenanceMode} maintenanceDuration={maintenanceDuration} maintenanceEndsAt={maintenanceEndsAt} onToggle={toggleMaintenance} />}
           {adminPage === "announcements" && <AdminAnnouncements />}
