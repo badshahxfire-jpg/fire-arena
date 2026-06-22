@@ -119,15 +119,15 @@ export default function Leaderboard() {
       });
     }
 
-    // Sort by wins (highest first), then by top 3 finishes, then by total winnings
+    // Sort by total winnings (highest first), then by wins, then by top 3
     return leaderboardData.sort((a, b) => {
+      if (b.totalWinnings !== a.totalWinnings) {
+        return b.totalWinnings - a.totalWinnings;
+      }
       if (b.wins !== a.wins) {
         return b.wins - a.wins;
       }
-      if (b.top3 !== a.top3) {
-        return b.top3 - a.top3;
-      }
-      return b.totalWinnings - a.totalWinnings;
+      return b.top3 - a.top3;
     });
   }, [users, matchResults]);
 
