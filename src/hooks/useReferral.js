@@ -426,7 +426,8 @@ export function useReferral(user) {
       return;
     }
     
-    const shareText = `🔥 Join FireBaadshah Arena using my referral code: ${code}\n\nGet ${referralConditions.newUserBonusAmount} bonus coins on registration! Download now: [Your App Link]`;
+    const appLink = window.location.origin;
+    const shareText = `🔥 Join FireBaadshah Arena using my referral code: ${code}\n\nGet ${referralConditions.newUserBonusAmount} bonus coins on registration! Download now: ${appLink}`;
     
     if (navigator.share) {
       try {
