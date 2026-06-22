@@ -118,8 +118,11 @@ export default function Navbar({
                 <button onClick={onShowBonusWinners} className="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 py-2.5 rounded-xl font-bold flex-1 text-center truncate flex items-center justify-center gap-1">
                   🎁 BONUS WINNERS
                 </button>
+              </div>
+              {/* Row 3 */}
+              <div className="flex w-full gap-2">
                 <button onClick={onShowBlocked} className="bg-red-500/10 text-red-400 border border-red-500/20 py-2.5 rounded-xl font-bold flex-1 text-center truncate flex items-center justify-center gap-1">
-                  🚫 BLOCKED
+                  🚫 BLOCKED PLAYERS
                 </button>
               </div>
             </div>
