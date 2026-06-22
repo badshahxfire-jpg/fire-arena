@@ -41,6 +41,7 @@ import NotificationsPopup from "./components/Popups/NotificationsPopup";
 import ReferralPopup from "./components/Popups/ReferralPopup";
 import UserActivityPopup from "./components/Admin/UserActivityPopup";
 import BonusWinnersPopup from "./components/Popups/BonusWinnersPopup";
+import BlockedUsersPopup from "./components/Popups/BlockedUsersPopup";
 import WelcomeScratchCard from "./components/Popups/WelcomeScratchCard";
 
 // Admin Components
@@ -86,6 +87,7 @@ export default function FireBaadshahArena() {
   const [showReferral, setShowReferral] = useState(false);
   const [showLoyal, setShowLoyal] = useState(false);
   const [showBonusWinners, setShowBonusWinners] = useState(false);
+  const [showBlockedUsers, setShowBlockedUsers] = useState(false);
   const [showJoinPopup, setShowJoinPopup] = useState(false);
   const [showUpcomingGames, setShowUpcomingGames] = useState(false);
   const [selectedMode, setSelectedMode] = useState("SOLO");
@@ -352,6 +354,7 @@ export default function FireBaadshahArena() {
       showReferral ||
       showLoyal ||
       showBonusWinners ||
+      showBlockedUsers ||
       showJoinPopup ||
       showUpcomingGames ||
       showTopupAdminPopup ||
@@ -384,6 +387,7 @@ export default function FireBaadshahArena() {
     showReferral,
     showLoyal,
     showBonusWinners,
+    showBlockedUsers,
     showJoinPopup,
     showUpcomingGames,
     showTopupAdminPopup,
@@ -414,6 +418,7 @@ export default function FireBaadshahArena() {
       setShowReferral(false);
       setShowLoyal(false);
       setShowBonusWinners(false);
+      setShowBlockedUsers(false);
       setShowJoinPopup(false);
       setShowUpcomingGames(false);
       setShowTopupAdminPopup(false);
@@ -453,6 +458,7 @@ export default function FireBaadshahArena() {
               s.showReferral ||
               s.showLoyal ||
               s.showBonusWinners ||
+              s.showBlockedUsers ||
               s.showJoinPopup ||
               s.showUpcomingGames ||
               s.showTopupAdminPopup ||
@@ -968,6 +974,7 @@ export default function FireBaadshahArena() {
         onShowReferral={() => setShowReferral(true)}
         onShowLoyal={() => setShowLoyal(true)}
         onShowBonusWinners={() => setShowBonusWinners(true)}
+        onShowBlocked={() => setShowBlockedUsers(true)}
         apkUrl={updateConfig?.updateUrl}
       />
 
@@ -1198,6 +1205,10 @@ export default function FireBaadshahArena() {
       {/* Top 10 Bonus Winners Popup */}
       {showBonusWinners && (
         <BonusWinnersPopup onClose={() => setShowBonusWinners(false)} />
+      )}
+      
+      {showBlockedUsers && (
+        <BlockedUsersPopup onClose={() => setShowBlockedUsers(false)} />
       )}
       
       {showHistory && <HistoryPopup user={user} joinedHistory={joinedHistory} playerResults={playerResults} matchResults={matchResults} onClose={() => setShowHistory(false)} onDeleteHistory={() => deleteAllUserMatchHistory(user?.email)} onDeleteMatch={deleteMatchHistory} userStats={userStats} />}

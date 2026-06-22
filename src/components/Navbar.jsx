@@ -19,6 +19,7 @@ export default function Navbar({
   onShowReferral,
   onShowLoyal,
   onShowBonusWinners,
+  onShowBlocked,
   apkUrl
 }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -86,6 +87,7 @@ export default function Navbar({
               <button onClick={onShowReferral} className="bg-orange-500/10 text-orange-400 border border-orange-500/20 hover:border-orange-500/50 hover:bg-orange-500/20 px-4 py-2 rounded-2xl font-bold transition-all">🎁 REFER & EARN</button>
               <button onClick={onShowLoyal} className="bg-orange-500/10 text-orange-400 border border-orange-500/20 hover:border-orange-500/50 hover:bg-orange-500/20 px-4 py-2 rounded-2xl font-bold transition-all">🔥 TOP 10 PLAYERS</button>
               <button onClick={onShowBonusWinners} className="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 hover:border-yellow-500/50 hover:bg-yellow-500/20 px-4 py-2 rounded-2xl font-bold transition-all">🎁 BONUS WINNERS</button>
+              <button onClick={onShowBlocked} className="bg-red-500/10 text-red-400 border border-red-500/20 hover:border-red-500/50 hover:bg-red-500/20 px-4 py-2 rounded-2xl font-bold transition-all">🚫 BLOCKED</button>
               <button onClick={onShowProfile} className="bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:border-purple-500/50 hover:bg-purple-500/20 px-4 py-2 rounded-2xl font-bold transition-all">PROFILE</button>
               <button onClick={onShowNotifications} className="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 hover:border-yellow-500/50 hover:bg-yellow-500/20 px-4 py-2 rounded-2xl font-bold transition-all flex items-center">
                 🔔 <span className="ml-1 text-yellow-400 font-extrabold">{notifications.filter((item) => !item.seen).length}</span>
@@ -131,6 +133,7 @@ export default function Navbar({
                 <button onClick={() => { onShowContact(); setIsMobileMenuOpen(false); }} className="w-full text-left bg-green-500/10 text-green-400 border border-green-500/20 p-3 rounded-xl font-bold">CONTACT</button>
                 <button onClick={() => { onShowHistory(); setIsMobileMenuOpen(false); }} className="w-full text-left bg-blue-500/10 text-blue-400 border border-blue-500/20 p-3 rounded-xl font-bold">MATCHES HISTORY</button>
                 <button onClick={() => { onShowPerKillHistory(); setIsMobileMenuOpen(false); }} className="w-full text-left bg-red-500/10 text-red-400 border border-red-500/20 p-3 rounded-xl font-bold">⚔️ PER KILL HISTORY</button>
+                <button onClick={() => { onShowBlocked(); setIsMobileMenuOpen(false); }} className="w-full text-left bg-red-500/10 text-red-400 border border-red-500/20 p-3 rounded-xl font-bold">🚫 BLOCKED PLAYERS</button>
                 <button onClick={() => { onShowProfile(); setIsMobileMenuOpen(false); }} className="w-full text-left bg-purple-500/10 text-purple-400 border border-purple-500/20 p-3 rounded-xl font-bold">PROFILE</button>
                 {isAdmin && <div className="w-full text-center bg-green-500/20 text-green-400 border border-green-500/30 p-3 rounded-xl font-bold">ADMIN</div>}
                 <button onClick={() => { onLogout(); setIsMobileMenuOpen(false); }} className="w-full bg-gradient-to-r from-red-600 to-rose-700 text-white p-3 rounded-xl font-bold text-center mt-2">LOGOUT</button>
