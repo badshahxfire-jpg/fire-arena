@@ -5,11 +5,13 @@ import { database, db } from "../firebase";
 
 export default function TournamentWinners() {
   const [matchResults, setMatchResults] = useState([]);
+  const [perKillMatchResults, setPerKillMatchResults] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTournament, setSelectedTournament] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
   const [userNames, setUserNames] = useState({});
   const [playerResults, setPlayerResults] = useState([]);
+  const [activeTab, setActiveTab] = useState("SURVIVAL");
 
   useEffect(() => {
     if (showDetails) {
@@ -60,13 +62,35 @@ export default function TournamentWinners() {
       if (data) {
         const tournaments = Object.keys(data).map((key) => ({
           id: key,
-          ...data[key]
+          ...data[key],
+          tournamentType: data[key].tournamentType || "CLASSIC"
         }));
         setMatchResults(tournaments);
       } else {
         setMatchResults([]);
       }
       setLoading(false);
+    });
+    
+    return () => unsubscribe();
+  }, []);
+
+  // Fetch perKillMatchResults from database
+  useEffect(() => {
+    const resultsRef = ref(database, "perKillResults");
+    
+    const unsubscribe = onValue(resultsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const tournaments = Object.keys(data).map((key) => ({
+          id: key,
+          ...data[key],
+          tournamentType: "PER_KILL"
+        }));
+        setPerKillMatchResults(tournaments);
+      } else {
+        setPerKillMatchResults([]);
+      }
     });
     
     return () => unsubscribe();
@@ -108,7 +132,9 @@ export default function TournamentWinners() {
       return 0;
     };
 
-    const sorted = [...matchResults].sort((a, b) => {
+    const allMatches = [...matchResults, ...perKillMatchResults];
+
+    const sorted = allMatches.sort((a, b) => {
       const timeA = parseDate(a.createdAt);
       const timeB = parseDate(b.createdAt);
       if (timeA !== timeB) {
@@ -123,12 +149,25 @@ export default function TournamentWinners() {
       if (enrichedTournament.results) {
         enrichedTournament.results = enrichedTournament.results.map(winner => {
           const winnerUid = winner.uid || winner.userId || winner.id;
-          const name = winner.name || winner.playerName || userNames[winnerUid] || winnerUid?.substring(0, 8) || "Unknown";
-          const coins = winner.winCoins || playerResults.find(
-            r => r.tournamentId === enrichedTournament.id && r.userId === winnerUid && r.approved
-          )?.winCoins || playerResults.find(
-            r => r.tournamentId === enrichedTournament.tournamentId && r.userId === winnerUid && r.approved
-          )?.winCoins || 0;
+          const name = winner.name || winner.playerName || winner.ingameName || userNames[winnerUid] || winnerUid?.substring(0, 8) || "Unknown";
+          
+          let coins = 0;
+          if (enrichedTournament.tournamentType === "PER_KILL") {
+            const pos = Number(winner.position || 0);
+            const kills = Number(winner.kills || 0);
+            const rate = Number(enrichedTournament.perKillRate || 0);
+            const posBonus = pos === 1 ? Number(enrichedTournament.booyahBonus || 0) : 
+                             pos === 2 ? Number(enrichedTournament.secondBonus || 0) : 
+                             pos === 3 ? Number(enrichedTournament.thirdBonus || 0) : 0;
+            coins = (kills * rate) + posBonus;
+          } else {
+            coins = winner.winCoins || playerResults.find(
+              r => r.tournamentId === enrichedTournament.id && r.userId === winnerUid && r.approved
+            )?.winCoins || playerResults.find(
+              r => r.tournamentId === enrichedTournament.tournamentId && r.userId === winnerUid && r.approved
+            )?.winCoins || 0;
+          }
+
           return {
             ...winner,
             uid: winnerUid,
@@ -139,7 +178,7 @@ export default function TournamentWinners() {
       }
       return enrichedTournament;
     });
-  }, [matchResults, userNames, playerResults]);
+  }, [matchResults, perKillMatchResults, userNames, playerResults]);
 
 
   const getMedal = (position) => {
@@ -186,11 +225,38 @@ export default function TournamentWinners() {
     <section className="max-w-7xl mx-auto px-6 py-10">
       <div className="text-center mb-8">
         <h2 className="text-3xl md:text-4xl font-black text-yellow-400 mb-2 cyber-neon">🏆 TOURNAMENT WINNERS</h2>
-        <p className="text-gray-400 text-sm">Recent tournament champions</p>
+        <p className="text-gray-400 text-sm mb-6">Recent tournament champions</p>
+
+        {/* Tab Toggle */}
+        <div className="inline-flex bg-black/40 p-1.5 rounded-2xl border border-gray-800 backdrop-blur-sm">
+          <button
+            onClick={() => setActiveTab("SURVIVAL")}
+            className={`px-6 sm:px-8 py-2.5 rounded-xl font-bold text-sm sm:text-base transition-all duration-300 ${
+              activeTab === "SURVIVAL" 
+                ? "bg-gradient-to-r from-orange-500 to-yellow-500 text-black shadow-[0_0_15px_rgba(234,179,8,0.4)]" 
+                : "text-gray-400 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            🔥 SURVIVAL
+          </button>
+          <button
+            onClick={() => setActiveTab("PER_KILL")}
+            className={`px-6 sm:px-8 py-2.5 rounded-xl font-bold text-sm sm:text-base transition-all duration-300 ${
+              activeTab === "PER_KILL" 
+                ? "bg-gradient-to-r from-orange-500 to-yellow-500 text-black shadow-[0_0_15px_rgba(234,179,8,0.4)]" 
+                : "text-gray-400 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            ⚔️ PER KILL
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {completedTournaments.slice(0, 6).map((tournament) => {
+        {completedTournaments
+          .filter(t => activeTab === "SURVIVAL" ? t.tournamentType !== "PER_KILL" : t.tournamentType === "PER_KILL")
+          .slice(0, 6)
+          .map((tournament) => {
           const top3Winners = tournament.results
             ?.filter(w => w.position <= 3)
             .sort((a, b) => a.position - b.position) || [];

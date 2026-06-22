@@ -22,6 +22,7 @@ export default function PerKillMatchResults({
   const [showTimePopup, setShowTimePopup] = useState(false);
   const [showPlayersPopup, setShowPlayersPopup] = useState(false);
   const [selectedViewTournament, setSelectedViewTournament] = useState(null);
+  const [showCompletedPopup, setShowCompletedPopup] = useState(false);
 
   if (!isAdmin) return null;
 
@@ -209,93 +210,125 @@ export default function PerKillMatchResults({
       </div>
 
       {/* COMPLETED TOURNAMENTS */}
-      <div>
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-2xl sm:text-3xl font-black text-green-400 flex items-center gap-2">
-            <span>✅</span> Completed Match Results ({matchResults.length})
-          </h3>
-          {matchResults.length > 0 && isAdmin && (
-            <button
-              onClick={() => onDeleteAllMatchResults("ALL")}
-              className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl font-bold text-sm transition-all"
-            >
-              🗑 DELETE ALL
-            </button>
-          )}
-        </div>
-        {matchResults.length > 0 ? (
-          <div className="space-y-4">
-            {matchResults.map(result => (
-              <div key={result.id} className="bg-[#111] rounded-3xl p-6 border border-green-500/10 cyber-card">
-                <div className="flex justify-between items-start flex-wrap gap-4 border-b border-gray-800 pb-4 mb-4">
-                  <div>
-                    <h4 className="text-lg font-black text-orange-400">{result.tournamentTitle}</h4>
-                    <p className="text-xs text-gray-400 mt-1">📅 Published: {result.createdAt} | Match Time: {result.matchDate} {result.matchTime}</p>
-                  </div>
-
-                  <div className="flex gap-4 text-sm bg-black/40 px-4 py-2 rounded-2xl border border-green-500/20">
-                    <div>Rate: <span className="text-orange-400 font-bold">🪙 {result.perKillRate}</span></div>
-                    <div>1st (Scaled): <span className="text-yellow-400 font-bold">🪙 {result.booyahBonus}</span></div>
-                    {result.secondBonus > 0 && <div>2nd (Scaled): <span className="text-gray-300 font-bold">🪙 {result.secondBonus}</span></div>}
-                    {result.thirdBonus > 0 && <div>3rd (Scaled): <span className="text-orange-400 font-bold">🪙 {result.thirdBonus}</span></div>}
-                  </div>
-                  {isAdmin && (
-                    <button
-                      onClick={() => onDeleteMatchResult(result.id)}
-                      className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-xl text-xs font-bold transition-all ml-auto"
-                    >
-                      🗑 DELETE
-                    </button>
-                  )}
-                </div>
-
-                <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
-                  {[...(result.results || [])]
-                    .sort((a, b) => {
-                      const posA = Number(a.position || 0);
-                      const posB = Number(b.position || 0);
-                      if (posA > 0 && posB > 0) return posA - posB;
-                      if (posA > 0) return -1;
-                      if (posB > 0) return 1;
-                      
-                      const killsA = Number(a.kills || 0);
-                      const killsB = Number(b.kills || 0);
-                      if (killsB !== killsA) return killsB - killsA;
-                      
-                      return Number(a.selectedSlot || 0) - Number(b.selectedSlot || 0);
-                    })
-                    .map((player, idx) => {
-                      const pos = Number(player.position || 0);
-                      const bonus = pos === 1 ? result.booyahBonus : pos === 2 ? result.secondBonus : pos === 3 ? result.thirdBonus : 0;
-                      const totalWin = (player.kills * result.perKillRate) + bonus;
-                      return (
-                        <div key={idx} className={`p-3 rounded-xl border text-sm flex justify-between items-center ${pos > 0 ? 'bg-yellow-500/10 border-yellow-500/30' : 'bg-black/40 border-gray-800'}`}>
-                          <div>
-                            <p className="font-bold flex items-center gap-1.5">
-                              {pos === 1 && <span>🥇</span>}
-                              {pos === 2 && <span>🥈</span>}
-                              {pos === 3 && <span>🥉</span>}
-                              {player.ingameName || player.name}
-                            </p>
-                            <p className="text-xs text-gray-400">Slot {player.selectedSlot} | UID: {player.gameUid || "N/A"}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-orange-400 font-bold text-xs">{player.kills} kills</p>
-                            <p className="text-green-400 font-black">🪙 {totalWin}</p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-10 bg-black/40 border border-green-500/10 rounded-3xl text-gray-400">
-            No completed matches yet.
-          </div>
-        )}
+      <div className="flex justify-center mt-10">
+        <button
+          onClick={() => setShowCompletedPopup(true)}
+          className="w-full max-w-md bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white px-8 py-4 rounded-3xl font-black text-xl sm:text-2xl transition-all duration-300 shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_40px_rgba(16,185,129,0.5)] border border-green-500/50"
+        >
+          ✅ VIEW COMPLETED RESULTS ({matchResults.length})
+        </button>
       </div>
+
+      {showCompletedPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-xl p-4 sm:p-8">
+          <div className="bg-[#0a0a0a] border border-green-500/30 rounded-3xl p-6 md:p-10 max-w-7xl w-full mx-auto relative shadow-[0_0_100px_rgba(16,185,129,0.15)] animate-fade-in-up flex flex-col max-h-[90vh]">
+            <button 
+              onClick={() => setShowCompletedPopup(false)}
+              className="absolute top-4 right-4 sm:top-6 sm:right-6 bg-red-500 hover:bg-red-600 text-white w-10 h-10 sm:w-12 sm:h-12 rounded-2xl font-black text-xl transition-all flex items-center justify-center z-50 shadow-lg shadow-red-500/20"
+            >
+              ✕
+            </button>
+
+            <div className="flex justify-between items-center mb-6 flex-wrap gap-4 pt-8 sm:pt-0 pr-12 shrink-0 border-b border-gray-800/50 pb-4">
+              <h3 className="text-3xl sm:text-4xl font-black text-green-400 flex items-center gap-3">
+                <span>✅</span> Completed Match Results ({matchResults.length})
+              </h3>
+              {matchResults.length > 0 && isAdmin && (
+                <button
+                  onClick={() => onDeleteAllMatchResults("ALL")}
+                  className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-2xl font-bold text-sm transition-all"
+                >
+                  🗑 DELETE ALL
+                </button>
+              )}
+            </div>
+
+            <div className="overflow-y-auto custom-scrollbar pr-2 sm:pr-4 flex-grow">
+              {matchResults.length > 0 ? (
+                <div className="space-y-6">
+                {matchResults.map(result => (
+                  <div key={result.id} className="bg-[#111] rounded-3xl p-6 border border-green-500/10 cyber-card hover:border-green-500/30 transition-colors">
+                    <div className="flex justify-between items-start flex-wrap gap-4 border-b border-gray-800 pb-4 mb-4">
+                      <div>
+                        <h4 className="text-xl font-black text-orange-400">{result.tournamentTitle}</h4>
+                        <p className="text-xs text-gray-400 mt-2">📅 Published: {result.createdAt} | Match Time: {result.matchDate} {result.matchTime}</p>
+                      </div>
+
+                      <div className="flex flex-wrap gap-3 text-sm bg-black/40 p-3 rounded-2xl border border-green-500/20">
+                        <div className="px-3 py-1 bg-[#222] rounded-lg">Rate: <span className="text-orange-400 font-bold ml-1">🪙 {result.perKillRate}</span></div>
+                        <div className="px-3 py-1 bg-[#222] rounded-lg">1st (Scaled): <span className="text-yellow-400 font-bold ml-1">🪙 {result.booyahBonus}</span></div>
+                        {result.secondBonus > 0 && <div className="px-3 py-1 bg-[#222] rounded-lg">2nd (Scaled): <span className="text-gray-300 font-bold ml-1">🪙 {result.secondBonus}</span></div>}
+                        {result.thirdBonus > 0 && <div className="px-3 py-1 bg-[#222] rounded-lg">3rd (Scaled): <span className="text-orange-400 font-bold ml-1">🪙 {result.thirdBonus}</span></div>}
+                      </div>
+                      {isAdmin && (
+                        <button
+                          onClick={() => onDeleteMatchResult(result.id)}
+                          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all sm:ml-auto"
+                        >
+                          🗑 DELETE
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
+                      {[...(result.results || [])]
+                        .sort((a, b) => {
+                          const posA = Number(a.position || 0);
+                          const posB = Number(b.position || 0);
+                          if (posA > 0 && posB > 0) return posA - posB;
+                          if (posA > 0) return -1;
+                          if (posB > 0) return 1;
+                          
+                          const killsA = Number(a.kills || 0);
+                          const killsB = Number(b.kills || 0);
+                          if (killsB !== killsA) return killsB - killsA;
+                          
+                          return Number(a.selectedSlot || 0) - Number(b.selectedSlot || 0);
+                        })
+                        .map((player, idx) => {
+                          const pos = Number(player.position || 0);
+                          const bonus = pos === 1 ? result.booyahBonus : pos === 2 ? result.secondBonus : pos === 3 ? result.thirdBonus : 0;
+                          const totalWin = (player.kills * result.perKillRate) + bonus;
+                          return (
+                            <div key={idx} className={`p-3 rounded-xl border text-sm flex justify-between items-center ${pos > 0 ? 'bg-yellow-500/10 border-yellow-500/30' : 'bg-black/40 border-gray-800'}`}>
+                              <div>
+                                <p className="font-bold flex items-center gap-1.5">
+                                  {pos === 1 && <span>🥇</span>}
+                                  {pos === 2 && <span>🥈</span>}
+                                  {pos === 3 && <span>🥉</span>}
+                                  {player.ingameName || player.name}
+                                </p>
+                                <p className="text-xs text-gray-400 mt-1">Slot {player.selectedSlot} | UID: {player.gameUid || "N/A"}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-orange-400 font-bold text-xs">{player.kills} kills</p>
+                                <p className="text-green-400 font-black mt-1">🪙 {totalWin}</p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-16 bg-black/40 border border-green-500/10 rounded-3xl text-gray-400">
+                No completed matches yet.
+              </div>
+            )}
+            </div>
+            
+            <div className="mt-6 pt-6 border-t border-gray-800 text-center shrink-0">
+              <button 
+                onClick={() => setShowCompletedPopup(false)}
+                className="bg-gray-800 hover:bg-gray-700 text-white px-10 py-4 rounded-2xl font-bold transition-all text-lg"
+              >
+                Close Results
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* POPUP: ENTER & PUBLISH RESULTS */}
       {showResultPopup && selectedTournament && (

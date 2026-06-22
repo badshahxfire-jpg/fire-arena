@@ -30,7 +30,7 @@ export function useAdminData(isAdmin) {
       }
     });
     return () => unsubscribe();
-  }, []);
+  }, [isAdmin]);
 
   // Fetch Withdraw Requests
   useEffect(() => {
@@ -46,7 +46,7 @@ export function useAdminData(isAdmin) {
       }
     });
     return () => unsubscribe();
-  }, []);
+  }, [isAdmin]);
 
   // Fetch Admin Stats (Persistent Totals)
   const [adminStats, setAdminStats] = useState({ totalDeposits: 0, totalWithdrawals: 0 });
@@ -186,7 +186,7 @@ export function useAdminData(isAdmin) {
       pendingWithdraws,
       adminRevenue: adminRevenue.toFixed(0),
     };
-  }, [totalUsers, tournaments, paymentRequests, withdrawRequests]);
+  }, [totalUsers, tournaments, paymentRequests, withdrawRequests, adminStats]);
 
   // Create Tournament
   const createTournament = async (tournamentData) => {

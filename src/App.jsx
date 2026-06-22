@@ -99,6 +99,7 @@ export default function FireBaadshahArena() {
   
   // Result Popup States
   const [showResultPopup, setShowResultPopup] = useState(false);
+  const [showResultAnalyticsPopup, setShowResultAnalyticsPopup] = useState(false);
   const [selectedPublishTournament, setSelectedPublishTournament] = useState(null);
   const [currentSystemMode, setCurrentSystemMode] = useState("classic"); // "classic" or "perkill"
   const [selectedPerKillMode, setSelectedPerKillMode] = useState("SOLO");
@@ -361,6 +362,7 @@ export default function FireBaadshahArena() {
       showTopupAdminPopup ||
       showWithdrawAdminPopup ||
       showResultPopup ||
+      showResultAnalyticsPopup ||
       selectedTournament ||
       selectedPublishTournament ||
       showUpdatePopup
@@ -437,6 +439,7 @@ export default function FireBaadshahArena() {
       setShowTopupAdminPopup(false);
       setShowWithdrawAdminPopup(false);
       setShowResultPopup(false);
+      setShowResultAnalyticsPopup(false);
       setSelectedTournament(null);
       setSelectedPublishTournament(null);
       setShowUpdatePopup(false);
@@ -1131,27 +1134,60 @@ export default function FireBaadshahArena() {
           />
 
           {/* Result Analytics */}
-          <section className="max-w-7xl mx-auto px-6 py-10">
-            <h2 className="text-5xl font-black text-red-400 mb-10 cyber-neon">📊 RESULT ANALYTICS</h2>
-            <div className="grid md:grid-cols-4 gap-6">
-              <div className="bg-[#111] rounded-3xl p-6 border border-orange-500/10 cyber-card">
-                <p className="text-gray-400">Total Submitted</p>
-                <h3 className="text-4xl font-black text-orange-500 mt-4">{resultAnalytics.totalSubmitted}</h3>
-              </div>
-              <div className="bg-[#111] rounded-3xl p-6 border border-green-500/10 cyber-card">
-                <p className="text-gray-400">Approved Results</p>
-                <h3 className="text-4xl font-black text-green-400 mt-4">{resultAnalytics.totalApproved}</h3>
-              </div>
-              <div className="bg-[#111] rounded-3xl p-6 border border-yellow-500/10 cyber-card">
-                <p className="text-gray-400">Pending Results</p>
-                <h3 className="text-4xl font-black text-yellow-400 mt-4">{resultAnalytics.pendingResults}</h3>
-              </div>
-              <div className="bg-[#111] rounded-3xl p-6 border border-purple-500/10 cyber-card">
-                <p className="text-gray-400">Prize Distributed</p>
-                <h3 className="text-4xl font-black text-purple-400 mt-4 cyber-prize">🪙 {resultAnalytics.totalPrizeDistributed}</h3>
+          {!showResultAnalyticsPopup ? (
+            <div className="flex justify-center mb-10 px-6">
+              <button
+                onClick={() => setShowResultAnalyticsPopup(true)}
+                className="w-full max-w-md bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-500 hover:to-pink-500 text-white px-8 py-6 rounded-3xl font-black text-2xl md:text-3xl transition-all duration-300 shadow-[0_0_30px_rgba(239,68,68,0.3)] hover:shadow-[0_0_50px_rgba(239,68,68,0.5)] cyber-neon cyber-btn border border-red-500/50"
+              >
+                📊 RESULT ANALYTICS
+              </button>
+            </div>
+          ) : (
+            <div className="fixed inset-0 z-40 bg-black/95 backdrop-blur-xl overflow-y-auto p-4 md:p-8">
+              <div className="bg-[#0a0a0a] border border-red-500/30 rounded-3xl p-6 md:p-10 max-w-7xl w-full mx-auto relative shadow-[0_0_100px_rgba(239,68,68,0.15)] mt-10 mb-20 animate-fade-in-up">
+                
+                <button 
+                  onClick={() => setShowResultAnalyticsPopup(false)}
+                  className="absolute top-4 right-4 md:top-6 md:right-6 bg-red-500 hover:bg-red-600 text-white w-12 h-12 rounded-2xl font-black text-xl transition-all flex items-center justify-center z-50 shadow-lg shadow-red-500/20"
+                >
+                  ✕
+                </button>
+
+                <h2 className="text-4xl md:text-5xl font-black text-red-400 cyber-neon text-center md:text-left mb-12 pt-8 md:pt-0">
+                  📊 RESULT ANALYTICS
+                </h2>
+                
+                <div className="grid md:grid-cols-4 gap-6">
+                  <div className="bg-[#111] rounded-3xl p-6 border border-orange-500/10 cyber-card hover:border-orange-500/30 transition-colors">
+                    <p className="text-gray-400 font-medium">Total Submitted</p>
+                    <h3 className="text-5xl font-black text-orange-500 mt-4">{resultAnalytics.totalSubmitted}</h3>
+                  </div>
+                  <div className="bg-[#111] rounded-3xl p-6 border border-green-500/10 cyber-card hover:border-green-500/30 transition-colors">
+                    <p className="text-gray-400 font-medium">Approved Results</p>
+                    <h3 className="text-5xl font-black text-green-400 mt-4">{resultAnalytics.totalApproved}</h3>
+                  </div>
+                  <div className="bg-[#111] rounded-3xl p-6 border border-yellow-500/10 cyber-card hover:border-yellow-500/30 transition-colors">
+                    <p className="text-gray-400 font-medium">Pending Results</p>
+                    <h3 className="text-5xl font-black text-yellow-400 mt-4">{resultAnalytics.pendingResults}</h3>
+                  </div>
+                  <div className="bg-[#111] rounded-3xl p-6 border border-purple-500/10 cyber-card hover:border-purple-500/30 transition-colors">
+                    <p className="text-gray-400 font-medium">Prize Distributed</p>
+                    <h3 className="text-5xl font-black text-purple-400 mt-4 cyber-prize">🪙 {resultAnalytics.totalPrizeDistributed}</h3>
+                  </div>
+                </div>
+
+                <div className="mt-12 text-center">
+                  <button 
+                    onClick={() => setShowResultAnalyticsPopup(false)}
+                    className="bg-gray-800 hover:bg-gray-700 text-white px-10 py-3 rounded-2xl font-bold transition-all"
+                  >
+                    Close Analytics Dashboard
+                  </button>
+                </div>
               </div>
             </div>
-          </section>
+          )}
           
           {/* Admin Tabs */}
           <div className="max-w-7xl mx-auto px-6">
