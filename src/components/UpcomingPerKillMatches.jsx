@@ -27,6 +27,26 @@ export default function UpcomingPerKillMatches({
   const [selectedViewTournament, setSelectedViewTournament] = useState(null);
   const [loadingAction, setLoadingAction] = useState(null);
 
+  const handleShareMatch = async (match) => {
+    const appLink = window.location.origin;
+    const shareText = `⚔️ Join the Per Kill match "${match.tournamentTitle}" on FireBaadshah Arena!\n\n🕒 Match Time: ${match.matchDate} at ${match.matchTime}\n💰 Entry Fee: ${match.entryFee} coins\n💀 Per Kill: ${match.perKillReward || 11} coins\n\nRegister now: ${appLink}`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Join ${match.tournamentTitle}`,
+          text: shareText,
+        });
+      } catch (err) {
+        navigator.clipboard.writeText(shareText);
+        alert("Match details copied to clipboard!");
+      }
+    } else {
+      navigator.clipboard.writeText(shareText);
+      alert("Match details copied to clipboard!");
+    }
+  };
+
   const [showRulesPopup, setShowRulesPopup] = useState(false);
   
   const [showCalcPopup, setShowCalcPopup] = useState(false);
@@ -313,28 +333,37 @@ export default function UpcomingPerKillMatches({
                 </div>
 
                 <div className="space-y-3">
-                  {alreadyJoined ? (
-                    <button 
-                      disabled 
-                      className="w-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 py-3.5 rounded-xl font-bold text-center cursor-not-allowed"
+                  <div className="flex gap-2">
+                    {alreadyJoined ? (
+                      <button 
+                        disabled 
+                        className="flex-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 py-3.5 rounded-xl font-bold text-center cursor-not-allowed"
+                      >
+                        ✓ Already Joined
+                      </button>
+                    ) : joinedCount >= tournament.totalTeams ? (
+                      <button 
+                        disabled 
+                        className="flex-1 bg-red-500/10 text-red-500 border border-red-500/20 py-3.5 rounded-xl font-bold text-center cursor-not-allowed"
+                      >
+                        Match Full
+                      </button>
+                    ) : (
+                      <button 
+                        onClick={() => handleOpenJoin(tournament)}
+                        className="flex-1 bg-gradient-to-r from-orange-500 to-red-600 text-black font-black py-3.5 rounded-xl hover:scale-[1.02] duration-300 transition-all flex items-center justify-center gap-2"
+                      >
+                        🎯 JOINE NOW
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleShareMatch(tournament)}
+                      className="px-4 bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 hover:border-blue-500/40 rounded-xl font-bold duration-300 flex items-center justify-center hover:scale-[1.02] active:scale-[0.98]"
+                      title="Share Match"
                     >
-                      ✓ Already Joined
+                      <span className="text-base md:text-lg">📤</span>
                     </button>
-                  ) : joinedCount >= tournament.totalTeams ? (
-                    <button 
-                      disabled 
-                      className="w-full bg-red-500/10 text-red-500 border border-red-500/20 py-3.5 rounded-xl font-bold text-center cursor-not-allowed"
-                    >
-                      Match Full
-                    </button>
-                  ) : (
-                    <button 
-                      onClick={() => handleOpenJoin(tournament)}
-                      className="w-full bg-gradient-to-r from-orange-500 to-red-600 text-black font-black py-3.5 rounded-xl hover:scale-[1.02] duration-300 transition-all flex items-center justify-center gap-2"
-                    >
-                      🎯 JOINE NOW
-                    </button>
-                  )}
+                  </div>
 
                   <button
                     onClick={() => { setSelectedViewTournament(tournament); setShowPlayersPopup(true); }}
