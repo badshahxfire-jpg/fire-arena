@@ -49,6 +49,30 @@ const THEMES = [
     bodyBg: "linear-gradient(135deg, #0f0d05 0%, #2e2a0a 30%, #1a180f 60%, #080705 100%)",
     desc: "Rich Yellow",
   },
+  {
+    id: "cyber",
+    name: "Cyber",
+    emoji: "🕶️",
+    hue: 180,
+    bodyBg: "linear-gradient(135deg, #051414 0%, #0a3e3e 30%, #0a2020 60%, #030808 100%)",
+    desc: "Neon Cyan",
+  },
+  {
+    id: "synth",
+    name: "Synth",
+    emoji: "🌆",
+    hue: 300,
+    bodyBg: "linear-gradient(135deg, #140514 0%, #3e0a3e 30%, #200a20 60%, #080308 100%)",
+    desc: "Neon Magenta",
+  },
+  {
+    id: "toxic",
+    name: "Toxic",
+    emoji: "☢️",
+    hue: 80,
+    bodyBg: "linear-gradient(135deg, #101405 0%, #323e0a 30%, #1a200a 60%, #060803 100%)",
+    desc: "Acid Green",
+  },
 ];
 
 // Generate CSS override for a theme based on hue rotation
@@ -173,6 +197,100 @@ function generateThemeCSS(theme) {
       .rounded-2xl, 
       .rounded-xl {
         border-radius: 4px !important;
+      }
+    `;
+  } else if (theme.id === "cyber") {
+    // Cyberpunk Theme: Glitchy sharp edges, neon borders
+    structuralCSS = `
+      @import url('https://fonts.googleapis.com/css2?family=Teko:wght@400;600&display=swap');
+      /* Font */
+      * {
+        font-family: 'Teko', sans-serif !important;
+        letter-spacing: 0.5px !important;
+      }
+      /* Cards & Containers */
+      .cyber-card, 
+      .bg-black, 
+      .bg-\\[\\#111\\], 
+      .bg-black\\/40, 
+      .bg-black\\/60, 
+      .bg-\\[\\#1a1a2e\\] {
+        border-radius: 0px !important;
+        border: 2px solid rgba(6, 182, 212, 0.5) !important;
+        border-left: 5px solid rgba(6, 182, 212, 0.8) !important;
+        box-shadow: 0 0 10px rgba(6, 182, 212, 0.2), inset 0 0 15px rgba(6, 182, 212, 0.1) !important;
+        transform: skewX(-2deg);
+      }
+      .cyber-card > *, .bg-black > * {
+        transform: skewX(2deg);
+      }
+      /* Buttons, Inputs, Selectors */
+      .cyber-btn, 
+      button, 
+      input, 
+      select, 
+      .rounded-3xl, 
+      .rounded-2xl, 
+      .rounded-xl {
+        border-radius: 0px !important;
+        border: 1px solid rgba(6, 182, 212, 0.8) !important;
+        transform: skewX(-5deg);
+      }
+    `;
+  } else if (theme.id === "synth") {
+    // Retrowave Synth Theme: Round tops, glow bottoms
+    structuralCSS = `
+      /* Cards & Containers */
+      .cyber-card, 
+      .bg-black, 
+      .bg-\\[\\#111\\], 
+      .bg-black\\/40, 
+      .bg-black\\/60, 
+      .bg-\\[\\#1a1a2e\\] {
+        border-radius: 20px 20px 4px 4px !important;
+        border-top: 1px solid rgba(217, 70, 239, 0.4) !important;
+        border-bottom: 3px solid rgba(217, 70, 239, 0.8) !important;
+        box-shadow: 0 10px 20px -5px rgba(217, 70, 239, 0.4) !important;
+      }
+      /* Buttons, Inputs, Selectors */
+      .cyber-btn, 
+      button, 
+      input, 
+      select, 
+      .rounded-3xl, 
+      .rounded-2xl, 
+      .rounded-xl {
+        border-radius: 10px !important;
+      }
+    `;
+  } else if (theme.id === "toxic") {
+    // Toxic Theme: Grimy, heavy borders, rounded blobs
+    structuralCSS = `
+      /* Font */
+      * {
+        font-family: 'Oswald', sans-serif !important;
+      }
+      /* Cards & Containers */
+      .cyber-card, 
+      .bg-black, 
+      .bg-\\[\\#111\\], 
+      .bg-black\\/40, 
+      .bg-black\\/60, 
+      .bg-\\[\\#1a1a2e\\] {
+        border-radius: 30px 10px 30px 10px !important;
+        border: 2px dashed rgba(132, 204, 22, 0.4) !important;
+        box-shadow: 0 0 20px rgba(132, 204, 22, 0.1) !important;
+      }
+      /* Buttons, Inputs, Selectors */
+      .cyber-btn, 
+      button, 
+      input, 
+      select, 
+      .rounded-3xl, 
+      .rounded-2xl, 
+      .rounded-xl {
+        border-radius: 15px 5px 15px 5px !important;
+        border-bottom: 2px solid rgba(132, 204, 22, 0.7) !important;
       }
     `;
   }

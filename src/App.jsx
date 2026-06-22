@@ -82,7 +82,7 @@ export default function FireBaadshahArena() {
   const [showHistory, setShowHistory] = useState(false);
   const [showPerKillHistory, setShowPerKillHistory] = useState(false);
   const [showContact, setShowContact] = useState(false);
-  const [showTutorial, setShowTutorial] = useState(true);
+  const [showTutorial, setShowTutorial] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showReferral, setShowReferral] = useState(false);
   const [showLoyal, setShowLoyal] = useState(false);
