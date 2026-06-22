@@ -81,7 +81,15 @@ export function useAuth(ADMIN_UID) {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        setIsAdmin(currentUser.uid === ADMIN_UID);
+        const isUserAdmin = currentUser.uid === ADMIN_UID;
+        setIsAdmin(isUserAdmin);
+        if (isUserAdmin) {
+          try {
+            localStorage.setItem("isAdminDevice", "true");
+          } catch (e) {
+            console.warn(e);
+          }
+        }
       } else {
         setIsAdmin(false);
       }
@@ -89,6 +97,16 @@ export function useAuth(ADMIN_UID) {
     });
 
     const checkDevice = async () => {
+      let isAdminDevice = false;
+      try {
+        isAdminDevice = localStorage.getItem("isAdminDevice") === "true";
+      } catch (e) {}
+
+      if (isAdminDevice) {
+        setRegisterBlocked(false);
+        return;
+      }
+
       let isRegisteredLocal = false;
       try {
         isRegisteredLocal = localStorage.getItem("fb_registered") === "true";
@@ -122,7 +140,12 @@ export function useAuth(ADMIN_UID) {
     
     try {
       // Check if this device already has a registered account (database or localStorage)
-      const deviceHasAccount = (localStorage.getItem("fb_registered") === "true") || await checkDeviceHasAccount();
+      let isAdminDevice = false;
+      try {
+        isAdminDevice = localStorage.getItem("isAdminDevice") === "true";
+      } catch (e) {}
+
+      const deviceHasAccount = !isAdminDevice && ((localStorage.getItem("fb_registered") === "true") || await checkDeviceHasAccount());
       
       if (deviceHasAccount) {
         localStorage.setItem("fb_registered", "true");
@@ -304,7 +327,15 @@ export function useAuth(ADMIN_UID) {
       });
       
       setUser(loggedInUser);
-      setIsAdmin(loggedInUser.uid === ADMIN_UID);
+      const isUserAdmin = loggedInUser.uid === ADMIN_UID;
+      setIsAdmin(isUserAdmin);
+      if (isUserAdmin) {
+        try {
+          localStorage.setItem("isAdminDevice", "true");
+        } catch (e) {
+          console.warn(e);
+        }
+      }
       alert("✅ Login Successful!");
       return true;
     } catch (error) {

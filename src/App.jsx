@@ -41,6 +41,7 @@ import NotificationsPopup from "./components/Popups/NotificationsPopup";
 import ReferralPopup from "./components/Popups/ReferralPopup";
 import UserActivityPopup from "./components/Admin/UserActivityPopup";
 import BonusWinnersPopup from "./components/Popups/BonusWinnersPopup";
+import WelcomeScratchCard from "./components/Popups/WelcomeScratchCard";
 
 // Admin Components
 import AdminAnalytics from "./components/Admin/AdminAnalytics";
@@ -102,6 +103,10 @@ export default function FireBaadshahArena() {
   const [showUpdatePopup, setShowUpdatePopup] = useState(false);
   const [isForceUpdate, setIsForceUpdate] = useState(false);
   const [updateConfig, setUpdateConfig] = useState(null);
+
+  // Welcome Bonus States
+  const [showWelcomeBonus, setShowWelcomeBonus] = useState(false);
+  const [hasPostponedWelcomeBonus, setHasPostponedWelcomeBonus] = useState(false);
 
   // Ref to hold the latest UI states for the back button listener
   const stateRef = useRef();
@@ -267,6 +272,31 @@ export default function FireBaadshahArena() {
       : 0,
     kd: ((playerData?.wins || 0) * 3 + (playerData?.top3 || 0) / (joinedHistory.filter((item) => item.userEmail === user?.email).length || 1)).toFixed(2),
     mvp: Math.floor((playerData?.wins || 0) / 2),
+  };
+
+  // Welcome Bonus check and claim functions
+  useEffect(() => {
+    if (user && playerData && !isAdmin && !playerData.welcomeBonusClaimed && !hasPostponedWelcomeBonus) {
+      setShowWelcomeBonus(true);
+    } else {
+      setShowWelcomeBonus(false);
+    }
+  }, [user, playerData, isAdmin, hasPostponedWelcomeBonus]);
+
+  const handleClaimWelcomeBonus = async () => {
+    if (!user) return;
+    try {
+      const userRef = doc(db, "users", user.uid);
+      await updateDoc(userRef, {
+        coins: increment(20),
+        welcomeBonusClaimed: true
+      });
+      await logCoinTransaction(user.uid, 20, "WELCOME_BONUS", "Welcome signup bonus claimed!", true);
+      setShowWelcomeBonus(false);
+    } catch (error) {
+      console.error("Error claiming welcome bonus:", error);
+      alert("Failed to claim welcome bonus. Please try again.");
+    }
   };
 
   useEffect(() => {
@@ -1132,6 +1162,7 @@ export default function FireBaadshahArena() {
 
       {/* Popups */}
       {showUpdatePopup && <AppUpdatePopup updateConfig={updateConfig} isForceUpdate={isForceUpdate} onClose={() => setShowUpdatePopup(false)} />}
+      {showWelcomeBonus && <WelcomeScratchCard onClaim={handleClaimWelcomeBonus} onClose={() => setHasPostponedWelcomeBonus(true)} />}
       {showLogin && <LoginPopup onClose={() => setShowLogin(false)} onLogin={loginUser} onForgotPassword={forgotPassword} loginLoading={loginLoading} />}
       {showRegister && <RegisterPopup onClose={() => setShowRegister(false)} onRegister={registerUser} registerLoading={registerLoading} registerBlocked={registerBlocked} />}
       {showWallet && <WalletPopup user={user} coins={coins} winCoins={winCoins} onClose={() => setShowWallet(false)} onTopup={handleTopup} onShowWithdraw={() => { setShowWallet(false); setShowWithdrawPopup(true); }} onShowCoinHistory={() => { setShowWallet(false); setShowCoinHistory(true); }} paymentRequests={paymentRequests} buttonLoading={buttonLoading} transferCoins={transferCoins} verifyRecipient={verifyRecipient} />}
