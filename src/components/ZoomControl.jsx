@@ -21,14 +21,14 @@ export default function ZoomControl() {
   }, [zoomLevel]);
 
   return (
-    <div className="fixed bottom-24 right-6 z-[999] flex flex-col gap-2 bg-black/80 backdrop-blur-xl border border-white/10 rounded-2xl p-1.5 shadow-2xl transition-all">
-      <button onClick={handleZoomIn} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center font-bold text-xl text-white transition-all active:scale-95" title="Zoom In">
+    <div className="fixed top-24 right-2 md:right-6 z-[999] flex flex-col gap-2 bg-black/80 backdrop-blur-xl border border-white/10 rounded-2xl p-1.5 shadow-2xl transition-all">
+      <button onClick={handleZoomIn} className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center font-bold text-xl text-white transition-all active:scale-95" title="Zoom In">
         +
       </button>
-      <button onClick={resetZoom} className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center font-bold text-[10px] text-orange-400 transition-all active:scale-95" title="Reset Zoom">
+      <button onClick={resetZoom} className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center font-bold text-[9px] md:text-[10px] text-orange-400 transition-all active:scale-95" title="Reset Zoom">
         {(zoomLevel * 100).toFixed(0)}%
       </button>
-      <button onClick={handleZoomOut} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center font-bold text-2xl text-white transition-all active:scale-95" title="Zoom Out">
+      <button onClick={handleZoomOut} className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center font-bold text-2xl text-white transition-all active:scale-95" title="Zoom Out">
         -
       </button>
     </div>
