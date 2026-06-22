@@ -1283,6 +1283,15 @@ export default function FireBaadshahArena() {
       {/* Theme Switcher */}
       <ThemeSwitcher />
 
+      {/* Floating Refresh Button for WebViews/APKs */}
+      <button
+        onClick={() => window.location.reload()}
+        className="fixed bottom-6 right-6 z-[999] w-12 h-12 rounded-2xl bg-black/80 backdrop-blur-xl border border-white/10 hover:border-white/30 shadow-2xl flex items-center justify-center text-xl transition-all duration-300 hover:scale-110 active:scale-95"
+        title="Refresh App"
+      >
+        🔄
+      </button>
+
       {/* Footer */}
       <Footer />
 

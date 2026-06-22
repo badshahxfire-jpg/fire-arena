@@ -26,6 +26,20 @@ export default function UserProfileCheck({ allUsers = [], onSearchUser, searched
     setLoadingAction(null);
   };
 
+  const handleTogglePhoneLock = async () => {
+    if (!displayUser) return;
+    setLoadingAction("togglePhoneLock");
+    try {
+      await updateDoc(doc(db, "users", displayUser.uid), {
+        mobileNumberLocked: !displayUser.mobileNumberLocked
+      });
+      alert(`Mobile Number successfully ${!displayUser.mobileNumberLocked ? "locked" : "unlocked"}!`);
+    } catch (err) {
+      alert("Failed to toggle Mobile Number lock: " + err.message);
+    }
+    setLoadingAction(null);
+  };
+
   // Users table state
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all"); // "all", "active", "blocked"
@@ -278,6 +292,20 @@ export default function UserProfileCheck({ allUsers = [], onSearchUser, searched
                     </div>
                   </div>
 
+                  {/* Mobile Number & Lock Status */}
+                  <div className="flex items-center justify-between mt-2 p-3 bg-black rounded-xl border border-purple-500/10 text-xs">
+                    <div>
+                      <p className="text-gray-400 text-[10px]">MOBILE NUMBER</p>
+                      <p className="text-orange-400 font-bold">{displayUser.mobileNumber || "Not Set"}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-[10px] text-right">PHONE LOCK</p>
+                      <p className={`font-black ${displayUser.mobileNumberLocked ? "text-red-400" : "text-green-400"}`}>
+                        {displayUser.mobileNumberLocked ? "🔒 LOCKED" : "🔓 UNLOCKED"}
+                      </p>
+                    </div>
+                  </div>
+
                   {/* Button Grid */}
                   <div className="grid grid-cols-3 gap-2 mt-5">
                     <button
@@ -328,6 +356,25 @@ export default function UserProfileCheck({ allUsers = [], onSearchUser, searched
                         : displayUser.gameUidLocked 
                           ? "🔓 UNLOCK GAME UID" 
                           : "🔒 LOCK GAME UID"}
+                  </button>
+
+                  {/* Unlock Mobile Number Button */}
+                  <button
+                    onClick={handleTogglePhoneLock}
+                    disabled={loadingAction === "togglePhoneLock" || !displayUser.mobileNumber}
+                    className={`w-full py-2.5 rounded-xl font-black text-xs transition-all mt-2 disabled:opacity-50 ${
+                      displayUser.mobileNumberLocked 
+                        ? "bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 border border-purple-500/30" 
+                        : "bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/30"
+                    }`}
+                  >
+                    {loadingAction === "togglePhoneLock" 
+                      ? "⏳ WORKING..." 
+                      : !displayUser.mobileNumber
+                        ? "❌ NO MOBILE NO REGISTERED"
+                        : displayUser.mobileNumberLocked 
+                          ? "🔓 UNLOCK MOBILE NO" 
+                          : "🔒 LOCK MOBILE NO"}
                   </button>
 
                   {/* Wallet Control */}

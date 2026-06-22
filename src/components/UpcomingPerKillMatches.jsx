@@ -1,4 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { getDoc, doc, updateDoc } from "firebase/firestore";
+import { db } from "../firebase";
 
 export default function UpcomingPerKillMatches({ 
   tournaments, 
@@ -26,6 +28,27 @@ export default function UpcomingPerKillMatches({
   const [showPlayersPopup, setShowPlayersPopup] = useState(false);
   const [selectedViewTournament, setSelectedViewTournament] = useState(null);
   const [loadingAction, setLoadingAction] = useState(null);
+  const [leaderProfile, setLeaderProfile] = useState(null);
+
+  // Fetch leader profile data to autofill and enforce lock
+  useEffect(() => {
+    if (!user) return;
+    const fetchLeaderProfile = async () => {
+      try {
+        const userRef = doc(db, "users", user.uid);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          const data = userSnap.data();
+          setLeaderProfile(data);
+          setGameUid(data.gameUid || "");
+          setMobileNumber(data.mobileNumber || "");
+        }
+      } catch (error) {
+        console.error("Error fetching leader profile in PerKill matches:", error);
+      }
+    };
+    fetchLeaderProfile();
+  }, [user]);
 
   const handleShareMatch = async (match) => {
     const appLink = window.location.origin;
@@ -113,9 +136,9 @@ export default function UpcomingPerKillMatches({
     setSelectedTournament(tournament);
     setSelectedSlot(null);
     setIngameName("");
-    setGameUid("");
+    setGameUid(leaderProfile?.gameUid || "");
     setGameLevel("");
-    setMobileNumber("");
+    setMobileNumber(leaderProfile?.mobileNumber || "");
     setShowJoinPopup(true);
   };
 
@@ -127,6 +150,30 @@ export default function UpcomingPerKillMatches({
     if (!ingameName || !gameUid || !gameLevel || !mobileNumber) {
       alert("Please fill in all player details! ❌");
       return;
+    }
+
+    // Auto-save and lock Game UID & Mobile Number if they weren't set/locked in profile yet
+    if (user) {
+      const updates = {};
+      if (!leaderProfile || !leaderProfile.gameUidLocked) {
+        updates.gameUid = gameUid.trim();
+        updates.gameUidLocked = true;
+      }
+      if (!leaderProfile || !leaderProfile.mobileNumberLocked) {
+        updates.mobileNumber = mobileNumber.trim();
+        updates.mobileNumberLocked = true;
+      }
+      if (Object.keys(updates).length > 0) {
+        try {
+          await updateDoc(doc(db, "users", user.uid), updates);
+          setLeaderProfile(prev => ({
+            ...prev,
+            ...updates
+          }));
+        } catch (err) {
+          console.error("Error auto-saving profile fields on PerKill join:", err);
+        }
+      }
     }
 
     const success = await onJoin(user, selectedTournament, {
@@ -502,13 +549,21 @@ export default function UpcomingPerKillMatches({
                 </div>
                 <div>
                   <label className="text-xs text-gray-400 font-bold block mb-1">GAME UID</label>
-                  <input
-                    type="text"
-                    value={gameUid}
-                    onChange={(e) => setGameUid(e.target.value)}
-                    placeholder="Enter game UID numbers"
-                    className="bg-black border border-gray-800 rounded-xl w-full px-4 py-3 text-white outline-none focus:border-orange-500/40 transition"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={gameUid}
+                      onChange={(e) => setGameUid(e.target.value)}
+                      placeholder="Enter game UID numbers"
+                      className="bg-black border border-gray-800 rounded-xl w-full px-4 py-3 text-white outline-none focus:border-orange-500/40 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                      disabled={!!leaderProfile?.gameUidLocked}
+                    />
+                    {!!leaderProfile?.gameUidLocked && (
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs flex items-center gap-1 font-bold">
+                        🔒 Locked
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <label className="text-xs text-gray-400 font-bold block mb-1">GAME LEVEL</label>
@@ -522,13 +577,21 @@ export default function UpcomingPerKillMatches({
                 </div>
                 <div>
                   <label className="text-xs text-gray-400 font-bold block mb-1">MOBILE NUMBER</label>
-                  <input
-                    type="text"
-                    value={mobileNumber}
-                    onChange={(e) => setMobileNumber(e.target.value)}
-                    placeholder="WhatsApp number preferred"
-                    className="bg-black border border-gray-800 rounded-xl w-full px-4 py-3 text-white outline-none focus:border-orange-500/40 transition"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={mobileNumber}
+                      onChange={(e) => setMobileNumber(e.target.value)}
+                      placeholder="WhatsApp number preferred"
+                      className="bg-black border border-gray-800 rounded-xl w-full px-4 py-3 text-white outline-none focus:border-orange-500/40 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                      disabled={!!leaderProfile?.mobileNumberLocked}
+                    />
+                    {!!leaderProfile?.mobileNumberLocked && (
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs flex items-center gap-1 font-bold">
+                        🔒 Locked
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

@@ -17,6 +17,8 @@ export default function ProfilePopup({ user, playerData, coins, onClose, onChang
   const [tempName, setTempName] = useState("");
   const [showUidEdit, setShowUidEdit] = useState(false);
   const [tempUid, setTempUid] = useState("");
+  const [showPhoneEdit, setShowPhoneEdit] = useState(false);
+  const [tempPhone, setTempPhone] = useState("");
 
   // AUTO-GENERATE REFERRAL CODE IF MISSING
   useEffect(() => {
@@ -97,6 +99,26 @@ export default function ProfilePopup({ user, playerData, coins, onClose, onChang
     setShowUidEdit(true);
   };
 
+  const handleChangePhone = async () => {
+    if (tempPhone.trim() && user) {
+      try {
+        await updateDoc(doc(db, "users", user.uid), {
+          mobileNumber: tempPhone.trim(),
+          mobileNumberLocked: true
+        });
+        setShowPhoneEdit(false);
+        setTempPhone("");
+      } catch (err) {
+        alert("Failed to update Mobile Number: " + err.message);
+      }
+    }
+  };
+
+  const openPhoneEdit = () => {
+    setTempPhone(playerData?.mobileNumber || "");
+    setShowPhoneEdit(true);
+  };
+
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 px-4">
       <div className="bg-[#111] w-full max-w-2xl rounded-[40px] p-5 md:p-8 border border-purple-500/20 max-h-[90vh] overflow-y-auto cyber-card">
@@ -148,6 +170,30 @@ export default function ProfilePopup({ user, playerData, coins, onClose, onChang
             </div>
             {playerData?.gameUidLocked && (
               <p className="text-gray-500 text-[10px] mt-2">⚠️ Contact Admin if you want to change your locked UID.</p>
+            )}
+          </div>
+
+          {/* MOBILE NUMBER */}
+          <div className="bg-black rounded-3xl p-6">
+            <p className="text-gray-400">MOBILE NUMBER</p>
+            <div className="flex items-center justify-between mt-2">
+              <h3 className="text-2xl font-black text-orange-400">{playerData?.mobileNumber || "Not Set"}</h3>
+              {!playerData?.mobileNumberLocked && (
+                <button
+                  onClick={openPhoneEdit}
+                  className="bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 px-3 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-1"
+                >
+                  <span>✏️</span> SET NUMBER
+                </button>
+              )}
+              {playerData?.mobileNumberLocked && (
+                <span className="bg-gray-500/20 text-gray-400 px-3 py-2 rounded-xl text-xs font-bold">
+                  🔒 Locked
+                </span>
+              )}
+            </div>
+            {playerData?.mobileNumberLocked && (
+              <p className="text-gray-500 text-[10px] mt-2">⚠️ Contact Admin if you want to change your locked Mobile Number.</p>
             )}
           </div>
 
@@ -295,6 +341,51 @@ export default function ProfilePopup({ user, playerData, coins, onClose, onChang
               }`}
             >
               CONFIRM & LOCK UID
+            </button>
+          </div>
+        </div>
+      )}
+      {/* MOBILE NUMBER SET/EDIT MODAL */}
+      {showPhoneEdit && (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-[60] px-4">
+          <div className="bg-[#111] w-full max-w-md rounded-[30px] p-6 border border-orange-500/20 cyber-card">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-black text-orange-400">✏️ SET MOBILE NUMBER</h3>
+              <button
+                onClick={() => setShowPhoneEdit(false)}
+                className="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-3 py-1.5 rounded-xl text-sm font-bold"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <p className="text-gray-400 text-sm mb-4">
+              Current Number: <span className="text-orange-400 font-bold">{playerData?.mobileNumber || "Not Set"}</span>
+            </p>
+            
+            <input
+              type="text"
+              placeholder="Enter Mobile Number"
+              value={tempPhone}
+              onChange={(e) => setTempPhone(e.target.value)}
+              className="w-full bg-black border border-orange-500/30 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 mb-4"
+              autoFocus
+            />
+            
+            <p className="text-yellow-400 text-xs mb-4 font-bold">
+              ⚠️ Once you save your Mobile Number, it will be locked to prevent spam or duplicate accounts. You cannot change it without Admin approval!
+            </p>
+            
+            <button
+              onClick={handleChangePhone}
+              disabled={!tempPhone.trim() || tempPhone === playerData?.mobileNumber}
+              className={`w-full py-3 rounded-xl font-bold text-base transition-all ${
+                !tempPhone.trim() || tempPhone === playerData?.mobileNumber
+                  ? "bg-gray-600 cursor-not-allowed text-gray-300"
+                  : "bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white"
+              }`}
+            >
+              CONFIRM & LOCK NUMBER
             </button>
           </div>
         </div>

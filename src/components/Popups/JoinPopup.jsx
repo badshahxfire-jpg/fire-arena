@@ -62,7 +62,8 @@ export default function JoinPopup({ tournament, user, joinedPlayers, onJoin, joi
           
           setJoinData(prev => ({
             ...prev,
-            gameUid: data.gameUid || ""
+            gameUid: data.gameUid || "",
+            mobileNumber: data.mobileNumber || ""
           }));
         }
       } catch (error) {
@@ -361,15 +362,23 @@ export default function JoinPopup({ tournament, user, joinedPlayers, onJoin, joi
   const handleJoin = async () => {
     if (!isValidForm()) return;
     
-    // Auto-save and lock Game UID if it wasn't set/locked in profile yet
-    if (user && (!leaderProfile || !leaderProfile.gameUid)) {
-      try {
-        await updateDoc(doc(db, "users", user.uid), {
-          gameUid: joinData.gameUid.trim(),
-          gameUidLocked: true
-        });
-      } catch (err) {
-        console.error("Error auto-saving Game UID on join:", err);
+    // Auto-save and lock Game UID & Mobile Number if they weren't set/locked in profile yet
+    if (user) {
+      const updates = {};
+      if (!leaderProfile || !leaderProfile.gameUidLocked) {
+        updates.gameUid = joinData.gameUid.trim();
+        updates.gameUidLocked = true;
+      }
+      if (!leaderProfile || !leaderProfile.mobileNumberLocked) {
+        updates.mobileNumber = joinData.mobileNumber.trim();
+        updates.mobileNumberLocked = true;
+      }
+      if (Object.keys(updates).length > 0) {
+        try {
+          await updateDoc(doc(db, "users", user.uid), updates);
+        } catch (err) {
+          console.error("Error auto-saving profile fields on join:", err);
+        }
       }
     }
     
@@ -668,13 +677,21 @@ export default function JoinPopup({ tournament, user, joinedPlayers, onJoin, joi
         <div className="mb-6 p-4 bg-blue-500/10 rounded-2xl border border-blue-500/20">
           <h4 className="text-xl font-black text-blue-400 mb-4">👑 TEAM LEADER (YOU)</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <input
-              type="number"
-              placeholder="Your Mobile No.*"
-              value={joinData.mobileNumber}
-              onChange={(e) => setJoinData({ ...joinData, mobileNumber: e.target.value })}
-              className="bg-black border border-orange-500/30 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500"
-            />
+            <div className="relative">
+              <input
+                type="number"
+                placeholder="Your Mobile No.*"
+                value={joinData.mobileNumber}
+                onChange={(e) => setJoinData({ ...joinData, mobileNumber: e.target.value })}
+                className="w-full bg-black border border-orange-500/30 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                disabled={!!leaderProfile?.mobileNumberLocked}
+              />
+              {!!leaderProfile?.mobileNumberLocked && (
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs flex items-center gap-1 font-bold">
+                  🔒 Locked
+                </span>
+              )}
+            </div>
             <div className="relative">
               <input
                 type="text"
@@ -682,9 +699,9 @@ export default function JoinPopup({ tournament, user, joinedPlayers, onJoin, joi
                 value={joinData.gameUid}
                 onChange={(e) => setJoinData({ ...joinData, gameUid: e.target.value })}
                 className="w-full bg-black border border-orange-500/30 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 disabled:opacity-60 disabled:cursor-not-allowed"
-                disabled={!!leaderProfile?.gameUid}
+                disabled={!!leaderProfile?.gameUidLocked}
               />
-              {!!leaderProfile?.gameUid && (
+              {!!leaderProfile?.gameUidLocked && (
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs flex items-center gap-1 font-bold">
                   🔒 Locked
                 </span>
