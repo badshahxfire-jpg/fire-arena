@@ -62,10 +62,7 @@ export default function JoinPopup({ tournament, user, joinedPlayers, onJoin, joi
           
           setJoinData(prev => ({
             ...prev,
-            gameUid: data.gameUid || "",
-            ingameName: data.ingameName || data.name || "",
-            gameLevel: data.gameLevel || "",
-            mobileNumber: data.mobileNumber || ""
+            gameUid: data.gameUid || ""
           }));
         }
       } catch (error) {
