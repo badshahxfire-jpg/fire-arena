@@ -17,6 +17,26 @@ export default function UpcomingMatches({
   const [selectedViewTournament, setSelectedViewTournament] = useState(null);
   const [loadingAction, setLoadingAction] = useState(null);
 
+  const handleShareMatch = async (match) => {
+    const appLink = window.location.origin;
+    const shareText = `🎮 Join the match "${match.tournamentTitle}" on FireBaadshah Arena!\n\n🕒 Match Time: ${match.matchDate} at ${match.matchTime}\n💰 Entry Fee: ${match.entryFee} coins\n🏆 Prize Pool: ${match.prizePool} coins\n\nRegister now: ${appLink}`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Join ${match.tournamentTitle}`,
+          text: shareText,
+        });
+      } catch (err) {
+        navigator.clipboard.writeText(shareText);
+        alert("Match details copied to clipboard!");
+      }
+    } else {
+      navigator.clipboard.writeText(shareText);
+      alert("Match details copied to clipboard!");
+    }
+  };
+
   const upcomingTournaments = tournaments
     .filter((item) => {
       const now = new Date();
@@ -309,16 +329,25 @@ export default function UpcomingMatches({
                     </div>
                   )}
 
-                  {/* Join Button */}
-                  <button
-                    onClick={() => onJoin(item)}
-                    disabled={joinLoading}
-                    className={`w-full mt-4 py-2.5 md:py-3 rounded-[14px] font-extrabold text-sm md:text-base tracking-wide duration-300
-                      bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-black hover:scale-[1.02] active:scale-[0.98] shadow-md shadow-orange-500/10 hover:shadow-orange-500/20
-                      ${joinLoading ? "opacity-50 cursor-not-allowed" : ""}`}
-                  >
-                    {joinLoading ? "JOINING..." : `🚀 JOIN ${item.tournamentType}`}
-                  </button>
+                  {/* Join and Share Buttons */}
+                  <div className="flex gap-2 mt-4">
+                    <button
+                      onClick={() => onJoin(item)}
+                      disabled={joinLoading}
+                      className={`flex-1 py-2.5 md:py-3 rounded-[14px] font-extrabold text-sm md:text-base tracking-wide duration-300
+                        bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-black hover:scale-[1.02] active:scale-[0.98] shadow-md shadow-orange-500/10 hover:shadow-orange-500/20
+                        ${joinLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+                    >
+                      {joinLoading ? "JOINING..." : `🚀 JOIN ${item.tournamentType}`}
+                    </button>
+                    <button
+                      onClick={() => handleShareMatch(item)}
+                      className="px-4 bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 hover:border-blue-500/40 rounded-[14px] font-bold duration-300 flex items-center justify-center hover:scale-[1.02] active:scale-[0.98]"
+                      title="Share Match"
+                    >
+                      <span className="text-base md:text-lg">📤</span>
+                    </button>
+                  </div>
 
                   {/* Admin Buttons */}
                   {isAdmin && (
