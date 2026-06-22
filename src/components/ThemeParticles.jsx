@@ -66,6 +66,24 @@ export default function ThemeParticles() {
         vy = random(0.3, 1.0);
         vx = random(-0.4, 0.4);
         color = `rgba(234, 179, 8, ${random(0.18, 0.5)})`;
+      } else if (theme === "cyber") {
+        // Cyber: floating data characters
+        vy = random(-0.6, 0.6);
+        vx = random(-0.6, 0.6);
+        color = `rgba(6, 182, 212, ${random(0.4, 0.9)})`;
+      } else if (theme === "synth") {
+        // Synth: fast moving horizontal laser lines
+        if (!isInitial) {
+          x = random() > 0.5 ? -10 : width + 10;
+        }
+        vy = random(-0.1, 0.1);
+        vx = x < width / 2 ? random(1, 3) : random(-3, -1);
+        color = `rgba(217, 70, 239, ${random(0.2, 0.6)})`;
+      } else if (theme === "toxic") {
+        // Toxic: glowing green blobs rising slowly
+        vy = random(-0.8, -0.1);
+        vx = random(-0.2, 0.2);
+        color = `rgba(132, 204, 22, ${random(0.1, 0.3)})`;
       }
 
       return {
@@ -78,14 +96,17 @@ export default function ThemeParticles() {
         life: maxLife,
         maxLife,
         wiggle: random(0, Math.PI * 2),
-        wiggleSpeed: random(0.01, 0.04)
+        wiggleSpeed: random(0.01, 0.04),
+        char: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ$#@%&*".charAt(Math.floor(Math.random() * 42)),
+        rotation: random(0, Math.PI * 2),
+        rotationSpeed: random(-0.05, 0.05)
       };
     };
 
     // Initialize the particles system
     const initParticles = (theme) => {
       particles = [];
-      if (theme === "emerald") return; // Matrix doesn't use standard particles
+      if (theme === "emerald" || theme === "cyber") return; // Matrix doesn't use standard particles
       for (let i = 0; i < maxParticles; i++) {
         particles.push(createParticle(theme, true));
       }
@@ -128,9 +149,10 @@ export default function ThemeParticles() {
       ctx.clearRect(0, 0, width, height);
       const activeTheme = themeRef.current;
 
-      if (activeTheme === "emerald") {
+      if (activeTheme === "emerald" || activeTheme === "cyber") {
         // --- MATRIX CODE RAIN ---
         ctx.fillStyle = "rgba(0, 0, 0, 0.08)"; // trail effect
+        ctx.fillRect(0, 0, width, height); // Apply trail
         ctx.font = `bold ${matrixFontSize}px monospace`;
 
         for (let i = 0; i < matrixDrops.length; i++) {
@@ -138,8 +160,8 @@ export default function ThemeParticles() {
           const x = i * matrixFontSize;
           const y = matrixDrops[i] * matrixFontSize;
 
-          // Glowing matrix text
-          ctx.fillStyle = "rgba(16, 185, 129, 0.85)";
+          // Glowing matrix text (emerald=green, cyber=cyan)
+          ctx.fillStyle = activeTheme === "cyber" ? "rgba(6, 182, 212, 0.85)" : "rgba(16, 185, 129, 0.85)";
           ctx.fillText(text, x, y);
 
           // Highlight lead character
@@ -178,12 +200,19 @@ export default function ThemeParticles() {
             // falling sway
             p.vx += Math.cos(p.wiggle) * 0.02;
           }
-
+          
           // Draw Particle
           ctx.beginPath();
           const alpha = p.life / p.maxLife;
 
-          if (activeTheme === "ocean") {
+          if (activeTheme === "synth") {
+            // Fast laser lines
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p.x - p.vx * 10, p.y - p.vy * 10);
+            ctx.strokeStyle = p.color.replace(/[\d.]+\)$/, `${alpha})`);
+            ctx.lineWidth = p.size / 2;
+            ctx.stroke();
+          } else if (activeTheme === "ocean") {
             // Bubble with outline
             ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
             ctx.strokeStyle = p.color.replace(/[\d.]+\)$/, `${alpha * 0.4})`);

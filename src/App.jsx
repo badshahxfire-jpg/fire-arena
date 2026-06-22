@@ -67,6 +67,7 @@ import AnnouncementBanner from "./components/AnnouncementBanner";
 import AdminAnnouncements from "./components/Admin/AdminAnnouncements";
 import ThemeSwitcher from "./components/ThemeSwitcher";
 import ThemeParticles from "./components/ThemeParticles";
+import ZoomControl from "./components/ZoomControl";
 
 const ADMIN_UID = "FAVc9zfAgoYs1d1BDr2EoDwSw0x1";
 
@@ -1297,6 +1298,9 @@ export default function FireBaadshahArena() {
       
       {/* Theme Switcher */}
       <ThemeSwitcher />
+
+      {/* Zoom Control */}
+      <ZoomControl />
 
       {/* Floating Refresh Button for WebViews/APKs */}
       <button
