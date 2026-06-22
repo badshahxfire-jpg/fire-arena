@@ -28,7 +28,7 @@ export default function ThemeParticles() {
     // Particle Factory
     const createParticle = (theme, isInitial = false) => {
       const size = random(2, 5.5);
-      const x = random(0, width);
+      let x = random(0, width);
       let y = height + 10;
       let vy = random(-1.4, -0.4);
       let vx = random(-0.4, 0.4);
