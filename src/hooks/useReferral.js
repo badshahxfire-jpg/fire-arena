@@ -301,10 +301,6 @@ export function useReferral(user) {
       // Get user data
       const userRef = doc(db, "users", userId);
       const userSnap = await getDoc(userRef);
-      if (userSnap.exists()) {
-        stats = userSnap.data().referralStats || stats;
-        setReferralStats(stats);
-      }
       
       // Get referral history
       const referralsRef = ref(database, "referrals");
@@ -312,11 +308,51 @@ export function useReferral(user) {
       const referrals = snapshot.val();
       
       const history = [];
+      let calculatedTotal = 0;
+      let calculatedCompleted = 0;
+      let calculatedPending = 0;
+      let calculatedEarned = 0;
+
       for (const key in referrals) {
         if (referrals[key].referrerId === userId) {
+          const refItem = referrals[key];
           history.push({
             id: key,
-            ...referrals[key]
+            ...refItem
+          });
+          calculatedTotal++;
+          if (refItem.status === "completed") {
+            calculatedCompleted++;
+            calculatedEarned += Number(refItem.referrerBonus || 20);
+          } else if (refItem.status === "pending") {
+            calculatedPending++;
+          }
+        }
+      }
+      
+      stats = {
+        totalReferrals: calculatedTotal,
+        completedReferrals: calculatedCompleted,
+        pendingReferrals: calculatedPending,
+        totalEarned: calculatedEarned
+      };
+      
+      setReferralStats(stats);
+
+      // Self-heal: update stats in Firestore if they are out of sync
+      if (userSnap.exists()) {
+        const dbStats = userSnap.data().referralStats || {};
+        if (
+          dbStats.totalReferrals !== calculatedTotal ||
+          dbStats.completedReferrals !== calculatedCompleted ||
+          dbStats.pendingReferrals !== calculatedPending ||
+          dbStats.totalEarned !== calculatedEarned
+        ) {
+          await updateDoc(userRef, {
+            "referralStats.totalReferrals": calculatedTotal,
+            "referralStats.completedReferrals": calculatedCompleted,
+            "referralStats.pendingReferrals": calculatedPending,
+            "referralStats.totalEarned": calculatedEarned
           });
         }
       }
