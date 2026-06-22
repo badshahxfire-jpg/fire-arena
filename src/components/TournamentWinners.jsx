@@ -65,45 +65,9 @@ export default function TournamentWinners() {
 
   // Enrich completed tournaments via useMemo
   const completedTournaments = useMemo(() => {
-    const parseDate = (dateStr) => {
-      if (!dateStr) return 0;
-      let time = Date.parse(dateStr);
-      if (!isNaN(time)) return time;
-
-      try {
-        const cleaned = dateStr.replace(/,/g, '').trim();
-        const parts = cleaned.split(/\s+/);
-        if (parts.length >= 1) {
-          const dateParts = parts[0].split('/');
-          if (dateParts.length === 3) {
-            const day = parseInt(dateParts[0], 10);
-            const month = parseInt(dateParts[1], 10) - 1;
-            const year = parseInt(dateParts[2], 10);
-            
-            let hours = 0, minutes = 0, seconds = 0;
-            if (parts[1]) {
-              const timeParts = parts[1].split(':');
-              hours = parseInt(timeParts[0] || '0', 10);
-              minutes = parseInt(timeParts[1] || '0', 10);
-              seconds = parseInt(timeParts[2] || '0', 10);
-            }
-            const d = new Date(year, month, day, hours, minutes, seconds);
-            if (!isNaN(d.getTime())) return d.getTime();
-          }
-        }
-      } catch (e) {
-        console.error("Failed to parse date:", dateStr, e);
-      }
-      return 0;
-    };
-
-    // Sort by date (newest first), falling back to Firebase ID ordering
+    // Firebase Push IDs are chronologically sortable.
+    // Sorting by ID descending ensures newest tournaments are first.
     const sorted = [...matchResults].sort((a, b) => {
-      const timeA = parseDate(a.createdAt);
-      const timeB = parseDate(b.createdAt);
-      if (timeA !== timeB) {
-        return timeB - timeA;
-      }
       return (b.id || "").localeCompare(a.id || "");
     });
     
