@@ -42,6 +42,7 @@ export default function UpcomingPerKillMatches({
           setLeaderProfile(data);
           setGameUid(data.gameUid || "");
           setMobileNumber(data.mobileNumber || "");
+          setIngameName(data.ingameName || "");
         }
       } catch (error) {
         console.error("Error fetching leader profile in PerKill matches:", error);
@@ -135,7 +136,7 @@ export default function UpcomingPerKillMatches({
     }
     setSelectedTournament(tournament);
     setSelectedSlot(null);
-    setIngameName("");
+    setIngameName(leaderProfile?.ingameName || "");
     setGameUid(leaderProfile?.gameUid || "");
     setGameLevel("");
     setMobileNumber(leaderProfile?.mobileNumber || "");
@@ -152,7 +153,7 @@ export default function UpcomingPerKillMatches({
       return;
     }
 
-    // Auto-save and lock Game UID & Mobile Number if they weren't set/locked in profile yet
+    // Auto-save and lock Game UID, Mobile Number & In-game Name if they weren't set/locked in profile yet
     if (user) {
       const updates = {};
       if (!leaderProfile || !leaderProfile.gameUidLocked) {
@@ -162,6 +163,10 @@ export default function UpcomingPerKillMatches({
       if (!leaderProfile || !leaderProfile.mobileNumberLocked) {
         updates.mobileNumber = mobileNumber.trim();
         updates.mobileNumberLocked = true;
+      }
+      if (!leaderProfile || !leaderProfile.ingameNameLocked) {
+        updates.ingameName = ingameName.trim();
+        updates.ingameNameLocked = true;
       }
       if (Object.keys(updates).length > 0) {
         try {
@@ -539,13 +544,21 @@ export default function UpcomingPerKillMatches({
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs text-gray-400 font-bold block mb-1">IN-GAME NAME</label>
-                  <input
-                    type="text"
-                    value={ingameName}
-                    onChange={(e) => setIngameName(e.target.value)}
-                    placeholder="Enter exactly as shown in-game"
-                    className="bg-black border border-gray-800 rounded-xl w-full px-4 py-3 text-white outline-none focus:border-orange-500/40 transition"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={ingameName}
+                      onChange={(e) => setIngameName(e.target.value)}
+                      placeholder="Enter exactly as shown in-game"
+                      className="bg-black border border-gray-800 rounded-xl w-full px-4 py-3 text-white outline-none focus:border-orange-500/40 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                      disabled={!!leaderProfile?.ingameNameLocked}
+                    />
+                    {!!leaderProfile?.ingameNameLocked && (
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs flex items-center gap-1 font-bold">
+                        🔒 Locked
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <label className="text-xs text-gray-400 font-bold block mb-1">GAME UID</label>

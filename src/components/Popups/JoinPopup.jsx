@@ -63,7 +63,8 @@ export default function JoinPopup({ tournament, user, joinedPlayers, onJoin, joi
           setJoinData(prev => ({
             ...prev,
             gameUid: data.gameUid || "",
-            mobileNumber: data.mobileNumber || ""
+            mobileNumber: data.mobileNumber || "",
+            ingameName: data.ingameName || ""
           }));
         }
       } catch (error) {
@@ -362,7 +363,7 @@ export default function JoinPopup({ tournament, user, joinedPlayers, onJoin, joi
   const handleJoin = async () => {
     if (!isValidForm()) return;
     
-    // Auto-save and lock Game UID & Mobile Number if they weren't set/locked in profile yet
+    // Auto-save and lock Game UID, Mobile Number & In-game Name if they weren't set/locked in profile yet
     if (user) {
       const updates = {};
       if (!leaderProfile || !leaderProfile.gameUidLocked) {
@@ -372,6 +373,10 @@ export default function JoinPopup({ tournament, user, joinedPlayers, onJoin, joi
       if (!leaderProfile || !leaderProfile.mobileNumberLocked) {
         updates.mobileNumber = joinData.mobileNumber.trim();
         updates.mobileNumberLocked = true;
+      }
+      if (!leaderProfile || !leaderProfile.ingameNameLocked) {
+        updates.ingameName = joinData.ingameName.trim();
+        updates.ingameNameLocked = true;
       }
       if (Object.keys(updates).length > 0) {
         try {
@@ -707,13 +712,21 @@ export default function JoinPopup({ tournament, user, joinedPlayers, onJoin, joi
                 </span>
               )}
             </div>
-            <input
-              type="text"
-              placeholder="Ingame Name*"
-              value={joinData.ingameName}
-              onChange={(e) => setJoinData({ ...joinData, ingameName: e.target.value })}
-              className="bg-black border border-orange-500/30 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500"
-            />
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Ingame Name*"
+                value={joinData.ingameName}
+                onChange={(e) => setJoinData({ ...joinData, ingameName: e.target.value })}
+                className="w-full bg-black border border-orange-500/30 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                disabled={!!leaderProfile?.ingameNameLocked}
+              />
+              {!!leaderProfile?.ingameNameLocked && (
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs flex items-center gap-1 font-bold">
+                  🔒 Locked
+                </span>
+              )}
+            </div>
             <input
               type="number"
               placeholder="Game Level*"

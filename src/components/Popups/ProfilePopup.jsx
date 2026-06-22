@@ -19,6 +19,8 @@ export default function ProfilePopup({ user, playerData, coins, onClose, onChang
   const [tempUid, setTempUid] = useState("");
   const [showPhoneEdit, setShowPhoneEdit] = useState(false);
   const [tempPhone, setTempPhone] = useState("");
+  const [showIngameEdit, setShowIngameEdit] = useState(false);
+  const [tempIngame, setTempIngame] = useState("");
 
   // AUTO-GENERATE REFERRAL CODE IF MISSING
   useEffect(() => {
@@ -119,6 +121,26 @@ export default function ProfilePopup({ user, playerData, coins, onClose, onChang
     setShowPhoneEdit(true);
   };
 
+  const handleChangeIngame = async () => {
+    if (tempIngame.trim() && user) {
+      try {
+        await updateDoc(doc(db, "users", user.uid), {
+          ingameName: tempIngame.trim(),
+          ingameNameLocked: true
+        });
+        setShowIngameEdit(false);
+        setTempIngame("");
+      } catch (err) {
+        alert("Failed to update In-Game Name: " + err.message);
+      }
+    }
+  };
+
+  const openIngameEdit = () => {
+    setTempIngame(playerData?.ingameName || "");
+    setShowIngameEdit(true);
+  };
+
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 px-4">
       <div className="bg-[#111] w-full max-w-2xl rounded-[40px] p-5 md:p-8 border border-purple-500/20 max-h-[90vh] overflow-y-auto cyber-card">
@@ -194,6 +216,30 @@ export default function ProfilePopup({ user, playerData, coins, onClose, onChang
             </div>
             {playerData?.mobileNumberLocked && (
               <p className="text-gray-500 text-[10px] mt-2">⚠️ Contact Admin if you want to change your locked Mobile Number.</p>
+            )}
+          </div>
+
+          {/* IN-GAME NAME */}
+          <div className="bg-black rounded-3xl p-6">
+            <p className="text-gray-400">IN-GAME NAME (FREE FIRE)</p>
+            <div className="flex items-center justify-between mt-2">
+              <h3 className="text-2xl font-black text-orange-400">{playerData?.ingameName || "Not Set"}</h3>
+              {!playerData?.ingameNameLocked && (
+                <button
+                  onClick={openIngameEdit}
+                  className="bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 px-3 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-1"
+                >
+                  <span>✏️</span> SET INGAME NAME
+                </button>
+              )}
+              {playerData?.ingameNameLocked && (
+                <span className="bg-gray-500/20 text-gray-400 px-3 py-2 rounded-xl text-xs font-bold">
+                  🔒 Locked
+                </span>
+              )}
+            </div>
+            {playerData?.ingameNameLocked && (
+              <p className="text-gray-500 text-[10px] mt-2">⚠️ Contact Admin if you want to change your locked In-game Name.</p>
             )}
           </div>
 
@@ -386,6 +432,51 @@ export default function ProfilePopup({ user, playerData, coins, onClose, onChang
               }`}
             >
               CONFIRM & LOCK NUMBER
+            </button>
+          </div>
+        </div>
+      )}
+      {/* IN-GAME NAME SET/EDIT MODAL */}
+      {showIngameEdit && (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-[60] px-4">
+          <div className="bg-[#111] w-full max-w-md rounded-[30px] p-6 border border-orange-500/20 cyber-card">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-black text-orange-400">✏️ SET IN-GAME NAME</h3>
+              <button
+                onClick={() => setShowIngameEdit(false)}
+                className="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-3 py-1.5 rounded-xl text-sm font-bold"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <p className="text-gray-400 text-sm mb-4">
+              Current In-game Name: <span className="text-orange-400 font-bold">{playerData?.ingameName || "Not Set"}</span>
+            </p>
+            
+            <input
+              type="text"
+              placeholder="Enter In-game Name"
+              value={tempIngame}
+              onChange={(e) => setTempIngame(e.target.value)}
+              className="w-full bg-black border border-orange-500/30 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 mb-4"
+              autoFocus
+            />
+            
+            <p className="text-yellow-400 text-xs mb-4 font-bold">
+              ⚠️ Once you save your In-game Name, it will be locked to prevent multiple accounts or impersonation. You cannot change it without Admin approval!
+            </p>
+            
+            <button
+              onClick={handleChangeIngame}
+              disabled={!tempIngame.trim() || tempIngame === playerData?.ingameName}
+              className={`w-full py-3 rounded-xl font-bold text-base transition-all ${
+                !tempIngame.trim() || tempIngame === playerData?.ingameName
+                  ? "bg-gray-600 cursor-not-allowed text-gray-300"
+                  : "bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white"
+              }`}
+            >
+              CONFIRM & LOCK INGAME NAME
             </button>
           </div>
         </div>

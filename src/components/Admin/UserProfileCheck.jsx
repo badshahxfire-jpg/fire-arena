@@ -40,6 +40,34 @@ export default function UserProfileCheck({ allUsers = [], onSearchUser, searched
     setLoadingAction(null);
   };
 
+  const handleToggleIngameLock = async () => {
+    if (!displayUser) return;
+    setLoadingAction("toggleIngameLock");
+    try {
+      await updateDoc(doc(db, "users", displayUser.uid), {
+        ingameNameLocked: !displayUser.ingameNameLocked
+      });
+      alert(`In-game Name successfully ${!displayUser.ingameNameLocked ? "locked" : "unlocked"}!`);
+    } catch (err) {
+      alert("Failed to toggle In-game Name lock: " + err.message);
+    }
+    setLoadingAction(null);
+  };
+
+  const handleToggleNameChangeLock = async () => {
+    if (!displayUser) return;
+    setLoadingAction("toggleNameChangeLock");
+    try {
+      await updateDoc(doc(db, "users", displayUser.uid), {
+        nameChanged: !displayUser.nameChanged
+      });
+      alert(`Player Name successfully ${!displayUser.nameChanged ? "locked" : "unlocked"}!`);
+    } catch (err) {
+      alert("Failed to toggle Player Name lock: " + err.message);
+    }
+    setLoadingAction(null);
+  };
+
   // Users table state
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all"); // "all", "active", "blocked"
@@ -306,6 +334,34 @@ export default function UserProfileCheck({ allUsers = [], onSearchUser, searched
                     </div>
                   </div>
 
+                  {/* In-game Name & Lock Status */}
+                  <div className="flex items-center justify-between mt-2 p-3 bg-black rounded-xl border border-purple-500/10 text-xs">
+                    <div>
+                      <p className="text-gray-400 text-[10px]">IN-GAME NAME</p>
+                      <p className="text-orange-400 font-bold">{displayUser.ingameName || "Not Set"}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-[10px] text-right">INGAME LOCK</p>
+                      <p className={`font-black ${displayUser.ingameNameLocked ? "text-red-400" : "text-green-400"}`}>
+                        {displayUser.ingameNameLocked ? "🔒 LOCKED" : "🔓 UNLOCKED"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Player Name Change Lock Status */}
+                  <div className="flex items-center justify-between mt-2 p-3 bg-black rounded-xl border border-purple-500/10 text-xs">
+                    <div>
+                      <p className="text-gray-400 text-[10px]">PLAYER NAME CHANGE</p>
+                      <p className="text-orange-400 font-bold">{displayUser.name || "Not Set"}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-[10px] text-right">NAME CHANGE LOCK</p>
+                      <p className={`font-black ${displayUser.nameChanged ? "text-red-400" : "text-green-400"}`}>
+                        {displayUser.nameChanged ? "🔒 LOCKED (Changed)" : "🔓 UNLOCKED"}
+                      </p>
+                    </div>
+                  </div>
+
                   {/* Button Grid */}
                   <div className="grid grid-cols-3 gap-2 mt-5">
                     <button
@@ -375,6 +431,42 @@ export default function UserProfileCheck({ allUsers = [], onSearchUser, searched
                         : displayUser.mobileNumberLocked 
                           ? "🔓 UNLOCK MOBILE NO" 
                           : "🔒 LOCK MOBILE NO"}
+                  </button>
+
+                  {/* Unlock In-game Name Button */}
+                  <button
+                    onClick={handleToggleIngameLock}
+                    disabled={loadingAction === "toggleIngameLock" || !displayUser.ingameName}
+                    className={`w-full py-2.5 rounded-xl font-black text-xs transition-all mt-2 disabled:opacity-50 ${
+                      displayUser.ingameNameLocked 
+                        ? "bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 border border-purple-500/30" 
+                        : "bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/30"
+                    }`}
+                  >
+                    {loadingAction === "toggleIngameLock" 
+                      ? "⏳ WORKING..." 
+                      : !displayUser.ingameName
+                        ? "❌ NO IN-GAME NAME REGISTERED"
+                        : displayUser.ingameNameLocked 
+                          ? "🔓 UNLOCK IN-GAME NAME" 
+                          : "🔒 LOCK IN-GAME NAME"}
+                  </button>
+
+                  {/* Unlock Player Name Button */}
+                  <button
+                    onClick={handleToggleNameChangeLock}
+                    disabled={loadingAction === "toggleNameChangeLock"}
+                    className={`w-full py-2.5 rounded-xl font-black text-xs transition-all mt-2 disabled:opacity-50 ${
+                      displayUser.nameChanged 
+                        ? "bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 border border-purple-500/30" 
+                        : "bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/30"
+                    }`}
+                  >
+                    {loadingAction === "toggleNameChangeLock" 
+                      ? "⏳ WORKING..." 
+                      : displayUser.nameChanged 
+                        ? "🔓 UNLOCK PLAYER NAME" 
+                        : "🔒 LOCK PLAYER NAME"}
                   </button>
 
                   {/* Wallet Control */}
