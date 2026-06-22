@@ -22,9 +22,9 @@ service cloud.firestore {
       // Any authenticated user can read profiles (needed for leaderboards, search etc.)
       allow read: if isAuthenticated();
       
-      // A user can create their own profile, but must initialize coins/winCoins to 0
+      // A user can create their own profile, but must initialize coins/winCoins correctly
       allow create: if (isOwner(userId) 
-        && request.resource.data.coins == 0 
+        && ((request.resource.data.coins == 0) || (request.resource.data.coins == 10 && request.resource.data.referredBy != null))
         && request.resource.data.winCoins == 0) || isAdmin();
 
       // PHASE 1: MEDIUM SECURITY (Will NOT break your current app)
