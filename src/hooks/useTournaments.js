@@ -260,9 +260,12 @@ export function useTournaments() {
 
         const res = await secureFetch("/api/join-tournament", {
           tournamentId: tournament.id,
-          entryFee: entryFee
+          entryFee: entryFee,
+          selectedSlot: joinData.selectedSlot,
+          totalSlots: tournament.totalTeams
         });
         const winCoinsDeducted = res?.deductions?.[user.uid]?.winCoinsDeducted || 0;
+        const bookedSlot = res?.bookedSlot || joinData.selectedSlot;
 
         await push(ref(database, "joinedPlayers"), {
           tournamentId: tournament.id,
@@ -274,7 +277,7 @@ export function useTournaments() {
           gameUid: joinData.gameUid,
           ingameName: joinData.ingameName,
           gameLevel: joinData.gameLevel,
-          selectedSlot: joinData.selectedSlot,
+          selectedSlot: bookedSlot,
           createdAt: new Date().toLocaleString(),
           entryFeeDeducted: true,
           coinsDeducted: entryFee,
@@ -397,12 +400,15 @@ export function useTournaments() {
         const res = await secureFetch("/api/join-tournament", {
           tournamentId: tournament.id,
           entryFee: entryFee,
-          teamMembers: teamMembers
+          teamMembers: teamMembers,
+          selectedSlot: joinData.selectedSlot,
+          totalSlots: tournament.totalTeams
         });
         
         // ========== FIX: Save ALL team members in joinedPlayers ==========
         const allTeamMembers = [...teamMembers];
-        const teamSlot = joinData.selectedSlot;
+        const bookedSlot = res?.bookedSlot || joinData.selectedSlot;
+        const teamSlot = bookedSlot;
         const teamName = joinData.teamName;
         
         // Save EACH team member as a separate record in joinedPlayers
@@ -650,6 +656,7 @@ export function useTournaments() {
       }
       
       await remove(ref(database, `liveTournaments/${tournament.id}`));
+      await remove(ref(database, `slotLocks/${tournament.id}`));
       alert("Tournament Cancelled 🔥");
       return true;
     } catch (error) {

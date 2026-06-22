@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { getDoc, doc } from "firebase/firestore";
+import { useState, useEffect } from "react";
+import { getDoc, doc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 
 export default function JoinPopup({ tournament, user, joinedPlayers, onJoin, joinLoading, onClose }) {
@@ -47,6 +47,34 @@ export default function JoinPopup({ tournament, user, joinedPlayers, onJoin, joi
   });
 
   const [verifying, setVerifying] = useState({});
+  const [leaderProfile, setLeaderProfile] = useState(null);
+
+  // Fetch leader profile data to autofill and enforce lock
+  useEffect(() => {
+    if (!user) return;
+    const fetchLeaderProfile = async () => {
+      try {
+        const userRef = doc(db, "users", user.uid);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          const data = userSnap.data();
+          setLeaderProfile(data);
+          
+          setJoinData(prev => ({
+            ...prev,
+            gameUid: data.gameUid || "",
+            ingameName: data.ingameName || data.name || "",
+            gameLevel: data.gameLevel || "",
+            mobileNumber: data.mobileNumber || ""
+          }));
+        }
+      } catch (error) {
+        console.error("Error fetching leader profile:", error);
+      }
+    };
+    fetchLeaderProfile();
+  }, [user]);
+
   const tournamentType = tournament?.tournamentType || "SOLO";
   const isSoloOr1v1 = tournamentType === "SOLO" || tournamentType === "1V1";
   
@@ -333,8 +361,20 @@ export default function JoinPopup({ tournament, user, joinedPlayers, onJoin, joi
     return true;
   };
 
-  const handleJoin = () => {
+  const handleJoin = async () => {
     if (!isValidForm()) return;
+    
+    // Auto-save and lock Game UID if it wasn't set/locked in profile yet
+    if (user && (!leaderProfile || !leaderProfile.gameUid)) {
+      try {
+        await updateDoc(doc(db, "users", user.uid), {
+          gameUid: joinData.gameUid.trim(),
+          gameUidLocked: true
+        });
+      } catch (err) {
+        console.error("Error auto-saving Game UID on join:", err);
+      }
+    }
     
     // Prepare team members data
     let teamMembers = [];
@@ -638,13 +678,21 @@ export default function JoinPopup({ tournament, user, joinedPlayers, onJoin, joi
               onChange={(e) => setJoinData({ ...joinData, mobileNumber: e.target.value })}
               className="bg-black border border-orange-500/30 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500"
             />
-            <input
-              type="text"
-              placeholder="Free Fire UID*"
-              value={joinData.gameUid}
-              onChange={(e) => setJoinData({ ...joinData, gameUid: e.target.value })}
-              className="bg-black border border-orange-500/30 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500"
-            />
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Free Fire UID*"
+                value={joinData.gameUid}
+                onChange={(e) => setJoinData({ ...joinData, gameUid: e.target.value })}
+                className="w-full bg-black border border-orange-500/30 rounded-xl px-4 py-3 text-white outline-none focus:border-orange-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                disabled={!!leaderProfile?.gameUid}
+              />
+              {!!leaderProfile?.gameUid && (
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs flex items-center gap-1 font-bold">
+                  🔒 Locked
+                </span>
+              )}
+            </div>
             <input
               type="text"
               placeholder="Ingame Name*"

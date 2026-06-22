@@ -44,13 +44,19 @@ async function verifyToken(req, res, next) {
 // -------------------------------------------------------------
 async function logCoinTransaction(userId, amount, type, description, isBonus = false) {
   const historyRef = db.collection("users").doc(userId).collection("coinHistory");
+  const additionTypes = ["COIN_TRANSFER_RECEIVE", "REFUND", "ADMIN_ADD", "LOYALTY_BONUS", "REFERRAL_BONUS"];
+  const isAddition = additionTypes.includes(type);
+
   await historyRef.add({
     amount: Number(amount),
     type: type,
     description: description,
+    reason: description,
+    isAddition: isAddition,
     isBonus: isBonus,
     timestamp: admin.firestore.FieldValue.serverTimestamp(),
-    date: new Date().toLocaleString()
+    date: new Date().toLocaleString(),
+    dateString: new Date().toLocaleString()
   });
 }
 
@@ -59,7 +65,7 @@ async function logCoinTransaction(userId, amount, type, description, isBonus = f
 // -------------------------------------------------------------
 app.post("/api/join-tournament", verifyToken, async (req, res) => {
   const uid = req.user.uid;
-  const { tournamentId, entryFee, teamMembers } = req.body;
+  const { tournamentId, entryFee, teamMembers, selectedSlot, totalSlots } = req.body;
 
   if (!tournamentId || entryFee === undefined) {
     return res.status(400).json({ error: "Missing required fields" });
@@ -73,8 +79,43 @@ app.post("/api/join-tournament", verifyToken, async (req, res) => {
     : [uid];
 
   const deductions = {};
+  let actualSlot = null;
 
   try {
+    // Attempt slot locking if selectedSlot is provided
+    if (selectedSlot !== undefined) {
+      const slotNum = Number(selectedSlot);
+      const maxSlots = Number(totalSlots || 100);
+      const locksRef = rtdb.ref(`slotLocks/${tournamentId}`);
+
+      await locksRef.transaction((currentLocks) => {
+        const locks = currentLocks || {};
+        
+        // 1. Check if the requested slot is free
+        if (!locks[slotNum]) {
+          actualSlot = slotNum;
+          locks[slotNum] = { bookedBy: uid, bookedAt: Date.now() };
+          return locks;
+        }
+        
+        // 2. If requested slot is taken, find the next available free slot
+        for (let s = 1; s <= maxSlots; s++) {
+          if (!locks[s]) {
+            actualSlot = s;
+            locks[s] = { bookedBy: uid, bookedAt: Date.now() };
+            return locks;
+          }
+        }
+        
+        // 3. If no slots are available, abort
+        return;
+      });
+
+      if (!actualSlot) {
+        return res.status(400).json({ error: "Tournament is full!" });
+      }
+    }
+
     await db.runTransaction(async (transaction) => {
       const userDocs = [];
       
@@ -127,8 +168,20 @@ app.post("/api/join-tournament", verifyToken, async (req, res) => {
       );
     }
 
-    return res.json({ success: true, message: "Joined successfully and coins deducted", deductions });
+    return res.json({ 
+      success: true, 
+      message: "Joined successfully and coins deducted", 
+      deductions,
+      bookedSlot: actualSlot 
+    });
   } catch (error) {
+    if (selectedSlot !== undefined && actualSlot) {
+      try {
+        await rtdb.ref(`slotLocks/${tournamentId}/${actualSlot}`).remove();
+      } catch (err) {
+        console.error("Failed to release slot lock:", err);
+      }
+    }
     console.error("Join tournament error:", error);
     return res.status(400).json({ error: error.message });
   }

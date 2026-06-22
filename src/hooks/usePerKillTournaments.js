@@ -163,9 +163,12 @@ export function usePerKillTournaments() {
       // Deduct coins securely via backend transaction
       const res = await secureFetch("/api/join-tournament", {
         tournamentId: tournament.id,
-        entryFee: entryFee
+        entryFee: entryFee,
+        selectedSlot: joinData.selectedSlot,
+        totalSlots: tournament.totalTeams
       });
       const winCoinsDeducted = res?.deductions?.[user.uid]?.winCoinsDeducted || 0;
+      const bookedSlot = res?.bookedSlot || joinData.selectedSlot;
 
       // Register player
       await push(ref(database, "joinedPerKillPlayers"), {
@@ -177,7 +180,7 @@ export function usePerKillTournaments() {
         gameUid: joinData.gameUid,
         ingameName: joinData.ingameName,
         gameLevel: joinData.gameLevel,
-        selectedSlot: joinData.selectedSlot,
+        selectedSlot: bookedSlot,
         createdAt: new Date().toLocaleString(),
         entryFeeDeducted: true,
         coinsDeducted: entryFee,
@@ -238,6 +241,7 @@ export function usePerKillTournaments() {
 
       // Delete tournament
       await remove(ref(database, `perKillTournaments/${tournament.id}`));
+      await remove(ref(database, `slotLocks/${tournament.id}`));
       alert("Match cancelled and refunds processed successfully!");
     } catch (error) {
       console.error(error);

@@ -15,6 +15,8 @@ export default function ProfilePopup({ user, playerData, coins, onClose, onChang
   });
   const [showNameEdit, setShowNameEdit] = useState(false);
   const [tempName, setTempName] = useState("");
+  const [showUidEdit, setShowUidEdit] = useState(false);
+  const [tempUid, setTempUid] = useState("");
 
   // AUTO-GENERATE REFERRAL CODE IF MISSING
   useEffect(() => {
@@ -75,6 +77,26 @@ export default function ProfilePopup({ user, playerData, coins, onClose, onChang
     setTimeout(() => setShowCopied(null), 2000);
   };
 
+  const handleChangeUid = async () => {
+    if (tempUid.trim() && user) {
+      try {
+        await updateDoc(doc(db, "users", user.uid), {
+          gameUid: tempUid.trim(),
+          gameUidLocked: true
+        });
+        setShowUidEdit(false);
+        setTempUid("");
+      } catch (err) {
+        alert("Failed to update Game UID: " + err.message);
+      }
+    }
+  };
+
+  const openUidEdit = () => {
+    setTempUid(playerData?.gameUid || "");
+    setShowUidEdit(true);
+  };
+
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 px-4">
       <div className="bg-[#111] w-full max-w-2xl rounded-[40px] p-5 md:p-8 border border-purple-500/20 max-h-[90vh] overflow-y-auto cyber-card">
@@ -103,6 +125,30 @@ export default function ProfilePopup({ user, playerData, coins, onClose, onChang
                 </span>
               )}
             </div>
+          </div>
+
+          {/* GAME UID */}
+          <div className="bg-black rounded-3xl p-6">
+            <p className="text-gray-400">GAME UID (FREE FIRE)</p>
+            <div className="flex items-center justify-between mt-2">
+              <h3 className="text-2xl font-black text-purple-400 font-mono">{playerData?.gameUid || "Not Set"}</h3>
+              {!playerData?.gameUidLocked && (
+                <button
+                  onClick={openUidEdit}
+                  className="bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 px-3 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-1"
+                >
+                  <span>✏️</span> SET UID
+                </button>
+              )}
+              {playerData?.gameUidLocked && (
+                <span className="bg-gray-500/20 text-gray-400 px-3 py-2 rounded-xl text-xs font-bold">
+                  🔒 Locked
+                </span>
+              )}
+            </div>
+            {playerData?.gameUidLocked && (
+              <p className="text-gray-500 text-[10px] mt-2">⚠️ Contact Admin if you want to change your locked UID.</p>
+            )}
           </div>
 
           {/* EMAIL */}
@@ -204,6 +250,51 @@ export default function ProfilePopup({ user, playerData, coins, onClose, onChang
               }`}
             >
               CONFIRM CHANGE
+            </button>
+          </div>
+        </div>
+      )}
+      {/* GAME UID SET/EDIT MODAL */}
+      {showUidEdit && (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-[60] px-4">
+          <div className="bg-[#111] w-full max-w-md rounded-[30px] p-6 border border-purple-500/20 cyber-card">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-black text-purple-400">✏️ SET GAME UID</h3>
+              <button
+                onClick={() => setShowUidEdit(false)}
+                className="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-3 py-1.5 rounded-xl text-sm font-bold"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <p className="text-gray-400 text-sm mb-4">
+              Current UID: <span className="text-purple-400 font-bold font-mono">{playerData?.gameUid || "Not Set"}</span>
+            </p>
+            
+            <input
+              type="text"
+              placeholder="Enter Game UID"
+              value={tempUid}
+              onChange={(e) => setTempUid(e.target.value)}
+              className="w-full bg-black border border-purple-500/30 rounded-xl px-4 py-3 text-white outline-none focus:border-purple-500 mb-4 font-mono"
+              autoFocus
+            />
+            
+            <p className="text-yellow-400 text-xs mb-4 font-bold">
+              ⚠️ Once you save your UID, it will be locked to prevent multiple accounts. You cannot change it without Admin approval!
+            </p>
+            
+            <button
+              onClick={handleChangeUid}
+              disabled={!tempUid.trim() || tempUid === playerData?.gameUid}
+              className={`w-full py-3 rounded-xl font-bold text-base transition-all ${
+                !tempUid.trim() || tempUid === playerData?.gameUid
+                  ? "bg-gray-600 cursor-not-allowed text-gray-300"
+                  : "bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white"
+              }`}
+            >
+              CONFIRM & LOCK UID
             </button>
           </div>
         </div>

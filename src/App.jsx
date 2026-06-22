@@ -1167,7 +1167,7 @@ export default function FireBaadshahArena() {
       {showRegister && <RegisterPopup onClose={() => setShowRegister(false)} onRegister={registerUser} registerLoading={registerLoading} registerBlocked={registerBlocked} />}
       {showWallet && <WalletPopup user={user} coins={coins} winCoins={winCoins} onClose={() => setShowWallet(false)} onTopup={handleTopup} onShowWithdraw={() => { setShowWallet(false); setShowWithdrawPopup(true); }} onShowCoinHistory={() => { setShowWallet(false); setShowCoinHistory(true); }} paymentRequests={paymentRequests} buttonLoading={buttonLoading} transferCoins={transferCoins} verifyRecipient={verifyRecipient} />}
       {showWithdrawPopup && <WithdrawPopup user={user} coins={coins} winCoins={winCoins} onClose={() => setShowWithdrawPopup(false)} onWithdraw={handleWithdraw} withdrawRequests={withdrawRequests} withdrawLoading={withdrawLoading} />}
-      {showCoinHistory && <CoinHistoryPopup user={user} closePopup={() => setShowCoinHistory(false)} />}
+      {showCoinHistory && <CoinHistoryPopup user={user} currentCoins={coins} closePopup={() => setShowCoinHistory(false)} />}
       
       {showTopupAdminPopup && <PaymentRequests paymentRequests={paymentRequests} onApprovePayment={approvePayment} onRejectPayment={rejectPayment} onDeletePayment={deletePaymentRequests} onClose={() => setShowTopupAdminPopup(false)} />}
       {showWithdrawAdminPopup && <WithdrawRequests withdrawRequests={withdrawRequests} onApproveWithdraw={approveWithdraw} onRejectWithdraw={rejectWithdraw} onDeleteWithdraw={deleteWithdrawRequests} onClose={() => setShowWithdrawAdminPopup(false)} />}

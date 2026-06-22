@@ -1,16 +1,8 @@
 import { useState, useEffect } from "react";
 import { ref, onValue, update, remove, push, get } from "firebase/database";
 import { database } from "../firebase";
-import notificationSound from "../assets/notification.mp3";
-
 const playNotificationSound = () => {
-  try {
-    const audio = new Audio(notificationSound);
-    audio.volume = 1.0;
-    audio.play().catch(e => console.log("Audio play failed:", e));
-  } catch (e) {
-    console.log("Audio error:", e);
-  }
+  // Sound disabled
 };
 
 export function useNotifications(user) {

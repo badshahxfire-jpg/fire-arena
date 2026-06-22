@@ -1,6 +1,8 @@
 import { useState, useMemo, useEffect } from "react";
 import UserHistoryPopup from "./UserHistoryPopup";
 import CoinHistoryPopup from "../Popups/CoinHistoryPopup";
+import { updateDoc, doc } from "firebase/firestore";
+import { db } from "../../firebase";
 
 export default function UserProfileCheck({ allUsers = [], onSearchUser, searchedUser, onBlockUser, onAddCoins, onDeductCoins }) {
   const [searchUid, setSearchUid] = useState("");
@@ -9,6 +11,20 @@ export default function UserProfileCheck({ allUsers = [], onSearchUser, searched
   const [showHistoryPopup, setShowHistoryPopup] = useState(false);
   const [showCoinHistoryPopup, setShowCoinHistoryPopup] = useState(false);
   const [loadingAction, setLoadingAction] = useState(null);
+
+  const handleToggleUidLock = async () => {
+    if (!displayUser) return;
+    setLoadingAction("toggleUidLock");
+    try {
+      await updateDoc(doc(db, "users", displayUser.uid), {
+        gameUidLocked: !displayUser.gameUidLocked
+      });
+      alert(`Game UID successfully ${!displayUser.gameUidLocked ? "locked" : "unlocked"}!`);
+    } catch (err) {
+      alert("Failed to toggle UID lock: " + err.message);
+    }
+    setLoadingAction(null);
+  };
 
   // Users table state
   const [searchTerm, setSearchTerm] = useState("");
@@ -248,6 +264,20 @@ export default function UserProfileCheck({ allUsers = [], onSearchUser, searched
                     </div>
                   </div>
 
+                  {/* Game UID & Lock Status */}
+                  <div className="flex items-center justify-between mt-3 p-3 bg-black rounded-xl border border-purple-500/10 text-xs">
+                    <div>
+                      <p className="text-gray-400 text-[10px]">GAME UID</p>
+                      <p className="text-purple-400 font-bold font-mono">{displayUser.gameUid || "Not Set"}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-[10px] text-right">UID LOCK</p>
+                      <p className={`font-black ${displayUser.gameUidLocked ? "text-red-400" : "text-green-400"}`}>
+                        {displayUser.gameUidLocked ? "🔒 LOCKED" : "🔓 UNLOCKED"}
+                      </p>
+                    </div>
+                  </div>
+
                   {/* Button Grid */}
                   <div className="grid grid-cols-3 gap-2 mt-5">
                     <button
@@ -280,6 +310,25 @@ export default function UserProfileCheck({ allUsers = [], onSearchUser, searched
                       🪙 COINS
                     </button>
                   </div>
+
+                  {/* Unlock UID Button */}
+                  <button
+                    onClick={handleToggleUidLock}
+                    disabled={loadingAction === "toggleUidLock" || !displayUser.gameUid}
+                    className={`w-full py-2.5 rounded-xl font-black text-xs transition-all mt-2 disabled:opacity-50 ${
+                      displayUser.gameUidLocked 
+                        ? "bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 border border-purple-500/30" 
+                        : "bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/30"
+                    }`}
+                  >
+                    {loadingAction === "toggleUidLock" 
+                      ? "⏳ WORKING..." 
+                      : !displayUser.gameUid
+                        ? "❌ NO GAME UID REGISTERED"
+                        : displayUser.gameUidLocked 
+                          ? "🔓 UNLOCK GAME UID" 
+                          : "🔒 LOCK GAME UID"}
+                  </button>
 
                   {/* Wallet Control */}
                   <div className="bg-[#1a1a2e] rounded-xl p-4 border border-orange-500/20 mt-4">
