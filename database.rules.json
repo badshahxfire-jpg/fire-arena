@@ -8,7 +8,8 @@
     },
     "joinedPlayers": {
       ".read": "auth != null",
-      ".write": "auth != null"
+      ".write": "auth != null",
+      ".indexOn": ["tournamentId"]
     },
     "withdrawRequests": {
       ".read": "auth != null",
@@ -74,7 +75,8 @@
     },
     "joinedPerKillPlayers": {
       ".read": "auth != null",
-      ".write": "auth != null"
+      ".write": "auth != null",
+      ".indexOn": ["tournamentId"]
     },
     "perKillResults": {
       ".read": "auth != null",

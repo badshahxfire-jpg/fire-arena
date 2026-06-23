@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ref, onValue, push, update, remove, get } from "firebase/database";
+import { ref, onValue, push, update, remove, get, query, orderByChild, equalTo } from "firebase/database";
 import { doc, updateDoc, increment, getDoc } from "firebase/firestore";
 import { database, db } from "../firebase";
 import { logCoinTransaction } from "../utils/coinHistory";
@@ -129,7 +129,7 @@ export function usePerKillTournaments() {
       const coins = userSnap.data().coins || 0;
 
       // Fetch latest joined players from database to prevent race conditions
-      const playersSnapshot = await get(ref(database, "joinedPerKillPlayers"));
+      const playersSnapshot = await get(query(ref(database, "joinedPerKillPlayers"), orderByChild("tournamentId"), equalTo(tournament.id)));
       const playersVal = playersSnapshot.val() || {};
       const latestJoinedPlayers = Object.keys(playersVal).map(key => ({ id: key, ...playersVal[key] }));
 

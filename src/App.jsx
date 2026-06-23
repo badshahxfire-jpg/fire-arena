@@ -1151,8 +1151,9 @@ export default function FireBaadshahArena() {
 
 
 
-      {!isAdmin && <Leaderboard />}
-      {!isAdmin && <TournamentWinners />}
+      {/* Leaderboard and TournamentWinners temporarily disabled to prevent excessive Firestore reads */}
+      {/* {!isAdmin && <Leaderboard />} */}
+      {/* {!isAdmin && <TournamentWinners />} */}
       
       {/* Admin Sections */}
       {isAdmin && (

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ref, onValue, push, update, remove, get } from "firebase/database";
+import { ref, onValue, push, update, remove, get, query, orderByChild, equalTo } from "firebase/database";
 import { doc, updateDoc, increment, getDoc } from "firebase/firestore";
 import { database, db } from "../firebase";
 import { logCoinTransaction } from "../utils/coinHistory";
@@ -88,7 +88,7 @@ export function useTournaments() {
 
   // Check if user is already in any team for this tournament
   const isUserAlreadyInTeam = async (tournamentId, userId) => {
-    const joinedRef = ref(database, "joinedPlayers");
+    const joinedRef = query(ref(database, "joinedPlayers"), orderByChild("tournamentId"), equalTo(tournamentId));
     const snapshot = await get(joinedRef);
     const data = snapshot.val();
     if (data) {
@@ -215,7 +215,7 @@ export function useTournaments() {
       const teamMembers = joinData.teamMembers || [];
 
       // Fetch latest joined players from database to prevent race conditions
-      const playersSnapshot = await get(ref(database, "joinedPlayers"));
+      const playersSnapshot = await get(query(ref(database, "joinedPlayers"), orderByChild("tournamentId"), equalTo(tournament.id)));
       const playersVal = playersSnapshot.val() || {};
       const latestJoinedPlayers = Object.keys(playersVal).map(key => ({ id: key, ...playersVal[key] }));
       

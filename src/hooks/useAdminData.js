@@ -133,6 +133,7 @@ export function useAdminData(isAdmin) {
 
   // Fetch Total Users
   useEffect(() => {
+    if (!isAdmin) return;
     const usersRef = collection(db, "users");
     const unsubscribe = onSnapshot(usersRef, (snapshot) => {
       setTotalUsers(snapshot.size);
@@ -142,17 +143,18 @@ export function useAdminData(isAdmin) {
       console.log("Error fetching total users:", error);
     });
     return () => unsubscribe();
-  }, []);
+  }, [isAdmin]);
 
   // Fetch Tournaments
   useEffect(() => {
+    if (!isAdmin) return;
     const tournamentsRef = ref(database, "liveTournaments");
     const unsubscribe = onValue(tournamentsRef, (tournamentSnap) => {
       const tournamentData = tournamentSnap.val();
       setTournaments(tournamentData ? Object.values(tournamentData) : []);
     });
     return () => unsubscribe();
-  }, []);
+  }, [isAdmin]);
 
   // Compute Analytics using useMemo
   const analytics = useMemo(() => {
