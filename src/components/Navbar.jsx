@@ -20,6 +20,8 @@ export default function Navbar({
   onShowLoyal,
   onShowBonusWinners,
   onShowBlocked,
+  isSoundMuted,
+  toggleMute,
   apkUrl
 }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -92,6 +94,13 @@ export default function Navbar({
               <button onClick={onShowNotifications} className="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 hover:border-yellow-500/50 hover:bg-yellow-500/20 px-4 py-2 rounded-2xl font-bold transition-all flex items-center">
                 🔔 <span className="ml-1 text-yellow-400 font-extrabold">{notifications.filter((item) => !item.seen).length}</span>
               </button>
+              <button 
+                onClick={toggleMute} 
+                className={`border px-4 py-2 rounded-2xl font-bold transition-all flex items-center ${isSoundMuted ? 'bg-red-500/10 text-red-400 border-red-500/20 hover:border-red-500/50 hover:bg-red-500/20' : 'bg-green-500/10 text-green-400 border-green-500/20 hover:border-green-500/50 hover:bg-green-500/20'}`}
+                title={isSoundMuted ? "Unmute Sounds" : "Mute Sounds"}
+              >
+                {isSoundMuted ? "🔇" : "🔊"}
+              </button>
               {isAdmin && <span className="bg-green-500/20 text-green-400 border border-green-500/30 px-4 py-2 rounded-full font-bold">ADMIN</span>}
               <button onClick={onLogout} className="bg-gradient-to-r from-red-600 to-rose-700 text-white hover:from-red-500 hover:to-rose-600 px-5 py-2.5 rounded-2xl font-bold transition-all shadow-md">LOGOUT</button>
             </div>
@@ -108,6 +117,12 @@ export default function Navbar({
                 </button>
                 <button onClick={onShowNotifications} className="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-3 py-2.5 rounded-xl font-bold flex items-center justify-center flex-shrink-0">
                   🔔 <span className="ml-1 text-yellow-400 font-extrabold">{notifications.filter((item) => !item.seen).length}</span>
+                </button>
+                <button 
+                  onClick={toggleMute} 
+                  className={`border px-3 py-2.5 rounded-xl font-bold flex items-center justify-center flex-shrink-0 ${isSoundMuted ? 'bg-red-500/10 text-red-400 border-red-500/20' : 'bg-green-500/10 text-green-400 border-green-500/20'}`}
+                >
+                  {isSoundMuted ? "🔇" : "🔊"}
                 </button>
               </div>
               {/* Row 2 */}
