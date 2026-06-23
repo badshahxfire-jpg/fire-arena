@@ -1,8 +1,10 @@
 import "./App.css";
 import { useState, useEffect, useRef } from "react";
 import { ref, update, remove, push, get, onValue } from "firebase/database";
-import { database, db } from "./firebase";
-import { doc, updateDoc, increment, getDoc } from "firebase/firestore";
+import { database, db, messaging } from "./firebase";
+import { doc, updateDoc, increment, getDoc, setDoc } from "firebase/firestore";
+import { getToken, onMessage } from "firebase/messaging";
+import { secureFetch } from "./utils/backendApi";
 import AppUpdatePopup from "./components/Popups/AppUpdatePopup";
 import AppUpdateAdmin from "./components/Admin/AppUpdateAdmin";
 
@@ -358,6 +360,39 @@ export default function FireBaadshahArena() {
 
   // Keep track of whether we pushed a state for the active popup
   const hasPushedStateRef = useRef(false);
+
+  // ================= FCM Registration =================
+  useEffect(() => {
+    if (!user || !messaging) return;
+    
+    // Request permission and get token
+    const requestPermission = async () => {
+      try {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          // Replace this VAPID key with the one from Firebase Console -> Cloud Messaging -> Web configuration
+          const currentToken = await getToken(messaging, { vapidKey: 'BCAjW1ZCBKvhXkLPxa5imNSAprbkHEnrGHHlSW2RUDj33RJj9JnLVgF7SjEHbKUgCObuZ6OicaSE9jMMpYJz944' });
+          if (currentToken) {
+            // Send token to backend to subscribe to 'all_users' topic
+            await secureFetch('/api/register-token', { token: currentToken });
+            console.log('FCM Token registered successfully');
+          }
+        }
+      } catch (error) {
+        console.error('Error getting notification permission:', error);
+      }
+    };
+    
+    requestPermission();
+
+    // Listen for foreground messages
+    const unsubscribe = onMessage(messaging, (payload) => {
+      console.log('Foreground message received: ', payload);
+      // Optional: show a custom toast notification here if you want
+    });
+
+    return () => unsubscribe();
+  }, [user]);
 
   useEffect(() => {
     const anyOpen = !!(
@@ -1311,7 +1346,7 @@ export default function FireBaadshahArena() {
           onToggleMute={toggleMute}
         />
       )}
-      {showJoinPopup && selectedTournament && <JoinPopup tournament={selectedTournament} user={user} joinedPlayers={joinedPlayers} onJoin={handleJoinTournament} joinLoading={joinLoading} onClose={() => setShowJoinPopup(false)} />}
+      {showJoinPopup && selectedTournament && <JoinPopup tournament={selectedTournament} user={user} joinedPlayers={joinedPlayers} onJoin={handleJoinTournament} joinLoading={joinLoading} onClose={() => { setShowJoinPopup(false); setSelectedTournament(null); }} />}
 
       {/* Result Approval Popup */}
       {showResultPopup && selectedPublishTournament && (
@@ -1319,7 +1354,7 @@ export default function FireBaadshahArena() {
           <div className="bg-[#0a0a0f] w-full max-w-5xl rounded-3xl p-6 border border-purple-500/20 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6 pb-4 border-b border-purple-500/20">
               <h2 className="text-3xl font-black text-purple-400 cyber-neon">🏆 RESULT APPROVAL PANEL</h2>
-              <button onClick={() => setShowResultPopup(false)} className="bg-red-500 text-white px-5 py-2 rounded-2xl font-black">CLOSE</button>
+              <button onClick={() => { setShowResultPopup(false); setSelectedPublishTournament(null); }} className="bg-red-500 text-white px-5 py-2 rounded-2xl font-black">CLOSE</button>
             </div>
             <div className="mb-6 p-4 bg-purple-500/10 rounded-2xl border border-purple-500/20">
               <p className="text-orange-400 font-bold">🎮 Tournament: {selectedPublishTournament.tournamentTitle}</p>

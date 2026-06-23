@@ -9,6 +9,7 @@ import {
   sendPasswordResetEmail
 } from "firebase/auth";
 import { getStorage } from "firebase/storage";
+import { getMessaging, isSupported } from "firebase/messaging";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBhElj_3kG-8X09JsQS5t0IJR9I_mzYQJc",
@@ -26,6 +27,14 @@ export const auth = getAuth(app);
 export const database = getDatabase(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
+
+// Initialize Messaging only if supported (e.g. not supported in incognito or some browsers)
+export let messaging = null;
+isSupported().then((supported) => {
+  if (supported) {
+    messaging = getMessaging(app);
+  }
+}).catch(console.error);
 
 export {
   createUserWithEmailAndPassword,

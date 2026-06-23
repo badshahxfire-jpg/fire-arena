@@ -16,9 +16,9 @@ export default function Leaderboard() {
     if (showDetailsPopup) {
       document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = "unset";
+      document.body.style.overflow = "";
     }
-    return () => { document.body.style.overflow = "unset"; };
+    return () => { document.body.style.overflow = ""; };
   }, [showDetailsPopup]);
 
   // Subscribe to Firestore users collection for real-time updates

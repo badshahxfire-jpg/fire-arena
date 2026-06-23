@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { ref, onValue, push, update, remove, get, query, orderByChild, equalTo } from "firebase/database";
-import { doc, updateDoc, increment, getDoc } from "firebase/firestore";
-import { database, db } from "../firebase";
+import { doc, updateDoc, getDoc } from "firebase/firestore";
+import { database, db, auth } from "../firebase";
 import { logCoinTransaction } from "../utils/coinHistory";
 import { secureFetch } from "../utils/backendApi";
 
@@ -97,6 +97,27 @@ export function usePerKillTournaments() {
         completed: false,
         createdAt: new Date().toLocaleString(),
       });
+
+      // Send Push Notification
+      try {
+        if (auth.currentUser) {
+          const idToken = await auth.currentUser.getIdToken();
+          await fetch('/api/send-notification', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${idToken}`
+            },
+            body: JSON.stringify({
+              title: "🔥 New Per-Kill Match Added!",
+              body: `${tournamentData.tournamentTitle} - Entry: ${tournamentData.entryFee} Coins. Join now!`
+            })
+          });
+        }
+      } catch (notifyError) {
+        console.error("Failed to send push notification:", notifyError);
+      }
+
       alert("Per Kill Tournament Created Successfully! 🚀");
       return true;
     } catch (error) {

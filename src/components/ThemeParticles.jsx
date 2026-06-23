@@ -27,7 +27,7 @@ export default function ThemeParticles() {
 
     // Particle Factory
     const createParticle = (theme, isInitial = false) => {
-      const size = random(2, 5.5);
+      let size = random(2, 5.5);
       let x = random(0, width);
       let y = height + 10;
       let vy = random(-1.4, -0.4);
@@ -40,24 +40,26 @@ export default function ThemeParticles() {
         y = random(0, height);
       }
 
-      if (theme === "ocean") {
-        // Ocean: rising bubbles
-        vy = random(-1.0, -0.3);
-        vx = random(-0.25, 0.25);
-        color = `rgba(14, 165, 233, ${random(0.12, 0.28)})`;
-      } else if (theme === "royal") {
-        // Royal: drifting stardust
-        vy = random(-0.7, -0.2);
-        vx = random(-0.3, 0.3);
-        color = `rgba(168, 85, 247, ${random(0.15, 0.42)})`;
-      } else if (theme === "rose") {
-        // Rose: petals falling down
+      if (theme === "ghost") {
+        // Ghost: slow ethereal floating orbs
+        vy = random(-0.3, 0.1);
+        vx = random(-0.1, 0.1);
+        color = `rgba(255, 255, 255, ${random(0.05, 0.2)})`;
+        size = random(3, 8);
+      } else if (theme === "venom") {
+        // Venom: jagged dark purple/green floating bits
+        vy = random(-0.6, -0.2);
+        vx = random(-0.4, 0.4);
+        color = random() > 0.5 ? `rgba(168, 85, 247, ${random(0.15, 0.4)})` : `rgba(16, 185, 129, ${random(0.15, 0.4)})`;
+      } else if (theme === "blood") {
+        // Blood: blood drips falling down
         if (!isInitial) {
           y = -10;
         }
-        vy = random(0.4, 1.2);
-        vx = random(-0.6, 0.6);
-        color = `rgba(244, 63, 94, ${random(0.18, 0.45)})`;
+        vy = random(0.5, 1.5);
+        vx = random(-0.1, 0.1);
+        color = `rgba(220, 38, 38, ${random(0.2, 0.6)})`;
+        size = random(2, 6);
       } else if (theme === "gold") {
         // Gold: gold dust falling
         if (!isInitial) {
@@ -196,9 +198,9 @@ export default function ThemeParticles() {
           p.wiggle += p.wiggleSpeed;
           p.x += Math.sin(p.wiggle) * 0.15;
 
-          if (activeTheme === "rose") {
-            // falling sway
-            p.vx += Math.cos(p.wiggle) * 0.02;
+          if (activeTheme === "blood") {
+            // falling straight down with slight stretch
+            p.vx *= 0.95;
           }
           
           // Draw Particle
@@ -212,14 +214,13 @@ export default function ThemeParticles() {
             ctx.strokeStyle = p.color.replace(/[\d.]+\)$/, `${alpha})`);
             ctx.lineWidth = p.size / 2;
             ctx.stroke();
-          } else if (activeTheme === "ocean") {
-            // Bubble with outline
+          } else if (activeTheme === "ghost") {
+            // Ghostly blurred orb
             ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            ctx.strokeStyle = p.color.replace(/[\d.]+\)$/, `${alpha * 0.4})`);
-            ctx.lineWidth = 1;
-            ctx.stroke();
-            ctx.fillStyle = p.color.replace(/[\d.]+\)$/, `${alpha * 0.1})`);
+            ctx.fillStyle = p.color.replace(/[\d.]+\)$/, `${alpha * 0.5})`);
             ctx.fill();
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = "rgba(255,255,255,0.4)";
           } else {
             // Glowing particle
             const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 2);

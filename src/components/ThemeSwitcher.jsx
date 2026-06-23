@@ -10,12 +10,12 @@ const THEMES = [
     desc: "Default",
   },
   {
-    id: "ocean",
-    name: "Ocean",
-    emoji: "🌊",
-    hue: 200,
-    bodyBg: "linear-gradient(135deg, #050a14 0%, #0a1a3e 30%, #0a1020 60%, #030508 100%)",
-    desc: "Cool Blue",
+    id: "ghost",
+    name: "Ghost",
+    emoji: "👻",
+    hue: 0,
+    bodyBg: "radial-gradient(circle at top, #1a1a2e 0%, #050508 60%, #000000 100%)",
+    desc: "Ethereal UI",
   },
   {
     id: "emerald",
@@ -26,20 +26,20 @@ const THEMES = [
     desc: "Deep Green",
   },
   {
-    id: "royal",
-    name: "Royal",
-    emoji: "💜",
+    id: "venom",
+    name: "Venom",
+    emoji: "🕷️",
     hue: 280,
-    bodyBg: "linear-gradient(135deg, #0f050f 0%, #2e0a2e 30%, #1a0f1a 60%, #080508 100%)",
-    desc: "Purple Vibes",
+    bodyBg: "linear-gradient(135deg, #05020a 0%, #1a0a2e 30%, #0a1a0f 60%, #030508 100%)",
+    desc: "Dark Web",
   },
   {
-    id: "rose",
-    name: "Rose",
-    emoji: "🌹",
-    hue: 330,
-    bodyBg: "linear-gradient(135deg, #0f0508 0%, #2e0a1a 30%, #1a0f14 60%, #080305 100%)",
-    desc: "Pinkish",
+    id: "blood",
+    name: "Blood",
+    emoji: "🦇",
+    hue: 350,
+    bodyBg: "radial-gradient(ellipse at bottom, #2e0a0a 0%, #0a0202 60%, #000000 100%)",
+    desc: "Crimson Glow",
   },
   {
     id: "gold",
@@ -82,13 +82,9 @@ function generateThemeCSS(theme) {
   // Structural aesthetic overrides per theme
   let structuralCSS = "";
 
-  if (theme.id === "ocean") {
-    // Ocean Theme: Sleek Glassmorphism (Frosted glass, teal/blue glow, round organic corners)
+  if (theme.id === "ghost") {
+    // Ghost Theme: Ultra transparent glass, monochrome, rounded smooth corners
     structuralCSS = `
-      /* Font */
-      * {
-        font-family: 'Outfit', sans-serif !important;
-      }
       /* Cards & Containers */
       .cyber-card, 
       .bg-black, 
@@ -96,11 +92,11 @@ function generateThemeCSS(theme) {
       .bg-black\\/40, 
       .bg-black\\/60, 
       .bg-\\[\\#1a1a2e\\] {
-        border-radius: 24px !important;
-        backdrop-filter: blur(16px) !important;
-        background-color: rgba(5, 12, 28, 0.75) !important;
-        border: 1.5px solid rgba(14, 165, 233, 0.2) !important;
-        box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.6), 0 0 20px rgba(14, 165, 233, 0.08) !important;
+        border-radius: 32px !important;
+        backdrop-filter: blur(24px) !important;
+        background-color: rgba(255, 255, 255, 0.02) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.02) !important;
       }
       /* Buttons, Inputs, Selectors */
       .cyber-btn, 
@@ -110,7 +106,11 @@ function generateThemeCSS(theme) {
       .rounded-3xl, 
       .rounded-2xl, 
       .rounded-xl {
-        border-radius: 14px !important;
+        border-radius: 20px !important;
+      }
+      /* Override colors to greyscale/white */
+      * {
+        color: rgba(255, 255, 255, 0.9) !important;
       }
     `;
   } else if (theme.id === "emerald") {
@@ -145,8 +145,8 @@ function generateThemeCSS(theme) {
         border: 1px solid rgba(16, 185, 129, 0.7) !important;
       }
     `;
-  } else if (theme.id === "royal") {
-    // Royal Theme: Premium Violet Neon Glow (Curved edges, intense purple drop shadows)
+  } else if (theme.id === "venom") {
+    // Venom Theme: Sharp cuts, dark purple and green
     structuralCSS = `
       /* Cards & Containers */
       .cyber-card, 
@@ -155,9 +155,11 @@ function generateThemeCSS(theme) {
       .bg-black\\/40, 
       .bg-black\\/60, 
       .bg-\\[\\#1a1a2e\\] {
-        border-radius: 20px !important;
-        border: 1.5px solid rgba(168, 85, 247, 0.4) !important;
-        box-shadow: 0 15px 45px 0 rgba(0, 0, 0, 0.7), 0 0 25px rgba(168, 85, 247, 0.25) !important;
+        border-radius: 0 !important;
+        border: 2px solid rgba(139, 92, 246, 0.4) !important;
+        border-bottom: 4px solid rgba(16, 185, 129, 0.6) !important;
+        background-color: rgba(5, 2, 10, 0.9) !important;
+        clip-path: polygon(0 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%);
       }
       /* Buttons, Inputs, Selectors */
       .cyber-btn, 
@@ -167,7 +169,8 @@ function generateThemeCSS(theme) {
       .rounded-3xl, 
       .rounded-2xl, 
       .rounded-xl {
-        border-radius: 12px !important;
+        border-radius: 0 !important;
+        clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
       }
     `;
   } else if (theme.id === "gold") {

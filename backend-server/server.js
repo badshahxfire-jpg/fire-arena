@@ -560,6 +560,59 @@ rtdb.ref("settings/appUpdate").on("value", async (snapshot) => {
   }
 });
 
+// -------------------------------------------------------------
+// Endpoint: Register FCM Token to Topic
+// -------------------------------------------------------------
+app.post("/api/register-token", verifyToken, async (req, res) => {
+  const { token } = req.body;
+  if (!token) return res.status(400).json({ error: "Missing token" });
+
+  try {
+    // Subscribe the device token to the "all_users" topic
+    await admin.messaging().subscribeToTopic([token], "all_users");
+    
+    // Optionally save token in user doc
+    await db.collection("users").doc(req.user.uid).set({
+      fcmToken: token
+    }, { merge: true });
+
+    return res.json({ success: true, message: "Token registered successfully" });
+  } catch (error) {
+    console.error("Error registering token:", error);
+    return res.status(500).json({ error: "Failed to register token" });
+  }
+});
+
+// -------------------------------------------------------------
+// Endpoint: Send Push Notification (Admin only)
+// -------------------------------------------------------------
+app.post("/api/send-notification", verifyToken, async (req, res) => {
+  const { title, body } = req.body;
+  
+  if (!title || !body) {
+    return res.status(400).json({ error: "Missing title or body" });
+  }
+
+  try {
+    // Verify admin
+    const userDoc = await db.collection("users").doc(req.user.uid).get();
+    if (!userDoc.exists || userDoc.data().role !== "admin") {
+      return res.status(403).json({ error: "Unauthorized. Admin only." });
+    }
+
+    const message = {
+      notification: { title, body },
+      topic: "all_users"
+    };
+
+    const response = await admin.messaging().send(message);
+    return res.json({ success: true, message: "Notification sent successfully", response });
+  } catch (error) {
+    console.error("Error sending notification:", error);
+    return res.status(500).json({ error: "Failed to send notification" });
+  }
+});
+
 // Start Server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Secure Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

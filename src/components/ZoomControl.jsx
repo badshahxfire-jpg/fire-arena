@@ -5,6 +5,7 @@ export default function ZoomControl() {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [isHorizontal, setIsHorizontal] = useState(false);
   const dragRef = useRef({ startX: 0, startY: 0, initialX: 0, initialY: 0 });
 
   useEffect(() => {
@@ -53,9 +54,11 @@ export default function ZoomControl() {
     let newX = dragRef.current.initialX + dx;
     let newY = dragRef.current.initialY + dy;
     
-    // Clamping to screen boundaries
-    newX = Math.max(0, Math.min(newX, window.innerWidth - 50));
-    newY = Math.max(0, Math.min(newY, window.innerHeight - 150));
+    // Clamping to screen boundaries based on orientation
+    const boxWidth = isHorizontal ? 220 : 60;
+    const boxHeight = isHorizontal ? 60 : 220;
+    newX = Math.max(0, Math.min(newX, window.innerWidth - boxWidth));
+    newY = Math.max(0, Math.min(newY, window.innerHeight - boxHeight));
     
     setPosition({ x: newX, y: newY });
   };
@@ -69,7 +72,7 @@ export default function ZoomControl() {
 
   return (
     <div 
-      className={`fixed z-[999] flex flex-col gap-2 bg-black/80 backdrop-blur-xl border border-cyan-500/30 rounded-2xl p-1.5 shadow-2xl transition-transform ${isDragging ? 'cursor-grabbing scale-105 shadow-cyan-500/20' : 'cursor-grab'}`}
+      className={`fixed z-[999] flex ${isHorizontal ? 'flex-row items-center' : 'flex-col items-center'} gap-2 bg-black/80 backdrop-blur-xl border border-cyan-500/30 rounded-2xl p-1.5 shadow-2xl transition-all duration-300 ${isDragging ? 'cursor-grabbing scale-105 shadow-cyan-500/20' : 'cursor-grab'}`}
       style={{ left: `${position.x}px`, top: `${position.y}px`, touchAction: 'none' }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
@@ -77,18 +80,24 @@ export default function ZoomControl() {
       onPointerCancel={onPointerUp}
     >
       {/* Drag Handle Indicator */}
-      <div className="w-full flex justify-center py-1 opacity-50">
-        <div className="w-4 h-1 bg-white/30 rounded-full" />
+      <div className={`flex justify-center opacity-50 ${isHorizontal ? 'px-1 h-full items-center' : 'w-full py-1'}`}>
+        <div className={`bg-white/30 rounded-full ${isHorizontal ? 'w-1 h-4' : 'w-4 h-1'}`} />
       </div>
       
-      <button onPointerDown={e => e.stopPropagation()} onClick={handleZoomIn} className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center font-bold text-xl text-white transition-all active:scale-95" title="Zoom In">
+      <button onPointerDown={e => e.stopPropagation()} onClick={handleZoomIn} className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center font-bold text-xl text-white transition-all active:scale-95 shrink-0" title="Zoom In">
         +
       </button>
-      <button onPointerDown={e => e.stopPropagation()} onClick={resetZoom} className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center font-bold text-[9px] md:text-[10px] text-orange-400 transition-all active:scale-95" title="Reset Zoom">
+      <button onPointerDown={e => e.stopPropagation()} onClick={resetZoom} className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center font-bold text-[9px] md:text-[10px] text-orange-400 transition-all active:scale-95 shrink-0" title="Reset Zoom">
         {(zoomLevel * 100).toFixed(0)}%
       </button>
-      <button onPointerDown={e => e.stopPropagation()} onClick={handleZoomOut} className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center font-bold text-2xl text-white transition-all active:scale-95" title="Zoom Out">
+      <button onPointerDown={e => e.stopPropagation()} onClick={handleZoomOut} className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center font-bold text-2xl text-white transition-all active:scale-95 shrink-0" title="Zoom Out">
         -
+      </button>
+      
+      <div className={isHorizontal ? "h-6 w-px bg-white/20" : "w-6 h-px bg-white/20"} />
+      
+      <button onPointerDown={e => e.stopPropagation()} onClick={() => setIsHorizontal(!isHorizontal)} className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center font-bold text-lg text-cyan-400 transition-all active:scale-95 shrink-0" title="Rotate">
+        ↻
       </button>
     </div>
   );

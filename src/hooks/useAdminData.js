@@ -2,8 +2,9 @@ import { useState, useEffect, useMemo } from "react";
 import { ref, onValue, push, update, remove, get, set } from "firebase/database";
 import { database } from "../firebase";
 import { doc, updateDoc, increment, getDoc, collection, onSnapshot, getDocs, writeBatch } from "firebase/firestore";
-import { db } from "../firebase";
+import { db, auth } from "../firebase";
 import { logCoinTransaction } from "../utils/coinHistory";
+import { secureFetch } from "../utils/backendApi";
 
 export function useAdminData(isAdmin) {
   const [totalUsers, setTotalUsers] = useState(0);
@@ -204,6 +205,17 @@ export function useAdminData(isAdmin) {
         resultPublished: false,
         completed: false,
       });
+
+      // Send Push Notification
+      try {
+        await secureFetch('/api/send-notification', {
+          title: "🔥 New Match Added!",
+          body: `${tournamentData.tournamentTitle} - Pool: ${tournamentData.totalPrizePool} Coins. Join now!`
+        });
+      } catch (notifyError) {
+        console.error("Failed to send push notification:", notifyError);
+      }
+
       alert("Tournament Created Successfully 🔥");
       return true;
     } catch (error) {
