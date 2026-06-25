@@ -111,9 +111,13 @@ export default function UpcomingMatches({
         <h2 className="text-xl md:text-3xl font-extrabold text-green-400 mb-3 border border-green-500/20 bg-green-500/5 p-3 md:p-4 rounded-2xl md:rounded-3xl text-center">
           ⚠️ MATCH START HONE KE 10 MINUTE PAHLE ROOM ID AUR PASSWORD DIYA JAYEGA ⚠️
         </h2>
-        <h2 className="text-4xl md:text-5xl font-extrabold text-orange-500 text-glow-orange mb-8 tracking-wide cyber-neon">
+        <h2 className="text-4xl md:text-5xl font-extrabold text-orange-500 text-glow-orange mb-6 tracking-wide cyber-neon uppercase">
           🔥 {selectedMode} UPCOMING MATCHES 🔥
         </h2>
+
+        <div className="mb-8 border border-cyan-500/50 bg-[#111] p-4 rounded-sm text-center text-red-400 font-bold uppercase tracking-wider text-sm md:text-base shadow-[0_0_10px_rgba(0,255,255,0.1)]">
+          ⚠️ Prize Pool tabhi milega jab tournament ke sabhi slots full honge. Agar slots full nahi hote, to Prize Pool uske hisaab se adjust kiya jayega. ⚠️
+        </div>
 
         <div className="relative">
           <button
