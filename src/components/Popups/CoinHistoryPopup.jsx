@@ -21,7 +21,7 @@ export default function CoinHistoryPopup({ user, closePopup }) {
 
     // 2. Fetch transaction history
     const historyRef = collection(db, "users", user.uid, "coinHistory");
-    const q = query(historyRef, orderBy("timestamp", "desc"), limit(50));
+    const q = query(historyRef, orderBy("timestamp", "desc"), limit(20));
     const unsubHistory = onSnapshot(q, (snapshot) => {
       const docs = snapshot.docs.map(doc => ({
         id: doc.id,
