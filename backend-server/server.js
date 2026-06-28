@@ -743,6 +743,18 @@ app.post("/api/send-personal-notification", verifyToken, async (req, res) => {
       token: targetToken
     };
 
+    // Save to RTDB for in-app notification (bell icon)
+    try {
+      await rtdb.ref(`notifications/${targetUserId}`).push({
+        title,
+        message: body,
+        timestamp: admin.database.ServerValue.TIMESTAMP,
+        seen: false
+      });
+    } catch (dbErr) {
+      console.error("Failed to save to RTDB:", dbErr);
+    }
+
     const response = await admin.messaging().send(message);
     return res.json({ success: true, message: "Personal notification sent successfully", response });
   } catch (error) {
