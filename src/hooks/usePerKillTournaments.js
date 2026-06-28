@@ -225,6 +225,7 @@ export function usePerKillTournaments(user) {
         // Deduct coins securely via backend transaction
         const res = await secureFetch("/api/join-tournament", {
           tournamentId: tournament.id,
+          tournamentTitle: tournament.tournamentTitle,
           entryFee: entryFee,
           selectedSlot: joinData.selectedSlot,
           totalSlots: tournament.totalTeams
@@ -320,6 +321,7 @@ export function usePerKillTournaments(user) {
         // Deduct coins from all team members securely
         const res = await secureFetch("/api/join-tournament", {
           tournamentId: tournament.id,
+          tournamentTitle: tournament.tournamentTitle,
           entryFee: entryFee,
           teamMembers: teamMembers,
           selectedSlot: joinData.selectedSlot,

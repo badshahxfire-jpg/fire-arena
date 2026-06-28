@@ -65,7 +65,7 @@ async function logCoinTransaction(userId, amount, type, description, isBonus = f
 // -------------------------------------------------------------
 app.post("/api/join-tournament", verifyToken, async (req, res) => {
   const uid = req.user.uid;
-  const { tournamentId, entryFee, teamMembers, selectedSlot, totalSlots } = req.body;
+  const { tournamentId, tournamentTitle, entryFee, teamMembers, selectedSlot, totalSlots } = req.body;
 
   if (!tournamentId || entryFee === undefined) {
     return res.status(400).json({ error: "Missing required fields" });
@@ -164,7 +164,7 @@ app.post("/api/join-tournament", verifyToken, async (req, res) => {
         targetUid,
         fee,
         "TOURNAMENT_JOIN",
-        `Joined Tournament (${tournamentId})`
+        `Joined Tournament (${tournamentTitle || tournamentId})`
       );
     }
 
