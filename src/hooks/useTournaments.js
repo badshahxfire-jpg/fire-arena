@@ -32,7 +32,7 @@ const deductUserCoins = async (userId, amount, tournamentId = "", tournamentTitl
   }
 };
 
-export function useTournaments() {
+export function useTournaments(user) {
   const [liveTournaments, setLiveTournaments] = useState([]);
   const [joinedPlayers, setJoinedPlayers] = useState([]);
   const [joinedHistory, setJoinedHistory] = useState([]);
@@ -41,6 +41,7 @@ export function useTournaments() {
 
   // Fetch Live Tournaments
   useEffect(() => {
+    if (!user) return;
     const liveRef = ref(database, "liveTournaments");
     onValue(liveRef, (snapshot) => {
       const data = snapshot.val();
@@ -54,10 +55,11 @@ export function useTournaments() {
         setLiveTournaments([]);
       }
     });
-  }, []);
+  }, [user]);
 
   // Fetch Joined Players
   useEffect(() => {
+    if (!user) return;
     const joinedRef = ref(database, "joinedPlayers");
     onValue(joinedRef, (snapshot) => {
       const data = snapshot.val();
@@ -70,10 +72,11 @@ export function useTournaments() {
         setJoinedHistory([]);
       }
     });
-  }, []);
+  }, [user]);
 
   // Fetch Match Results
   useEffect(() => {
+    if (!user) return;
     const resultRef = ref(database, "matchResults");
     onValue(resultRef, (snapshot) => {
       const data = snapshot.val();
@@ -84,7 +87,7 @@ export function useTournaments() {
         setMatchResults([]);
       }
     });
-  }, []);
+  }, [user]);
 
   // Check if user is already in any team for this tournament
   const isUserAlreadyInTeam = async (tournamentId, userId) => {

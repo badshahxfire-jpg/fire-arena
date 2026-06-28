@@ -197,7 +197,7 @@ export default function FireBaadshahArena() {
     publishResults: publishPerKillResults,
     deletePerKillMatchHistory,
     deleteAllPerKillMatchHistory
-  } = usePerKillTournaments();
+  } = usePerKillTournaments(user);
 
   const {
     liveTournaments,
@@ -214,7 +214,7 @@ export default function FireBaadshahArena() {
     cancelLoading,
     deleteMatchHistory,
     deleteAllUserMatchHistory,
-  } = useTournaments();
+  } = useTournaments(user);
 
 
   const {
@@ -319,7 +319,7 @@ export default function FireBaadshahArena() {
     updateLobbyDetails,
     advancePhase,
     updateTournamentRules
-  } = useWeeklyTournaments();
+  } = useWeeklyTournaments(user);
 
   // ================= User Stats for History =================
   const userStats = {

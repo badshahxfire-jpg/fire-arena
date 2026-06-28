@@ -32,7 +32,7 @@ const deductUserCoins = async (userId, amount, tournamentId = "", tournamentTitl
   }
 };
 
-export function usePerKillTournaments() {
+export function usePerKillTournaments(user) {
   const [liveTournaments, setLiveTournaments] = useState([]);
   const [joinedPlayers, setJoinedPlayers] = useState([]);
   const [matchResults, setMatchResults] = useState([]);
@@ -40,6 +40,7 @@ export function usePerKillTournaments() {
 
   // Fetch Live Tournaments
   useEffect(() => {
+    if (!user) return;
     const liveRef = ref(database, "perKillTournaments");
     const unsubscribe = onValue(liveRef, (snapshot) => {
       const data = snapshot.val();
@@ -54,10 +55,11 @@ export function usePerKillTournaments() {
       }
     });
     return () => unsubscribe();
-  }, []);
+  }, [user]);
 
   // Fetch Joined Players
   useEffect(() => {
+    if (!user) return;
     const joinedRef = ref(database, "joinedPerKillPlayers");
     const unsubscribe = onValue(joinedRef, (snapshot) => {
       const data = snapshot.val();
@@ -69,10 +71,11 @@ export function usePerKillTournaments() {
       }
     });
     return () => unsubscribe();
-  }, []);
+  }, [user]);
 
   // Fetch Match Results
   useEffect(() => {
+    if (!user) return;
     const resultsRef = ref(database, "perKillResults");
     const unsubscribe = onValue(resultsRef, (snapshot) => {
       const data = snapshot.val();
@@ -84,7 +87,7 @@ export function usePerKillTournaments() {
       }
     });
     return () => unsubscribe();
-  }, []);
+  }, [user]);
 
   // Create Tournament
   const createPerKillTournament = async (tournamentData) => {

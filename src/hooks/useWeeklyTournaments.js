@@ -3,12 +3,16 @@ import { ref, onValue, push, update, remove, get } from "firebase/database";
 import { database, db } from "../firebase";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { logCoinTransaction } from "../utils/coinHistory";
-export function useWeeklyTournaments() {
+export function useWeeklyTournaments(user) {
   const [weeklyTournaments, setWeeklyTournaments] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Fetch all weekly tournaments
   useEffect(() => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     const weeklyRef = ref(database, "weeklyTournaments");
     const unsubscribe = onValue(weeklyRef, (snapshot) => {
       if (snapshot.exists()) {
@@ -25,7 +29,7 @@ export function useWeeklyTournaments() {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [user]);
 
   // Admin: Create Weekly Tournament
   const createWeeklyTournament = async (tournamentData) => {
