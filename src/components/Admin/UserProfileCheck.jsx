@@ -3,6 +3,7 @@ import UserHistoryPopup from "./UserHistoryPopup";
 import CoinHistoryPopup from "../Popups/CoinHistoryPopup";
 import { updateDoc, doc } from "firebase/firestore";
 import { db } from "../../firebase";
+import { secureFetch } from "../../utils/backendApi";
 
 export default function UserProfileCheck({ allUsers = [], onSearchUser, searchedUser, onBlockUser, onAddCoins, onDeductCoins }) {
   const [searchUid, setSearchUid] = useState("");
@@ -371,7 +372,7 @@ export default function UserProfileCheck({ allUsers = [], onSearchUser, searched
                   )}
 
                   {/* Button Grid */}
-                  <div className="grid grid-cols-3 gap-2 mt-5">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-5">
                     <button
                       onClick={async () => {
                         let reason = "";
@@ -405,6 +406,33 @@ export default function UserProfileCheck({ allUsers = [], onSearchUser, searched
                       className="bg-yellow-500 text-black py-2.5 rounded-xl font-black text-xs hover:bg-yellow-600 transition-all"
                     >
                       🪙 COINS
+                    </button>
+
+                    <button
+                      onClick={async () => {
+                        const title = window.prompt("Enter message TITLE (e.g. Warning, Support):");
+                        if (!title) return;
+                        const body = window.prompt("Enter the MESSAGE:");
+                        if (!body) return;
+                        
+                        try {
+                          const res = await secureFetch("/api/send-personal-notification", {
+                            targetUserId: displayUser.uid,
+                            title,
+                            body
+                          });
+                          if (res.success) {
+                            alert("Message sent successfully! 🚀");
+                          } else {
+                            alert("Failed to send message.");
+                          }
+                        } catch (err) {
+                          alert("Error sending message: " + err.message);
+                        }
+                      }}
+                      className="bg-purple-500 text-white py-2.5 rounded-xl font-black text-xs hover:bg-purple-600 transition-all"
+                    >
+                      💬 MESSAGE
                     </button>
                   </div>
 

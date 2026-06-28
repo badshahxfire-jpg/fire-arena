@@ -684,6 +684,60 @@ app.post("/api/send-notification", verifyToken, async (req, res) => {
 });
 
 // -------------------------------------------------------------
+// Endpoint: Send Push Notification to Specific User (Admin only)
+// -------------------------------------------------------------
+app.post("/api/send-personal-notification", verifyToken, async (req, res) => {
+  const { targetUserId, title, body } = req.body;
+  
+  if (!targetUserId || !title || !body) {
+    return res.status(400).json({ error: "Missing targetUserId, title or body" });
+  }
+
+  try {
+    // Verify admin
+    const userDoc = await db.collection("users").doc(req.user.uid).get();
+    if (!userDoc.exists || userDoc.data().role !== "admin") {
+      return res.status(403).json({ error: "Unauthorized. Admin only." });
+    }
+
+    const targetUserDoc = await db.collection("users").doc(targetUserId).get();
+    if (!targetUserDoc.exists) {
+      return res.status(404).json({ error: "Target user not found" });
+    }
+    
+    const targetToken = targetUserDoc.data().fcmToken;
+    if (!targetToken) {
+      return res.status(400).json({ error: "User does not have a registered FCM token" });
+    }
+
+    const message = {
+      notification: { title, body },
+      android: {
+        priority: "high",
+        notification: {
+          sound: "default"
+        }
+      },
+      apns: {
+        payload: {
+          aps: {
+            contentAvailable: true,
+            sound: "default"
+          }
+        }
+      },
+      token: targetToken
+    };
+
+    const response = await admin.messaging().send(message);
+    return res.json({ success: true, message: "Personal notification sent successfully", response });
+  } catch (error) {
+    console.error("Error sending personal notification:", error);
+    return res.status(500).json({ error: "Failed to send personal notification" });
+  }
+});
+
+// -------------------------------------------------------------
 // Auto-Delete Old Match Results (Older than 7 days)
 // -------------------------------------------------------------
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
