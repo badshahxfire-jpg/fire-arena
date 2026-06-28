@@ -406,6 +406,20 @@ async function sendGlobalPushNotification(title, body) {
         title: title,
         body: body,
       },
+      android: {
+        priority: "high",
+        notification: {
+          sound: "default"
+        }
+      },
+      apns: {
+        payload: {
+          aps: {
+            contentAvailable: true,
+            sound: "default"
+          }
+        }
+      },
       tokens: tokens,
     };
 
@@ -431,6 +445,20 @@ async function sendPersonalPushNotification(userId, title, body) {
       notification: {
         title: title,
         body: body,
+      },
+      android: {
+        priority: "high",
+        notification: {
+          sound: "default"
+        }
+      },
+      apns: {
+        payload: {
+          aps: {
+            contentAvailable: true,
+            sound: "default"
+          }
+        }
       },
       token: token,
     };
@@ -630,6 +658,20 @@ app.post("/api/send-notification", verifyToken, async (req, res) => {
 
     const message = {
       notification: { title, body },
+      android: {
+        priority: "high",
+        notification: {
+          sound: "default"
+        }
+      },
+      apns: {
+        payload: {
+          aps: {
+            contentAvailable: true,
+            sound: "default"
+          }
+        }
+      },
       topic: "all_users"
     };
 
