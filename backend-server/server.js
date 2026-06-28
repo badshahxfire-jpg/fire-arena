@@ -659,7 +659,11 @@ app.post("/api/send-notification", verifyToken, async (req, res) => {
     }
 
     const message = {
-      notification: { title, body },
+      notification: { 
+        title, 
+        body,
+        image: "https://fire-baadshah-arena.vercel.app/logo.png"
+      },
       android: {
         priority: "high",
         notification: {
@@ -716,7 +720,11 @@ app.post("/api/send-personal-notification", verifyToken, async (req, res) => {
     }
 
     const message = {
-      notification: { title, body },
+      notification: { 
+        title, 
+        body,
+        image: "https://fire-baadshah-arena.vercel.app/logo.png"
+      },
       android: {
         priority: "high",
         notification: {
