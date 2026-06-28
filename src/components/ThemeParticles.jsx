@@ -2,11 +2,12 @@ import { useEffect, useRef } from "react";
 
 export default function ThemeParticles() {
   const canvasRef = useRef(null);
-  const themeRef = useRef("fire");
+  const themeRef = useRef("ghost");
+  const numParticles = 40; // Number of particles for aesthetic
 
   useEffect(() => {
     // Determine initial theme from body attribute
-    const initialTheme = document.body.getAttribute("data-theme") || "fire";
+    const initialTheme = document.body.getAttribute("data-theme") || "ghost";
     themeRef.current = initialTheme;
 
     // Canvas Setup
@@ -116,7 +117,7 @@ export default function ThemeParticles() {
 
     // Listen to theme-change events
     const handleThemeChange = (e) => {
-      const nextTheme = e.detail || "fire";
+      const nextTheme = e.detail || "ghost";
       themeRef.current = nextTheme;
       initParticles(nextTheme);
     };

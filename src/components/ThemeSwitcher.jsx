@@ -380,7 +380,7 @@ function generateThemeCSS(theme) {
 
 export default function ThemeSwitcher() {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTheme, setActiveTheme] = useState("cyber");
+  const [activeTheme, setActiveTheme] = useState("ghost");
   const panelRef = useRef(null);
 
   // Load saved theme on mount
@@ -393,10 +393,10 @@ export default function ThemeSwitcher() {
         applyTheme(theme);
       }
     } else {
-      // Default to cyber theme
-      const defaultTheme = THEMES.find((t) => t.id === "cyber");
+      // Default to ghost theme
+      const defaultTheme = THEMES.find((t) => t.id === "ghost");
       if (defaultTheme) {
-        setActiveTheme("cyber");
+        setActiveTheme("ghost");
         applyTheme(defaultTheme);
       }
     }
