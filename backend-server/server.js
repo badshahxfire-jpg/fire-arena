@@ -714,12 +714,26 @@ app.post("/api/send-personal-notification", verifyToken, async (req, res) => {
       return res.status(404).json({ error: "Target user not found" });
     }
     
-    const targetToken = targetUserDoc.data().fcmToken;
-    if (!targetToken) {
-      return res.status(400).json({ error: "User does not have a registered FCM token" });
+    // 1. Save to RTDB for in-app notification (bell icon) ALWAYS
+    try {
+      await rtdb.ref(`notifications/${targetUserId}`).push({
+        title,
+        message: body,
+        timestamp: admin.database.ServerValue.TIMESTAMP,
+        seen: false
+      });
+    } catch (dbErr) {
+      console.error("Failed to save to RTDB:", dbErr);
     }
 
-    const message = {
+    // 2. Check for FCM token to send Push Notification
+    const targetToken = targetUserDoc.data().fcmToken;
+    if (!targetToken) {
+      // User doesn't have a token, but we already saved to RTDB, so it's a partial success
+      return res.json({ success: true, message: "Message saved to in-app notifications (User has no FCM token for popup)" });
+    }
+
+    const messagePayload = {
       notification: { 
         title, 
         body,
@@ -743,19 +757,7 @@ app.post("/api/send-personal-notification", verifyToken, async (req, res) => {
       token: targetToken
     };
 
-    // Save to RTDB for in-app notification (bell icon)
-    try {
-      await rtdb.ref(`notifications/${targetUserId}`).push({
-        title,
-        message: body,
-        timestamp: admin.database.ServerValue.TIMESTAMP,
-        seen: false
-      });
-    } catch (dbErr) {
-      console.error("Failed to save to RTDB:", dbErr);
-    }
-
-    const response = await admin.messaging().send(message);
+    const response = await admin.messaging().send(messagePayload);
     return res.json({ success: true, message: "Personal notification sent successfully", response });
   } catch (error) {
     console.error("Error sending personal notification:", error);
