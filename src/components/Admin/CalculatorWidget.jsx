@@ -83,7 +83,7 @@ export default function CalculatorWidget({ onClose }) {
             <span className="text-gray-400 text-xs font-bold">Admin Profit:</span>
             <div className="text-right">
               <span className={`font-black text-xl ${adminProfit >= 0 ? 'text-green-400' : 'text-red-500'}`}>
-                {adminProfit >= 0 ? '+' : ''}{adminProfit}
+                {adminProfit >= 0 ? '+ 🪙' : '- 🪙'} {Math.abs(adminProfit)}
               </span>
               <p className={`text-[10px] ${adminProfit >= 0 ? 'text-green-500/70' : 'text-red-500/70'} font-bold`}>
                 Margin: {profitMargin}%
