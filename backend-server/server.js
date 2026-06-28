@@ -641,6 +641,66 @@ app.post("/api/send-notification", verifyToken, async (req, res) => {
   }
 });
 
+// -------------------------------------------------------------
+// Auto-Delete Old Match Results (Older than 7 days)
+// -------------------------------------------------------------
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+
+async function cleanupOldMatches() {
+  try {
+    const now = Date.now();
+    
+    // Clean up classic matchResults
+    const matchResultsRef = rtdb.ref("matchResults");
+    const matchResultsSnap = await matchResultsRef.get();
+    
+    if (matchResultsSnap.exists()) {
+      const data = matchResultsSnap.val();
+      for (const [key, match] of Object.entries(data)) {
+        // Handle explicit timestamp or parse createdAt string
+        let matchTime = 0;
+        if (match.timestamp) {
+          matchTime = match.timestamp;
+        } else if (match.createdAt) {
+          matchTime = new Date(match.createdAt).getTime();
+        }
+        
+        if (matchTime && (now - matchTime > SEVEN_DAYS_MS)) {
+          await matchResultsRef.child(key).remove();
+          console.log(`Auto-deleted old matchResult: ${key}`);
+        }
+      }
+    }
+
+    // Clean up perKillMatchResults
+    const perKillRef = rtdb.ref("perKillMatchResults");
+    const perKillSnap = await perKillRef.get();
+    
+    if (perKillSnap.exists()) {
+      const data = perKillSnap.val();
+      for (const [key, match] of Object.entries(data)) {
+        let matchTime = 0;
+        if (match.timestamp) {
+          matchTime = match.timestamp;
+        } else if (match.time || match.createdAt) {
+          matchTime = new Date(match.time || match.createdAt).getTime();
+        }
+        
+        if (matchTime && (now - matchTime > SEVEN_DAYS_MS)) {
+          await perKillRef.child(key).remove();
+          console.log(`Auto-deleted old perKillMatchResult: ${key}`);
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error running auto-cleanup:", error);
+  }
+}
+
+// Run cleanup immediately on start, and then every 12 hours
+cleanupOldMatches();
+setInterval(cleanupOldMatches, 12 * 60 * 60 * 1000);
+
 // Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
