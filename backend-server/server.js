@@ -663,6 +663,7 @@ app.post("/api/send-notification", verifyToken, async (req, res) => {
       android: {
         priority: "high",
         notification: {
+          channelId: "fba_alerts",
           sound: "default"
         }
       },
@@ -719,6 +720,7 @@ app.post("/api/send-personal-notification", verifyToken, async (req, res) => {
       android: {
         priority: "high",
         notification: {
+          channelId: "fba_alerts",
           sound: "default"
         }
       },

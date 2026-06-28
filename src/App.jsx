@@ -641,6 +641,21 @@ export default function FireBaadshahArena() {
             return;
           }
 
+          // Create high importance channel for Android popups (Heads-Up Notifications)
+          if (window.Capacitor && window.Capacitor.getPlatform() === "android") {
+            try {
+              await PushNotifications.createChannel({
+                id: 'fba_alerts',
+                name: 'FBA Alerts',
+                description: 'High priority notifications',
+                importance: 5,
+                visibility: 1
+              });
+            } catch (err) {
+              console.warn("Failed to create push channel:", err);
+            }
+          }
+
           await PushNotifications.register();
 
           PushNotifications.addListener("registration", async (token) => {

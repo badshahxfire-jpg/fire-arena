@@ -410,10 +410,9 @@ export default function UserProfileCheck({ allUsers = [], onSearchUser, searched
 
                     <button
                       onClick={async () => {
-                        const title = window.prompt("Enter message TITLE (e.g. Warning, Support):");
-                        if (!title) return;
-                        const body = window.prompt("Enter the MESSAGE:");
+                        const body = window.prompt("Enter the message you want to send to this user:");
                         if (!body) return;
+                        const title = "Admin Message";
                         
                         try {
                           const res = await secureFetch("/api/send-personal-notification", {
