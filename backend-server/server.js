@@ -453,9 +453,12 @@ setTimeout(() => {
   console.log("Push notification listener is now live and active! 🔥");
 }, 4000);
 
-// 1. Listen for personal user notifications
+const activeUserListeners = new Set();
 rtdb.ref("notifications").on("child_added", (userSnap) => {
   const userId = userSnap.key;
+  
+  if (activeUserListeners.has(userId)) return;
+  activeUserListeners.add(userId);
   
   rtdb.ref(`notifications/${userId}`).on("child_added", async (notifSnap) => {
     const notifId = notifSnap.key;

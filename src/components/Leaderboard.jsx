@@ -21,19 +21,23 @@ export default function Leaderboard() {
     return () => { document.body.style.overflow = ""; };
   }, [showDetailsPopup]);
 
-  // Subscribe to Firestore users collection for real-time updates
+  // Fetch Firestore users collection once to save reads
   useEffect(() => {
-    const usersRef = collection(db, "users");
-    const unsubscribe = onSnapshot(usersRef, (snapshot) => {
-      const usersData = {};
-      snapshot.forEach((doc) => {
-        usersData[doc.id] = { id: doc.id, ...doc.data() };
-      });
-      setUsers(usersData);
-    }, (error) => {
-      console.error("Error subscribing to users for leaderboard:", error);
-    });
-    return () => unsubscribe();
+    const fetchUsers = async () => {
+      try {
+        const { getDocs } = await import("firebase/firestore");
+        const usersRef = collection(db, "users");
+        const snapshot = await getDocs(usersRef);
+        const usersData = {};
+        snapshot.forEach((doc) => {
+          usersData[doc.id] = { id: doc.id, ...doc.data() };
+        });
+        setUsers(usersData);
+      } catch (error) {
+        console.error("Error fetching users for leaderboard:", error);
+      }
+    };
+    fetchUsers();
   }, []);
 
   // Subscribe to Realtime Database matchResults

@@ -339,8 +339,8 @@ export const getPrizeDistribution = (totalPrizePool, totalPlayers, tournamentTyp
         label: reward.label,
         percent: reward.percent,
         position: reward.position,
-        perTeam: reward.totalAmount,
-        perPlayer: Math.floor(reward.totalAmount / reward.teamSize),
+        perTeam: reward.coinAmount,
+        perPlayer: Math.floor(reward.coinAmount / reward.teamSize),
         count: reward.count
       };
     } else {

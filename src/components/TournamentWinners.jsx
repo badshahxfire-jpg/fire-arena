@@ -22,20 +22,24 @@ export default function TournamentWinners() {
     return () => { document.body.style.overflow = ""; };
   }, [showDetails]);
 
-  // Subscribe to Firestore users collection for real-time name resolution
+  // Fetch Firestore users collection once to save reads
   useEffect(() => {
-    const usersRef = collection(db, "users");
-    const unsubscribe = onSnapshot(usersRef, (snapshot) => {
-      const namesMap = {};
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        namesMap[doc.id] = data.name || data.email?.split('@')[0] || "Player";
-      });
-      setUserNames(namesMap);
-    }, (error) => {
-      console.error("Error subscribing to users for winners:", error);
-    });
-    return () => unsubscribe();
+    const fetchUsers = async () => {
+      try {
+        const { getDocs } = await import("firebase/firestore");
+        const usersRef = collection(db, "users");
+        const snapshot = await getDocs(usersRef);
+        const namesMap = {};
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          namesMap[doc.id] = data.name || data.email?.split('@')[0] || "Player";
+        });
+        setUserNames(namesMap);
+      } catch (error) {
+        console.error("Error fetching users for winners:", error);
+      }
+    };
+    fetchUsers();
   }, []);
 
   // Fetch playerResults from database

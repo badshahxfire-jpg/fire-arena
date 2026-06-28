@@ -149,18 +149,21 @@ export function useAdminData(isAdmin) {
     return () => unsubscribe();
   }, []);
 
-  // Fetch Total Users
+  // Fetch Total Users (One-time fetch to save reads)
   useEffect(() => {
     if (!isAdmin) return;
-    const usersRef = collection(db, "users");
-    const unsubscribe = onSnapshot(usersRef, (snapshot) => {
-      setTotalUsers(snapshot.size);
-      const list = snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() }));
-      setAllUsers(list);
-    }, (error) => {
-      console.log("Error fetching total users:", error);
-    });
-    return () => unsubscribe();
+    const fetchUsers = async () => {
+      try {
+        const usersRef = collection(db, "users");
+        const snapshot = await getDocs(usersRef);
+        setTotalUsers(snapshot.size);
+        const list = snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() }));
+        setAllUsers(list);
+      } catch (error) {
+        console.log("Error fetching total users:", error);
+      }
+    };
+    fetchUsers();
   }, [isAdmin]);
 
   // Fetch Tournaments
