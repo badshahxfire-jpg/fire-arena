@@ -112,8 +112,11 @@ export default function WithdrawRequests({ withdrawRequests, onApproveWithdraw, 
                   <button
                     disabled={item.status === "COMPLETED" || item.status === "REJECTED" || loadingAction === `reject-${item.id}`}
                     onClick={async () => {
+                      const reason = window.prompt("Enter reason for rejection:");
+                      if (reason === null) return; // User cancelled the prompt
+
                       setLoadingAction(`reject-${item.id}`);
-                      await onRejectWithdraw(item);
+                      await onRejectWithdraw(item, reason);
                       setLoadingAction(null);
                     }}
                     className={`px-6 py-3 rounded-2xl font-black cyber-btn ${
