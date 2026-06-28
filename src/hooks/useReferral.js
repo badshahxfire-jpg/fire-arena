@@ -429,16 +429,26 @@ export function useReferral(user) {
     const appLink = window.location.origin;
     const shareText = `🔥 Join FireBaadshah Arena using my referral code: ${code}\n\nGet ${referralConditions.newUserBonusAmount} bonus coins on registration! Download now: ${appLink}`;
     
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: "Join FireBaadshah Arena",
-          text: shareText,
-        });
-      } catch (err) {
-        copyToClipboard(code);
+    try {
+      const { Share } = await import("@capacitor/share");
+      await Share.share({
+        title: "Join FireBaadshah Arena",
+        text: shareText,
+        dialogTitle: "Share Referral Code",
+      });
+    } catch (err) {
+      console.error("Share API failed:", err);
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: "Join FireBaadshah Arena",
+            text: shareText,
+          });
+          return;
+        } catch (navErr) {
+          console.error("Navigator Share API failed:", navErr);
+        }
       }
-    } else {
       copyToClipboard(code);
     }
   };

@@ -49,17 +49,26 @@ export default function UpcomingPerKillMatches({
     const appLink = window.location.origin;
     const shareText = `⚔️ Join the Per Kill match "${match.tournamentTitle}" on FireBaadshah Arena!\n\n🕒 Match Time: ${match.matchDate} at ${match.matchTime}\n💰 Entry Fee: ${match.entryFee} coins\n💀 Per Kill: ${match.perKillReward || 11} coins\n\nRegister now: ${appLink}`;
     
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `Join ${match.tournamentTitle}`,
-          text: shareText,
-        });
-      } catch (err) {
-        navigator.clipboard.writeText(shareText);
-        alert("Match details copied to clipboard!");
+    try {
+      const { Share } = await import("@capacitor/share");
+      await Share.share({
+        title: "Join Match",
+        text: shareText,
+        dialogTitle: "Share Match",
+      });
+    } catch (err) {
+      console.error("Share API failed:", err);
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: "Join Match",
+            text: shareText,
+          });
+          return;
+        } catch (navErr) {
+          console.error("Navigator Share API failed:", navErr);
+        }
       }
-    } else {
       navigator.clipboard.writeText(shareText);
       alert("Match details copied to clipboard!");
     }
