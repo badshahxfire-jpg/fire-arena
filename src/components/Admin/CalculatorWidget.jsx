@@ -1,25 +1,27 @@
 import React, { useState } from 'react';
 
 export default function CalculatorWidget({ onClose }) {
-  const [calcMode, setCalcMode] = useState('survival'); // survival, perkill, weekly
-  const [format, setFormat] = useState('Solo'); // Solo, Duo, Squad, etc.
-  const [entryFee, setEntryFee] = useState(10);
-  const [totalPlayers, setTotalPlayers] = useState(48);
-  const [prizePool, setPrizePool] = useState(300); // For survival/weekly
+  const [calcMode, setCalcMode] = useState('weekly'); // survival, perkill, weekly
+  const [format, setFormat] = useState('Solo'); // Solo, Duo, Squad
+  const [entryFee, setEntryFee] = useState(50);
+  const [totalPlayers, setTotalPlayers] = useState(192);
+  const [prizePool, setPrizePool] = useState(300); // For survival
   const [perKillPrize, setPerKillPrize] = useState(5); // For perkill
+  const [winnerPrize, setWinnerPrize] = useState(0); // For perkill
   
   // Calculations
   const totalCollection = Number(entryFee) * Number(totalPlayers);
   
   let totalDistributed = 0;
-  if (calcMode === 'survival' || calcMode === 'weekly') {
+  if (calcMode === 'survival') {
     totalDistributed = Number(prizePool);
+  } else if (calcMode === 'weekly') {
+    // Weekly logic: Solo distributes 90%, Duo/Squad distributes 80%
+    const adminCut = format === 'Solo' ? 0.90 : 0.80;
+    totalDistributed = Math.floor(totalCollection * adminCut);
   } else if (calcMode === 'perkill') {
-    // In per kill, worst case scenario is every player gets killed (totalPlayers - 1) kills max. 
-    // Usually it's calculated as (Total Players - 1) * Per Kill Prize + Winner Prize
-    // We'll just calculate total possible kills for admin's worst case (Total Players - 1)
     const totalKills = Number(totalPlayers) - 1;
-    totalDistributed = totalKills * Number(perKillPrize);
+    totalDistributed = (totalKills * Number(perKillPrize)) + Number(winnerPrize);
   }
 
   const adminProfit = totalCollection - totalDistributed;
@@ -44,6 +46,14 @@ export default function CalculatorWidget({ onClose }) {
           <button onClick={() => setCalcMode('weekly')} className={`flex-1 text-xs py-2 font-bold rounded-lg transition-all ${calcMode === 'weekly' ? 'bg-orange-500 text-black' : 'text-gray-400'}`}>WEEKLY</button>
         </div>
 
+        {calcMode === 'weekly' && (
+          <div className="flex justify-center gap-2 mb-4">
+            <button onClick={() => setFormat('Solo')} className={`px-3 py-1 rounded text-xs font-bold ${format === 'Solo' ? 'bg-blue-500 text-black' : 'bg-black text-gray-400 border border-white/10'}`}>SOLO (90% Dist)</button>
+            <button onClick={() => setFormat('Duo')} className={`px-3 py-1 rounded text-xs font-bold ${format === 'Duo' ? 'bg-blue-500 text-black' : 'bg-black text-gray-400 border border-white/10'}`}>DUO (80% Dist)</button>
+            <button onClick={() => setFormat('Squad')} className={`px-3 py-1 rounded text-xs font-bold ${format === 'Squad' ? 'bg-blue-500 text-black' : 'bg-black text-gray-400 border border-white/10'}`}>SQUAD (80% Dist)</button>
+          </div>
+        )}
+
         {/* Inputs */}
         <div className="space-y-3 mb-5">
           <div className="flex justify-between items-center">
@@ -55,12 +65,20 @@ export default function CalculatorWidget({ onClose }) {
             <input type="number" value={totalPlayers} onChange={(e) => setTotalPlayers(e.target.value)} className="w-24 bg-black border border-blue-500/30 text-blue-400 font-bold px-2 py-1 rounded text-right focus:outline-none focus:border-blue-500" />
           </div>
 
-          {calcMode === 'perkill' ? (
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400 text-sm font-bold">Per Kill Prize</span>
-              <input type="number" value={perKillPrize} onChange={(e) => setPerKillPrize(e.target.value)} className="w-24 bg-black border border-green-500/30 text-green-400 font-bold px-2 py-1 rounded text-right focus:outline-none focus:border-green-500" />
-            </div>
-          ) : (
+          {calcMode === 'perkill' && (
+            <>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400 text-sm font-bold">Per Kill Prize</span>
+                <input type="number" value={perKillPrize} onChange={(e) => setPerKillPrize(e.target.value)} className="w-24 bg-black border border-green-500/30 text-green-400 font-bold px-2 py-1 rounded text-right focus:outline-none focus:border-green-500" />
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400 text-sm font-bold">Winner Prize</span>
+                <input type="number" value={winnerPrize} onChange={(e) => setWinnerPrize(e.target.value)} className="w-24 bg-black border border-yellow-500/30 text-yellow-400 font-bold px-2 py-1 rounded text-right focus:outline-none focus:border-yellow-500" />
+              </div>
+            </>
+          )}
+          
+          {calcMode === 'survival' && (
             <div className="flex justify-between items-center">
               <span className="text-gray-400 text-sm font-bold">Prize Pool</span>
               <input type="number" value={prizePool} onChange={(e) => setPrizePool(e.target.value)} className="w-24 bg-black border border-pink-500/30 text-pink-400 font-bold px-2 py-1 rounded text-right focus:outline-none focus:border-pink-500" />
