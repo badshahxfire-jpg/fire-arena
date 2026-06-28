@@ -31,22 +31,37 @@ export default function PaymentRequests({ paymentRequests, onApprovePayment, onR
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 no-scrollbar">
           <div className="flex flex-wrap gap-2 mb-6">
             <button
-              onClick={() => onDeletePayment("COMPLETED")}
-              className="bg-green-500 text-black px-3 py-2 rounded-xl font-black text-sm cyber-btn"
+              onClick={async () => {
+                setLoadingAction("delete-COMPLETED");
+                await onDeletePayment("COMPLETED");
+                setLoadingAction(null);
+              }}
+              disabled={loadingAction === "delete-COMPLETED"}
+              className="bg-green-500 text-black px-3 py-2 rounded-xl font-black text-sm cyber-btn disabled:opacity-50"
             >
-              🗑 DELETE COMPLETED
+              {loadingAction === "delete-COMPLETED" ? "⏳ DELETING..." : "🗑 DELETE COMPLETED"}
             </button>
             <button
-              onClick={() => onDeletePayment("REJECTED")}
-              className="bg-red-500 text-white px-3 py-2 rounded-xl font-black text-sm cyber-btn"
+              onClick={async () => {
+                setLoadingAction("delete-REJECTED");
+                await onDeletePayment("REJECTED");
+                setLoadingAction(null);
+              }}
+              disabled={loadingAction === "delete-REJECTED"}
+              className="bg-red-500 text-white px-3 py-2 rounded-xl font-black text-sm cyber-btn disabled:opacity-50"
             >
-              🗑 DELETE REJECTED
+              {loadingAction === "delete-REJECTED" ? "⏳ DELETING..." : "🗑 DELETE REJECTED"}
             </button>
             <button
-              onClick={() => onDeletePayment("ALL")}
-              className="bg-orange-500 text-black px-3 py-2 rounded-xl font-black text-sm cyber-btn"
+              onClick={async () => {
+                setLoadingAction("delete-ALL");
+                await onDeletePayment("ALL");
+                setLoadingAction(null);
+              }}
+              disabled={loadingAction === "delete-ALL"}
+              className="bg-orange-500 text-black px-3 py-2 rounded-xl font-black text-sm cyber-btn disabled:opacity-50"
             >
-              🗑 DELETE ALL
+              {loadingAction === "delete-ALL" ? "⏳ DELETING..." : "🗑 DELETE ALL"}
             </button>
           </div>
 

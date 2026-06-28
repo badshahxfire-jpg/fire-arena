@@ -23,6 +23,7 @@ export default function PerKillMatchResults({
   const [showPlayersPopup, setShowPlayersPopup] = useState(false);
   const [selectedViewTournament, setSelectedViewTournament] = useState(null);
   const [showCompletedPopup, setShowCompletedPopup] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
 
   if (!isAdmin) return null;
 
@@ -88,7 +89,10 @@ export default function PerKillMatchResults({
       position: Number(playerPositions[p.userId] || 0)
     }));
 
+    setIsPublishing(true);
     const success = await publishResults(selectedTournament, playerResultsList);
+    setIsPublishing(false);
+    
     if (success) {
       setShowResultPopup(false);
       setSelectedTournament(null);
@@ -469,9 +473,14 @@ export default function PerKillMatchResults({
               </button>
               <button
                 onClick={handleSubmitResults}
-                className="w-2/3 bg-gradient-to-r from-orange-500 to-red-600 text-black font-black text-lg py-3.5 rounded-xl hover:scale-[1.01] transition"
+                disabled={isPublishing}
+                className={`w-2/3 text-black font-black text-lg py-3.5 rounded-xl hover:scale-[1.01] transition ${
+                  isPublishing 
+                    ? "bg-gray-600 text-gray-300 opacity-50 cursor-wait" 
+                    : "bg-gradient-to-r from-orange-500 to-red-600"
+                }`}
               >
-                🏆 PUBLISH & DISTRIBUTE REWARDS
+                {isPublishing ? "⏳ PUBLISHING..." : "🏆 PUBLISH & DISTRIBUTE REWARDS"}
               </button>
             </div>
           </div>

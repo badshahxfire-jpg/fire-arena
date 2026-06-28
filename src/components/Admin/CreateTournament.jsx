@@ -9,6 +9,7 @@ export default function CreateTournament({ onCreateTournament }) {
   const [matchDate, setMatchDate] = useState("");
   const [tournamentType, setTournamentType] = useState("SOLO");
   const [selectedMap, setSelectedMap] = useState("Bermuda");
+  const [isLoading, setIsLoading] = useState(false);
 
   const fee = Number(entryFee || 0);
   const players = Number(totalTeams || 0);
@@ -18,22 +19,27 @@ export default function CreateTournament({ onCreateTournament }) {
   
   const { rewards: prizeDistribution } = getPrizeDistribution(totalPrizePool, players, tournamentType, fee);
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!tournamentTitle || !entryFee || !totalTeams || !matchTime || !matchDate) {
       alert("Please fill all fields");
       return;
     }
-    onCreateTournament({
-      tournamentTitle,
-      entryFee,
-      totalTeams,
-      matchTime,
-      matchDate,
-      tournamentType,
-      selectedMap,
-      adminProfit,
-      totalPrizePool,
-    });
+    setIsLoading(true);
+    try {
+      await onCreateTournament({
+        tournamentTitle,
+        entryFee,
+        totalTeams,
+        matchTime,
+        matchDate,
+        tournamentType,
+        selectedMap,
+        adminProfit,
+        totalPrizePool,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const getWinnerCountText = () => {
@@ -232,9 +238,14 @@ export default function CreateTournament({ onCreateTournament }) {
 
         <button
           onClick={handleCreate}
-          className="w-full mt-10 bg-gradient-to-r from-orange-500 to-red-600 text-black py-5 rounded-2xl text-xl font-black hover:scale-105 duration-300 cyber-btn"
+          disabled={isLoading}
+          className={`w-full mt-10 text-black py-5 rounded-2xl text-xl font-black transition-all duration-300 cyber-btn ${
+            isLoading 
+              ? "bg-gray-600 text-gray-300 opacity-50 cursor-wait" 
+              : "bg-gradient-to-r from-orange-500 to-red-600 hover:scale-105"
+          }`}
         >
-          🚀 CREATE TOURNAMENT
+          {isLoading ? "⏳ CREATING..." : "🚀 CREATE TOURNAMENT"}
         </button>
       </div>
     </section>

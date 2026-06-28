@@ -21,6 +21,7 @@ export default function ProfilePopup({ user, playerData, coins, onClose, onChang
   const [tempPhone, setTempPhone] = useState("");
   const [showIngameEdit, setShowIngameEdit] = useState(false);
   const [tempIngame, setTempIngame] = useState("");
+  const [isUpdating, setIsUpdating] = useState(false);
 
   // AUTO-GENERATE REFERRAL CODE IF MISSING
   useEffect(() => {
@@ -83,6 +84,7 @@ export default function ProfilePopup({ user, playerData, coins, onClose, onChang
 
   const handleChangeUid = async () => {
     if (tempUid.trim() && user) {
+      setIsUpdating(true);
       try {
         await updateDoc(doc(db, "users", user.uid), {
           gameUid: tempUid.trim(),
@@ -93,6 +95,7 @@ export default function ProfilePopup({ user, playerData, coins, onClose, onChang
       } catch (err) {
         alert("Failed to update Game UID: " + err.message);
       }
+      setIsUpdating(false);
     }
   };
 
@@ -103,6 +106,7 @@ export default function ProfilePopup({ user, playerData, coins, onClose, onChang
 
   const handleChangePhone = async () => {
     if (tempPhone.trim() && user) {
+      setIsUpdating(true);
       try {
         await updateDoc(doc(db, "users", user.uid), {
           mobileNumber: tempPhone.trim(),
@@ -113,6 +117,7 @@ export default function ProfilePopup({ user, playerData, coins, onClose, onChang
       } catch (err) {
         alert("Failed to update Mobile Number: " + err.message);
       }
+      setIsUpdating(false);
     }
   };
 
@@ -123,6 +128,7 @@ export default function ProfilePopup({ user, playerData, coins, onClose, onChang
 
   const handleChangeIngame = async () => {
     if (tempIngame.trim() && user) {
+      setIsUpdating(true);
       try {
         await updateDoc(doc(db, "users", user.uid), {
           ingameName: tempIngame.trim(),
@@ -133,6 +139,7 @@ export default function ProfilePopup({ user, playerData, coins, onClose, onChang
       } catch (err) {
         alert("Failed to update In-Game Name: " + err.message);
       }
+      setIsUpdating(false);
     }
   };
 
@@ -334,14 +341,14 @@ export default function ProfilePopup({ user, playerData, coins, onClose, onChang
             
             <button
               onClick={handleChangeName}
-              disabled={!tempName.trim() || tempName === playerData?.name}
+              disabled={isUpdating || !tempName.trim() || tempName === playerData?.name}
               className={`w-full py-3 rounded-xl font-bold text-base transition-all ${
-                !tempName.trim() || tempName === playerData?.name
+                isUpdating || !tempName.trim() || tempName === playerData?.name
                   ? "bg-gray-600 cursor-not-allowed text-gray-300"
                   : "bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white"
               }`}
             >
-              CONFIRM CHANGE
+              {isUpdating ? "SAVING..." : "CONFIRM CHANGE"}
             </button>
           </div>
         </div>
@@ -379,14 +386,14 @@ export default function ProfilePopup({ user, playerData, coins, onClose, onChang
             
             <button
               onClick={handleChangeUid}
-              disabled={!tempUid.trim() || tempUid === playerData?.gameUid}
+              disabled={isUpdating || !tempUid.trim() || tempUid === playerData?.gameUid}
               className={`w-full py-3 rounded-xl font-bold text-base transition-all ${
-                !tempUid.trim() || tempUid === playerData?.gameUid
+                isUpdating || !tempUid.trim() || tempUid === playerData?.gameUid
                   ? "bg-gray-600 cursor-not-allowed text-gray-300"
                   : "bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white"
               }`}
             >
-              CONFIRM & LOCK UID
+              {isUpdating ? "SAVING..." : "CONFIRM & LOCK UID"}
             </button>
           </div>
         </div>
@@ -424,14 +431,14 @@ export default function ProfilePopup({ user, playerData, coins, onClose, onChang
             
             <button
               onClick={handleChangePhone}
-              disabled={!tempPhone.trim() || tempPhone === playerData?.mobileNumber}
+              disabled={isUpdating || !tempPhone.trim() || tempPhone === playerData?.mobileNumber}
               className={`w-full py-3 rounded-xl font-bold text-base transition-all ${
-                !tempPhone.trim() || tempPhone === playerData?.mobileNumber
+                isUpdating || !tempPhone.trim() || tempPhone === playerData?.mobileNumber
                   ? "bg-gray-600 cursor-not-allowed text-gray-300"
                   : "bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white"
               }`}
             >
-              CONFIRM & LOCK NUMBER
+              {isUpdating ? "SAVING..." : "CONFIRM & LOCK NUMBER"}
             </button>
           </div>
         </div>
@@ -469,14 +476,14 @@ export default function ProfilePopup({ user, playerData, coins, onClose, onChang
             
             <button
               onClick={handleChangeIngame}
-              disabled={!tempIngame.trim() || tempIngame === playerData?.ingameName}
+              disabled={isUpdating || !tempIngame.trim() || tempIngame === playerData?.ingameName}
               className={`w-full py-3 rounded-xl font-bold text-base transition-all ${
-                !tempIngame.trim() || tempIngame === playerData?.ingameName
+                isUpdating || !tempIngame.trim() || tempIngame === playerData?.ingameName
                   ? "bg-gray-600 cursor-not-allowed text-gray-300"
                   : "bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white"
               }`}
             >
-              CONFIRM & LOCK INGAME NAME
+              {isUpdating ? "SAVING..." : "CONFIRM & LOCK INGAME NAME"}
             </button>
           </div>
         </div>

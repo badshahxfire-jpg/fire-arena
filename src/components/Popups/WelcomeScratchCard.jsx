@@ -7,6 +7,7 @@ export default function WelcomeScratchCard({ onClaim, onClose }) {
   const [isDrawing, setIsDrawing] = useState(false);
   const [claimed, setClaimed] = useState(false);
   const [confetti, setConfetti] = useState([]);
+  const lastPosRef = useRef(null);
 
   // Generate CSS confetti particles
   const triggerConfetti = () => {
@@ -123,6 +124,17 @@ export default function WelcomeScratchCard({ onClaim, onClose }) {
     };
   };
 
+  const startDrawing = (e) => {
+    setIsDrawing(true);
+    lastPosRef.current = getCoordinates(e);
+    draw(e);
+  };
+
+  const stopDrawing = () => {
+    setIsDrawing(false);
+    lastPosRef.current = null;
+  };
+
   const draw = (e) => {
     if (!isDrawing || isScratched) return;
     const canvas = canvasRef.current;
@@ -130,14 +142,26 @@ export default function WelcomeScratchCard({ onClaim, onClose }) {
     if (!ctx) return;
 
     // Prevent scrolling on mobile while scratching
-    e.preventDefault();
+    if (e.cancelable) e.preventDefault();
 
     const { x, y } = getCoordinates(e);
 
     ctx.globalCompositeOperation = "destination-out";
+    ctx.lineWidth = 45; // Scratch brush size
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
     ctx.beginPath();
-    ctx.arc(x, y, 22, 0, Math.PI * 2);
-    ctx.fill();
+    if (lastPosRef.current) {
+      ctx.moveTo(lastPosRef.current.x, lastPosRef.current.y);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+    } else {
+      ctx.arc(x, y, 22.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    
+    lastPosRef.current = { x, y };
 
     checkScratchPercentage();
   };
@@ -203,19 +227,13 @@ export default function WelcomeScratchCard({ onClaim, onClose }) {
           {/* HTML5 Canvas Scratchable Cover Layer */}
           <canvas
             ref={canvasRef}
-            onMouseDown={(e) => {
-              setIsDrawing(true);
-              draw(e);
-            }}
+            onMouseDown={startDrawing}
             onMouseMove={draw}
-            onMouseUp={() => setIsDrawing(false)}
-            onMouseLeave={() => setIsDrawing(false)}
-            onTouchStart={(e) => {
-              setIsDrawing(true);
-              draw(e);
-            }}
+            onMouseUp={stopDrawing}
+            onMouseLeave={stopDrawing}
+            onTouchStart={startDrawing}
             onTouchMove={draw}
-            onTouchEnd={() => setIsDrawing(false)}
+            onTouchEnd={stopDrawing}
             className={`absolute inset-0 cursor-crosshair transition-opacity duration-500 ${
               isScratched ? "opacity-0 pointer-events-none" : "opacity-100"
             }`}

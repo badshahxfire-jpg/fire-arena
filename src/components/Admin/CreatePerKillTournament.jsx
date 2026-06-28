@@ -12,25 +12,31 @@ export default function CreatePerKillTournament({ onCreateTournament }) {
   const [matchDate, setMatchDate] = useState("");
   const [tournamentType, setTournamentType] = useState("SOLO");
   const [selectedMap, setSelectedMap] = useState("Bermuda");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!tournamentTitle || !entryFee || !perKillRate || !booyahBonus || !totalTeams || !matchTime || !matchDate) {
       alert("Please fill all fields");
       return;
     }
-    onCreateTournament({
-      tournamentTitle,
-      entryFee: Number(entryFee),
-      perKillRate: Number(perKillRate),
-      booyahBonus: Number(booyahBonus),
-      secondBonus: Number(secondBonus || 0),
-      thirdBonus: Number(thirdBonus || 0),
-      totalTeams: Number(totalTeams),
-      matchTime,
-      matchDate,
-      tournamentType,
-      selectedMap,
-    });
+    setIsLoading(true);
+    try {
+      await onCreateTournament({
+        tournamentTitle,
+        entryFee: Number(entryFee),
+        perKillRate: Number(perKillRate),
+        booyahBonus: Number(booyahBonus),
+        secondBonus: Number(secondBonus || 0),
+        thirdBonus: Number(thirdBonus || 0),
+        totalTeams: Number(totalTeams),
+        matchTime,
+        matchDate,
+        tournamentType,
+        selectedMap,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -151,9 +157,14 @@ export default function CreatePerKillTournament({ onCreateTournament }) {
 
         <button
           onClick={handleCreate}
-          className="w-full mt-10 bg-gradient-to-r from-orange-500 to-red-600 text-black py-5 rounded-2xl text-xl font-black hover:scale-105 duration-300 cyber-btn"
+          disabled={isLoading}
+          className={`w-full mt-10 text-black py-5 rounded-2xl text-xl font-black transition-all duration-300 cyber-btn ${
+            isLoading
+              ? "bg-gray-600 text-gray-300 opacity-50 cursor-wait"
+              : "bg-gradient-to-r from-orange-500 to-red-600 hover:scale-105"
+          }`}
         >
-          🚀 CREATE PER KILL TOURNAMENT
+          {isLoading ? "⏳ CREATING..." : "🚀 CREATE PER KILL TOURNAMENT"}
         </button>
       </div>
     </section>
