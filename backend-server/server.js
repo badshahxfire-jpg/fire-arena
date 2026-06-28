@@ -405,10 +405,12 @@ async function sendGlobalPushNotification(title, body) {
       notification: {
         title: title,
         body: body,
+        image: "https://fire-baadshah-arena.vercel.app/logo.png"
       },
       android: {
         priority: "high",
         notification: {
+          channelId: "fba_alerts",
           sound: "default"
         }
       },
@@ -445,10 +447,12 @@ async function sendPersonalPushNotification(userId, title, body) {
       notification: {
         title: title,
         body: body,
+        image: "https://fire-baadshah-arena.vercel.app/logo.png"
       },
       android: {
         priority: "high",
         notification: {
+          channelId: "fba_alerts",
           sound: "default"
         }
       },
