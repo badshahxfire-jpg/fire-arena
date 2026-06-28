@@ -15,6 +15,7 @@ export function useAdminData(isAdmin) {
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [maintenanceDuration, setMaintenanceDuration] = useState("");
   const [maintenanceEndsAt, setMaintenanceEndsAt] = useState(0);
+  const [maintenanceAllowedUsers, setMaintenanceAllowedUsers] = useState([]);
   const [searchedUser, setSearchedUser] = useState(null);
 
   // Fetch Payment Requests
@@ -84,7 +85,7 @@ export function useAdminData(isAdmin) {
       return 0;
     };
 
-    const cleanupOldPlayers = async (path) => {
+    const cleanupOldData = async (path, dateField = "createdAt", condition = null) => {
       try {
         const refPath = ref(database, path);
         const snapshot = await get(refPath);
@@ -95,11 +96,16 @@ export function useAdminData(isAdmin) {
         const twentyDaysMs = 20 * 24 * 60 * 60 * 1000;
 
         for (const key in data) {
-          const player = data[key];
-          if (player && player.createdAt) {
-            const joinTime = parseDate(player.createdAt);
-            if (joinTime > 0 && (now - joinTime) > twentyDaysMs) {
-              console.log(`Auto-deleting old player from ${path}:`, player.ingameName || player.userEmail);
+          const item = data[key];
+          if (!item) continue;
+          
+          if (condition && !condition(item)) continue;
+
+          const dateStr = item[dateField];
+          if (dateStr) {
+            const itemTime = parseDate(dateStr);
+            if (itemTime > 0 && (now - itemTime) > twentyDaysMs) {
+              console.log(`Auto-deleting old data from ${path}:`, key);
               await remove(ref(database, `${path}/${key}`));
             }
           }
@@ -110,8 +116,17 @@ export function useAdminData(isAdmin) {
     };
 
     // Run cleanup once on admin load
-    cleanupOldPlayers("joinedPlayers");
-    cleanupOldPlayers("joinedPerKillPlayers");
+    cleanupOldData("joinedPlayers", "createdAt");
+    cleanupOldData("joinedPerKillPlayers", "createdAt");
+    
+    // New cleanups
+    cleanupOldData("paymentRequests", "time", (item) => item.status && item.status !== "PENDING");
+    cleanupOldData("withdrawRequests", "time", (item) => item.status && item.status !== "PENDING");
+    cleanupOldData("playerResults", "createdAt");
+    cleanupOldData("announcements", "createdAt");
+    cleanupOldData("liveTournaments", "createdAt", (item) => item.completed || item.resultPublished);
+    cleanupOldData("perKillTournaments", "createdAt", (item) => item.completed || item.resultPublished);
+    cleanupOldData("weeklyTournaments", "createdAt", (item) => item.status === "COMPLETED" && item.rewardsDistributed);
   }, [isAdmin]);
 
   // Fetch Maintenance Mode
@@ -123,10 +138,12 @@ export function useAdminData(isAdmin) {
         setMaintenanceMode(data.enabled || false);
         setMaintenanceDuration(data.duration || "");
         setMaintenanceEndsAt(data.endsAt || 0);
+        setMaintenanceAllowedUsers(data.allowedUsers || []);
       } else {
         setMaintenanceMode(data || false);
         setMaintenanceDuration("");
         setMaintenanceEndsAt(0);
+        setMaintenanceAllowedUsers([]);
       }
     });
     return () => unsubscribe();
@@ -476,11 +493,16 @@ const searchUser = async (uid) => {
   };
 
   // Block/Unblock User
-  const blockUser = async (uid, isBlocked) => {
+  const blockUser = async (uid, isBlocked, reason = "") => {
     try {
-      await updateDoc(doc(db, "users", uid), {
-        blocked: !isBlocked,
-      });
+      const updateData = { blocked: !isBlocked };
+      if (!isBlocked && reason) {
+        updateData.blockReason = reason;
+      } else if (isBlocked) {
+        updateData.blockReason = "";
+      }
+      
+      await updateDoc(doc(db, "users", uid), updateData);
       alert(isBlocked ? "User Unblocked 🔥" : "User Blocked 🚫");
       return true;
     } catch (error) {
@@ -502,17 +524,36 @@ const searchUser = async (uid) => {
     return num * 60 * 1000;
   };
 
-  // Toggle Maintenance Mode
   const toggleMaintenance = async (duration = "") => {
     const isEnabling = !maintenanceMode;
-    const endsAt = isEnabling && duration ? (Date.now() + parseDurationToMs(duration)) : 0;
-    await update(ref(database, "settings"), {
-      maintenance: {
-        enabled: isEnabling,
-        duration: isEnabling ? duration : "",
-        endsAt: endsAt
-      },
-    });
+    const endsAt = duration ? Date.now() + (parseInt(duration) * 60 * 60 * 1000) : 0;
+    
+    try {
+      await update(ref(database), {
+        "settings/maintenance": {
+          enabled: isEnabling,
+          duration: isEnabling ? duration : "",
+          endsAt: isEnabling ? endsAt : 0,
+          allowedUsers: maintenanceAllowedUsers
+        }
+      });
+      alert(`✅ Maintenance Mode ${isEnabling ? "ENABLED" : "DISABLED"}!`);
+    } catch (error) {
+      console.error("Error toggling maintenance mode:", error);
+      alert("❌ Failed to toggle maintenance mode.");
+    }
+  };
+
+  const updateMaintenanceAllowedUsers = async (allowedUsers) => {
+    try {
+      await update(ref(database, "settings/maintenance"), {
+        allowedUsers: allowedUsers
+      });
+      alert("✅ Allowed users updated!");
+    } catch (error) {
+      console.error("Error updating allowed users:", error);
+      alert("❌ Failed to update allowed users.");
+    }
   };
 
   // Migrate Old Users' Coins to Winnings
@@ -586,6 +627,7 @@ const searchUser = async (uid) => {
     maintenanceMode,
     maintenanceDuration,
     maintenanceEndsAt,
+    maintenanceAllowedUsers,
     searchedUser,
     createTournament,
     approvePayment,
@@ -600,6 +642,7 @@ const searchUser = async (uid) => {
     blockUser,
     searchUser,
     toggleMaintenance,
+    updateMaintenanceAllowedUsers,
     migrateWinnings,
     migrateSingleUserWinnings,
   };

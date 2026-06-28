@@ -85,13 +85,47 @@ export const getPrizeDistribution = (totalPrizePool, totalPlayers, tournamentTyp
     }
   }
   else if (tournamentType === "DUO") {
-    winnerCount = 4;
-    rewards = [
-      { label: "🥇 Team #1", percent: 40, position: 1, count: 1, teamSize: 2 },
-      { label: "🥈 Team #2", percent: 30, position: 2, count: 1, teamSize: 2 },
-      { label: "🥉 Team #3", percent: 20, position: 3, count: 1, teamSize: 2 },
-      { label: "🏅 Team #4", percent: 10, position: 4, count: 1, teamSize: 2 }
-    ];
+    if (players >= 48) {
+      winnerCount = 10;
+      rewards = [
+        { label: "🥇 Team #1", percent: 20, position: 1, count: 1, teamSize: 2 },
+        { label: "🥈 Team #2", percent: 15, position: 2, count: 1, teamSize: 2 },
+        { label: "🥉 Team #3", percent: 10, position: 3, count: 1, teamSize: 2 },
+        { label: "🏅 Team #4-5", percent: 8, position: "4-5", count: 2, teamSize: 2 },
+        { label: "🔥 Team #6-10", percent: 5, position: "6-10", count: 5, teamSize: 2 }
+      ];
+    } else if (players >= 40) {
+      winnerCount = 8;
+      rewards = [
+        { label: "🥇 Team #1", percent: 22, position: 1, count: 1, teamSize: 2 },
+        { label: "🥈 Team #2", percent: 16, position: 2, count: 1, teamSize: 2 },
+        { label: "🥉 Team #3", percent: 12, position: 3, count: 1, teamSize: 2 },
+        { label: "🏅 Team #4-5", percent: 9, position: "4-5", count: 2, teamSize: 2 },
+        { label: "🔥 Team #6-8", percent: 6, position: "6-8", count: 3, teamSize: 2 }
+      ];
+    } else if (players >= 30) {
+      winnerCount = 6;
+      rewards = [
+        { label: "🥇 Team #1", percent: 25, position: 1, count: 1, teamSize: 2 },
+        { label: "🥈 Team #2", percent: 18, position: 2, count: 1, teamSize: 2 },
+        { label: "🥉 Team #3", percent: 14, position: 3, count: 1, teamSize: 2 },
+        { label: "🏅 Team #4-6", percent: 10, position: "4-6", count: 3, teamSize: 2 }
+      ];
+    } else if (players >= 20) {
+      winnerCount = 4;
+      rewards = [
+        { label: "🥇 Team #1", percent: 40, position: 1, count: 1, teamSize: 2 },
+        { label: "🥈 Team #2", percent: 30, position: 2, count: 1, teamSize: 2 },
+        { label: "🥉 Team #3", percent: 20, position: 3, count: 1, teamSize: 2 },
+        { label: "🏅 Team #4", percent: 10, position: 4, count: 1, teamSize: 2 }
+      ];
+    } else {
+      winnerCount = 2;
+      rewards = [
+        { label: "🥇 Team #1", percent: 60, position: 1, count: 1, teamSize: 2 },
+        { label: "🥈 Team #2", percent: 40, position: 2, count: 1, teamSize: 2 }
+      ];
+    }
   }
   else if (tournamentType === "2V2") {
     winnerCount = 1;
@@ -100,12 +134,46 @@ export const getPrizeDistribution = (totalPrizePool, totalPlayers, tournamentTyp
     ];
   }
   else if (tournamentType === "SQUAD") {
-    winnerCount = 3;
-    rewards = [
-      { label: "🥇 Squad #1", percent: 50, position: 1, count: 1, teamSize: 4 },
-      { label: "🥈 Squad #2", percent: 30, position: 2, count: 1, teamSize: 4 },
-      { label: "🥉 Squad #3", percent: 20, position: 3, count: 1, teamSize: 4 }
-    ];
+    if (players >= 48) {
+      winnerCount = 5;
+      rewards = [
+        { label: "🥇 Squad #1", percent: 35, position: 1, count: 1, teamSize: 4 },
+        { label: "🥈 Squad #2", percent: 25, position: 2, count: 1, teamSize: 4 },
+        { label: "🥉 Squad #3", percent: 18, position: 3, count: 1, teamSize: 4 },
+        { label: "🏅 Squad #4", percent: 12, position: 4, count: 1, teamSize: 4 },
+        { label: "🔥 Squad #5", percent: 10, position: 5, count: 1, teamSize: 4 }
+      ];
+    }
+    else if (players >= 32) {
+      winnerCount = 4;
+      rewards = [
+        { label: "🥇 Squad #1", percent: 40, position: 1, count: 1, teamSize: 4 },
+        { label: "🥈 Squad #2", percent: 30, position: 2, count: 1, teamSize: 4 },
+        { label: "🥉 Squad #3", percent: 20, position: 3, count: 1, teamSize: 4 },
+        { label: "🏅 Squad #4", percent: 10, position: 4, count: 1, teamSize: 4 }
+      ];
+    }
+    else if (players >= 24) {
+      winnerCount = 3;
+      rewards = [
+        { label: "🥇 Squad #1", percent: 50, position: 1, count: 1, teamSize: 4 },
+        { label: "🥈 Squad #2", percent: 30, position: 2, count: 1, teamSize: 4 },
+        { label: "🥉 Squad #3", percent: 20, position: 3, count: 1, teamSize: 4 }
+      ];
+    }
+    else if (players >= 16) {
+      winnerCount = 2;
+      rewards = [
+        { label: "🥇 Squad #1", percent: 60, position: 1, count: 1, teamSize: 4 },
+        { label: "🥈 Squad #2", percent: 40, position: 2, count: 1, teamSize: 4 }
+      ];
+    }
+    else {
+      winnerCount = 1;
+      rewards = [
+        { label: "🥇 Squad #1", percent: 100, position: 1, count: 1, teamSize: 4 }
+      ];
+    }
   }
   else if (tournamentType === "1V1") {
     winnerCount = 1;
@@ -185,8 +253,8 @@ export const getPrizeDistribution = (totalPrizePool, totalPlayers, tournamentTyp
     }
   }
   
-  // Apply entryFee + 5 minimum logic for SOLO and DUO
-  const minPrizePerPlayer = (tournamentType === "SOLO" || tournamentType === "DUO") ? (Number(entryFee) + 5) : 0;
+  // Apply entryFee minimum logic for SOLO, DUO, and SQUAD
+  const minPrizePerPlayer = (tournamentType === "SOLO" || tournamentType === "DUO" || tournamentType === "SQUAD") ? Number(entryFee) : 0;
   if (minPrizePerPlayer > 0 && calculatedRewards.length > 0) {
     const totalWinningPlayers = calculatedRewards.reduce((sum, r) => sum + r.count * (r.teamSize || 1), 0);
     const totalMinRequired = totalWinningPlayers * minPrizePerPlayer;

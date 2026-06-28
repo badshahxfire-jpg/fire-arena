@@ -305,7 +305,7 @@ body::before {
 .airdrop:nth-child(2) { animation-delay: 8s; left: 30%; }
 .airdrop:nth-child(3) { animation-delay: 16s; left: 70%; }
 
-/* ================= CYBERPUNK 2077 STYLE ANIMATIONS ================= */
+/* ================= CYBERPUNK STYLE ANIMATIONS (FIRE THEME DEFAULT) ================= */
 
 .cyber-neon {
   animation: cyberNeon 2s ease-in-out infinite;
@@ -313,33 +313,33 @@ body::before {
 }
 
 @keyframes cyberNeon {
-  0%, 100% { text-shadow: 0 0 3px #00ffff, 0 0 6px #00ffff; color: #00ffff; }
-  50% { text-shadow: 0 0 5px #ff00ff, 0 0 8px #ff00ff; color: #ff00ff; }
+  0%, 100% { text-shadow: 0 0 3px #ff3300, 0 0 6px #ff3300; color: #ff3300; }
+  50% { text-shadow: 0 0 5px #ff0000, 0 0 8px #ff0000; color: #ff0000; }
 }
 
 .cyber-card {
   animation: cyberCardPulse 3s ease-in-out infinite;
-  background: rgba(10, 10, 20, 0.5);
+  background: rgba(20, 10, 10, 0.5);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(0, 255, 255, 0.2);
+  border: 1px solid rgba(255, 51, 0, 0.2);
   border-radius: 15px;
   transition: all 0.3s ease;
 }
 
 .cyber-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 10px 30px rgba(255, 0, 255, 0.15);
+  box-shadow: 0 10px 30px rgba(255, 0, 0, 0.15);
 }
 
 @keyframes cyberCardPulse {
-  0%, 100% { border-color: rgba(0, 255, 255, 0.2); box-shadow: 0 0 5px rgba(0, 255, 255, 0.1); }
-  50% { border-color: rgba(255, 0, 255, 0.3); box-shadow: 0 0 15px rgba(255, 0, 255, 0.2); }
+  0%, 100% { border-color: rgba(255, 51, 0, 0.2); box-shadow: 0 0 5px rgba(255, 51, 0, 0.1); }
+  50% { border-color: rgba(255, 0, 0, 0.3); box-shadow: 0 0 15px rgba(255, 0, 0, 0.2); }
 }
 
 .cyber-btn {
   animation: cyberButton 2s ease-in-out infinite;
-  background: linear-gradient(135deg, rgba(0, 255, 255, 0.08), rgba(255, 0, 255, 0.08));
-  border: 1px solid #00ffff;
+  background: linear-gradient(135deg, rgba(255, 51, 0, 0.08), rgba(255, 0, 0, 0.08));
+  border: 1px solid #ff3300;
   padding: 10px 20px;
   border-radius: 8px;
   font-weight: bold;
@@ -348,12 +348,12 @@ body::before {
 
 .cyber-btn:hover {
   transform: scale(1.02);
-  background: linear-gradient(135deg, rgba(0, 255, 255, 0.15), rgba(255, 0, 255, 0.15));
+  background: linear-gradient(135deg, rgba(255, 51, 0, 0.15), rgba(255, 0, 0, 0.15));
 }
 
 @keyframes cyberButton {
-  0%, 100% { box-shadow: 0 0 5px #00ffff, inset 0 0 3px #00ffff; border-color: #00ffff; }
-  50% { box-shadow: 0 0 10px #ff00ff, inset 0 0 5px #ff00ff; border-color: #ff00ff; }
+  0%, 100% { box-shadow: 0 0 5px #ff3300, inset 0 0 3px #ff3300; border-color: #ff3300; }
+  50% { box-shadow: 0 0 10px #ff0000, inset 0 0 5px #ff0000; border-color: #ff0000; }
 }
 
 .cyber-live {
@@ -367,8 +367,8 @@ body::before {
 }
 
 @keyframes cyberLive {
-  0%, 100% { background-color: #ff00ff; box-shadow: 0 0 8px #ff00ff; color: #00ffff; }
-  50% { background-color: #00ffff; box-shadow: 0 0 8px #00ffff; color: #ff00ff; }
+  0%, 100% { background-color: #ff0000; box-shadow: 0 0 8px #ff0000; color: #ff3300; }
+  50% { background-color: #ff3300; box-shadow: 0 0 8px #ff3300; color: #ff0000; }
 }
 
 .cyber-prize {
@@ -376,8 +376,8 @@ body::before {
 }
 
 @keyframes hologram {
-  0%, 100% { text-shadow: 0 0 3px #00ffff, 0 0 5px #ff00ff; opacity: 0.9; }
-  50% { text-shadow: 0 0 8px #00ffff, 0 0 12px #ff00ff; opacity: 1; transform: scale(1.01); }
+  0%, 100% { text-shadow: 0 0 3px #ff3300, 0 0 5px #ff0000; opacity: 0.9; }
+  50% { text-shadow: 0 0 8px #ff3300, 0 0 12px #ff0000; opacity: 1; transform: scale(1.01); }
 }
 
 .cyber-float {
@@ -385,8 +385,8 @@ body::before {
 }
 
 @keyframes floatNeon {
-  0%, 100% { transform: translateY(0) rotate(0deg); filter: drop-shadow(0 0 3px #00ffff); }
-  50% { transform: translateY(-5px) rotate(2deg); filter: drop-shadow(0 0 8px #ff00ff); }
+  0%, 100% { transform: translateY(0) rotate(0deg); filter: drop-shadow(0 0 3px #ff3300); }
+  50% { transform: translateY(-5px) rotate(2deg); filter: drop-shadow(0 0 8px #ff0000); }
 }
 
 /* ================= ROOT CONTENT ================= */

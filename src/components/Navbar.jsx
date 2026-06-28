@@ -32,11 +32,13 @@ export default function Navbar({
         {/* Logo Section */}
         <div className="flex items-center justify-between w-full md:w-auto">
           <div className="flex items-center gap-3">
-            <img
-              src={logo}
-              alt="FIRE BAADSHAH ARENA"
-              className="w-14 h-14 object-contain cyber-float"
-            />
+            <div className="cyber-float flex-shrink-0">
+              <img
+                src={logo}
+                alt="FIRE BAADSHAH ARENA"
+                className="w-14 h-14 object-contain"
+              />
+            </div>
             <div>
               <h1 className="text-2xl font-gaming font-extrabold leading-none text-orange-500 text-glow-orange tracking-wide cyber-neon">
                 FIRE BAADSHAH

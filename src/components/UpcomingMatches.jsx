@@ -108,13 +108,22 @@ export default function UpcomingMatches({
   return (
     <>
       <section className="max-w-7xl mx-auto px-6 py-10 md:py-16 font-gaming">
-        <h2 className="text-xl md:text-3xl font-extrabold text-green-400 mb-3 border border-green-500/20 bg-green-500/5 p-3 md:p-4 rounded-2xl md:rounded-3xl text-center">
-          ⚠️ MATCH START HONE KE 10 MINUTE PAHLE ROOM ID AUR PASSWORD DIYA JAYEGA ⚠️
-        </h2>
-        <h2 className="text-4xl md:text-5xl font-extrabold text-orange-500 text-glow-orange mb-8 tracking-wide cyber-neon">
+        <div className="text-green-400 text-sm md:text-base font-semibold text-center mb-3 bg-green-500/10 border border-green-500/30 rounded-lg p-3 max-w-3xl mx-auto flex flex-col md:flex-row items-center justify-center gap-2">
+          <span>⚠️</span>
+          <p>MATCH START HONE KE 10 MINUTE PAHLE ROOM ID AUR PASSWORD DIYA JAYEGA</p>
+          <span>⚠️</span>
+        </div>
+        <h2 className="text-2xl md:text-3xl font-extrabold text-orange-500 text-glow-orange mb-4 tracking-wide cyber-neon text-center">
           🔥 {selectedMode} UPCOMING MATCHES 🔥
         </h2>
 
+        <div className="text-red-400 text-sm md:text-base font-semibold text-center mb-8 bg-red-500/10 border border-red-500/30 rounded-lg p-3 max-w-3xl mx-auto flex flex-col md:flex-row items-center justify-center gap-2">
+          <span>⚠️</span>
+          <p>
+            Dhyan Dein: Agar sabhi slots full hote hain toh Prize yahan dikhaye gaye anusar hi milega! Agar slots full nahi hote, toh kripya match LIVE hone ke baad Live Matches section mein naya Leaderboard check karein.
+          </p>
+          <span>⚠️</span>
+        </div>
         <div className="relative">
           <button
             onClick={() => {

@@ -490,9 +490,10 @@ rtdb.ref("liveTournaments").on("child_added", async (snapshot) => {
   loadedTournaments.add(id);
 
   console.log("New tournament created! Sending global push...", tournament.tournamentTitle);
+  const mode = tournament.tournamentType || "SOLO";
   await sendGlobalPushNotification(
     "New Match Created! 🎮",
-    `Join "${tournament.tournamentTitle}" now. Entry: 🪙 ${tournament.entryFee}, Map: ${tournament.selectedMap}.`
+    `Join "${tournament.tournamentTitle}" (${mode}) now. Entry: 🪙 ${tournament.entryFee}, Map: ${tournament.selectedMap}.`
   );
 });
 
@@ -511,9 +512,33 @@ rtdb.ref("perKillTournaments").on("child_added", async (snapshot) => {
   loadedPerKillTournaments.add(id);
 
   console.log("New Per Kill tournament created! Sending global push...", tournament.tournamentTitle);
+  const mode = tournament.tournamentType || "SOLO";
   await sendGlobalPushNotification(
     "New Per Kill Match Created! ⚔️",
-    `Join "${tournament.tournamentTitle}" now. Entry: 🪙 ${tournament.entryFee}, Map: ${tournament.selectedMap}.`
+    `Join "${tournament.tournamentTitle}" (${mode}) now. Entry: 🪙 ${tournament.entryFee}, Map: ${tournament.selectedMap}.`
+  );
+});
+
+const loadedWeeklyTournaments = new Set();
+// 3b. Listen for new weekly matches
+rtdb.ref("weeklyTournaments").on("child_added", async (snapshot) => {
+  const id = snapshot.key;
+  const tournament = snapshot.val();
+  if (!tournament) return;
+
+  if (!isServerLive) {
+    loadedWeeklyTournaments.add(id);
+    return;
+  }
+
+  if (loadedWeeklyTournaments.has(id)) return;
+  loadedWeeklyTournaments.add(id);
+
+  console.log("New Weekly tournament created! Sending global push...", tournament.title);
+  const mode = tournament.format || "SOLO";
+  await sendGlobalPushNotification(
+    "New Weekly Match Created! 📅",
+    `Join "${tournament.title}" (${mode}) now. Entry: 🪙 ${tournament.entryFee}, Prize Pool: 🪙 ${tournament.prizePool}.`
   );
 });
 

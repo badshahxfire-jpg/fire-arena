@@ -362,12 +362,25 @@ export default function UserProfileCheck({ allUsers = [], onSearchUser, searched
                     </div>
                   </div>
 
+                  {/* Block Reason Display */}
+                  {displayUser.blocked && displayUser.blockReason && (
+                    <div className="mt-2 p-3 bg-red-500/10 rounded-xl border border-red-500/30 text-xs">
+                      <p className="text-red-400 font-bold mb-1">🚫 BLOCK REASON</p>
+                      <p className="text-red-300">{displayUser.blockReason}</p>
+                    </div>
+                  )}
+
                   {/* Button Grid */}
                   <div className="grid grid-cols-3 gap-2 mt-5">
                     <button
                       onClick={async () => {
+                        let reason = "";
+                        if (!displayUser.blocked) {
+                          reason = window.prompt("Enter the reason for blocking this user:");
+                          if (reason === null) return; // Admin cancelled the prompt
+                        }
                         setLoadingAction("block");
-                        await onBlockUser(displayUser.uid, displayUser.blocked);
+                        await onBlockUser(displayUser.uid, displayUser.blocked, reason);
                         setLoadingAction(null);
                       }}
                       disabled={loadingAction === "block"}

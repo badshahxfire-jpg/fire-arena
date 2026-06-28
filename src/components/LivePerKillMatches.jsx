@@ -27,6 +27,31 @@ export default function LivePerKillMatches({
     return diff <= 10 && diff > -7200 && item.tournamentType === selectedMode;
   });
 
+  const getTeamSizeForType = (tournamentType) => {
+    if (tournamentType === "SOLO") return 1;
+    if (tournamentType === "DUO" || tournamentType === "2V2") return 2;
+    if (tournamentType === "3V3") return 3;
+    if (tournamentType === "SQUAD") return 4;
+    return 1;
+  };
+
+  const getTeamJoinedCount = (tournament) => {
+    const players = joinedPlayers.filter(player => player.tournamentId === tournament.id);
+    const teamSize = getTeamSizeForType(tournament.tournamentType);
+    if (teamSize === 1) return players.length;
+    return Math.ceil(players.length / teamSize);
+  };
+
+  const getTotalSlotsForType = (tournament) => {
+    const totalTeams = Number(tournament.totalTeams) || 48;
+    const tournamentType = tournament.tournamentType;
+    if (tournamentType === "SOLO") return totalTeams;
+    if (tournamentType === "DUO" || tournamentType === "2V2") return Math.floor(totalTeams / 2);
+    if (tournamentType === "3V3") return Math.floor(totalTeams / 3);
+    if (tournamentType === "SQUAD") return Math.floor(totalTeams / 4);
+    return totalTeams;
+  };
+
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-20 text-white">
@@ -92,9 +117,17 @@ export default function LivePerKillMatches({
                       </div>
                     )}
                     <div className="flex justify-between border-t border-gray-800 pt-2.5">
-                      <span className="text-gray-400">👥 Players Joined</span>
-                      <span className="font-bold text-white">{joinedCount} / {tournament.totalTeams}</span>
+                      <span className="text-gray-400">{getTeamSizeForType(tournament.tournamentType) === 1 ? "👥 Players Joined" : "👥 Teams Joined"}</span>
+                      <span className="font-bold text-white">{getTeamJoinedCount(tournament)} / {getTotalSlotsForType(tournament)}</span>
                     </div>
+
+                    {(tournament.tournamentType === "DUO" || tournament.tournamentType === "SQUAD") && (
+                      <div className="bg-black/30 px-2 py-1 rounded border border-gray-700/50 flex-shrink-0 mt-2">
+                        <p className="text-[10px] text-gray-400 font-bold tracking-wider">
+                          📌 {tournament.tournamentType === "DUO" ? "2 Players per Team" : "4 Players per Squad"} | Total {getTotalSlotsForType(tournament)} {tournament.tournamentType === "DUO" ? "Teams" : "Squads"}
+                        </p>
+                      </div>
+                    )}
 
                     {joinedCount < 10 && (
                       <div className="bg-rose-500/10 text-rose-450 border border-rose-500/20 p-2.5 rounded-xl text-[11px] font-bold text-center mt-2">

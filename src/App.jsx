@@ -44,6 +44,7 @@ import ReferralPopup from "./components/Popups/ReferralPopup";
 import UserActivityPopup from "./components/Admin/UserActivityPopup";
 import BonusWinnersPopup from "./components/Popups/BonusWinnersPopup";
 import BlockedUsersPopup from "./components/Popups/BlockedUsersPopup";
+import OfflineBlockPopup from "./components/Popups/OfflineBlockPopup";
 import WelcomeScratchCard from "./components/Popups/WelcomeScratchCard";
 
 // Admin Components
@@ -72,6 +73,11 @@ import ThemeParticles from "./components/ThemeParticles";
 import ZoomControl from "./components/ZoomControl";
 import LoadingScreen from "./components/LoadingScreen";
 import { playClickSound, playSuccessSound, playErrorSound } from "./utils/soundEffects";
+
+// Weekly Tournament Components
+import { useWeeklyTournaments } from "./hooks/useWeeklyTournaments";
+import WeeklyDashboard from "./components/Weekly/WeeklyDashboard";
+import AdminWeeklyDashboard from "./components/Admin/Weekly/AdminWeeklyDashboard";
 
 const ADMIN_UID = "FAVc9zfAgoYs1d1BDr2EoDwSw0x1";
 
@@ -172,7 +178,9 @@ export default function FireBaadshahArena() {
     loading,
     loginLoading,
     registerLoading,
-    registerBlocked,  // Add this for device registration block
+    registerBlocked,
+    offlineBlockedUser,
+    setOfflineBlockedUser,
   } = useAuth(ADMIN_UID);
 
   const {
@@ -233,12 +241,42 @@ export default function FireBaadshahArena() {
     toggleMute,
   } = useNotifications(user);
 
+  // Auto-Block for 15 Days Inactivity
+  useEffect(() => {
+    if (user && playerData && !isAdmin) {
+      const checkAndAutoBlock = async () => {
+        const now = Date.now();
+        const lastActive = playerData.lastActiveTimestamp || now;
+        const daysInactive = (now - lastActive) / (1000 * 60 * 60 * 24);
+
+        if (daysInactive >= 15 && !playerData.blocked) {
+          // Auto block user
+          await updateDoc(doc(db, "users", user.uid), {
+            blocked: true,
+            blockReason: "Offline Regular",
+            lastActiveTimestamp: now
+          });
+          logoutUser(); // Sign them out
+        } else if (!playerData.blocked) {
+          // Update lastActiveTimestamp if it's been more than 1 hour to avoid too many writes
+          if (now - lastActive > 1000 * 60 * 60) {
+            await updateDoc(doc(db, "users", user.uid), {
+              lastActiveTimestamp: now
+            });
+          }
+        }
+      };
+      checkAndAutoBlock();
+    }
+  }, [user, playerData?.lastActiveTimestamp, playerData?.blocked, isAdmin, logoutUser]);
+
   const {
     analytics,
     allUsers,
     maintenanceMode,
     maintenanceDuration,
     maintenanceEndsAt,
+    maintenanceAllowedUsers,
     searchedUser,
     approvePayment,
     rejectPayment,
@@ -252,6 +290,7 @@ export default function FireBaadshahArena() {
     blockUser,
     searchUser,
     toggleMaintenance,
+    updateMaintenanceAllowedUsers,
     createTournament,
     migrateWinnings,
     migrateSingleUserWinnings,
@@ -266,6 +305,21 @@ export default function FireBaadshahArena() {
     rejectResult,
     publishFinalResults,
   } = useResults();
+
+  const {
+    weeklyTournaments,
+    createWeeklyTournament,
+    joinWeeklyTournament,
+    updateStatus,
+    updateTeamRank,
+    cancelWeeklyTournament,
+    updateRoomDetails,
+    distributeWeeklyRewards,
+    generateLobbies,
+    updateLobbyDetails,
+    advancePhase,
+    updateTournamentRules
+  } = useWeeklyTournaments();
 
   // ================= User Stats for History =================
   const userStats = {
@@ -370,8 +424,8 @@ export default function FireBaadshahArena() {
       try {
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
-          // Replace this VAPID key with the one from Firebase Console -> Cloud Messaging -> Web configuration
-          const currentToken = await getToken(messaging, { vapidKey: 'BCAjW1ZCBKvhXkLPxa5imNSAprbkHEnrGHHlSW2RUDj33RJj9JnLVgF7SjEHbKUgCObuZ6OicaSE9jMMpYJz944' });
+          // Replace this VAPID key with the valid one from Firebase Console -> Cloud Messaging -> Web configuration
+          const currentToken = await getToken(messaging, { vapidKey: 'BCAjW1ZCBKvhXkLPxe5imNSAptbkHEnrGHHlSW2RUDj33RJj9JnLVgF7SjEHbKUgCObuZ6OicaSE9jMMpYJz944' });
           if (currentToken) {
             // Send token to backend to subscribe to 'all_users' topic
             await secureFetch('/api/register-token', { token: currentToken });
@@ -434,12 +488,12 @@ export default function FireBaadshahArena() {
     if (anyOpen) {
       document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = "unset";
+      document.body.style.overflow = "";
     }
 
     // Cleanup on unmount
     return () => {
-      document.body.style.overflow = "unset";
+      document.body.style.overflow = "";
     };
   }, [
     showLogin,
@@ -763,20 +817,76 @@ export default function FireBaadshahArena() {
       }
     }
     else if (tournamentType === "DUO") {
-      if (position === 1) return Math.floor((pool * 0.40) / 2);
-      if (position === 2) return Math.floor((pool * 0.30) / 2);
-      if (position === 3) return Math.floor((pool * 0.20) / 2);
-      if (position === 4) return Math.floor((pool * 0.10) / 2);
-      return 0;
+      if (players >= 48) {
+        if (position === 1) return Math.floor((pool * 0.20) / 2);
+        if (position === 2) return Math.floor((pool * 0.15) / 2);
+        if (position === 3) return Math.floor((pool * 0.10) / 2);
+        if (position >= 4 && position <= 5) return Math.floor((pool * 0.08) / 2);
+        if (position >= 6 && position <= 10) return Math.floor((pool * 0.05) / 2);
+        return 0;
+      }
+      else if (players >= 40) {
+        if (position === 1) return Math.floor((pool * 0.22) / 2);
+        if (position === 2) return Math.floor((pool * 0.16) / 2);
+        if (position === 3) return Math.floor((pool * 0.12) / 2);
+        if (position >= 4 && position <= 5) return Math.floor((pool * 0.09) / 2);
+        if (position >= 6 && position <= 8) return Math.floor((pool * 0.06) / 2);
+        return 0;
+      }
+      else if (players >= 30) {
+        if (position === 1) return Math.floor((pool * 0.25) / 2);
+        if (position === 2) return Math.floor((pool * 0.18) / 2);
+        if (position === 3) return Math.floor((pool * 0.14) / 2);
+        if (position >= 4 && position <= 6) return Math.floor((pool * 0.10) / 2);
+        return 0;
+      }
+      else if (players >= 20) {
+        if (position === 1) return Math.floor((pool * 0.40) / 2);
+        if (position === 2) return Math.floor((pool * 0.30) / 2);
+        if (position === 3) return Math.floor((pool * 0.20) / 2);
+        if (position === 4) return Math.floor((pool * 0.10) / 2);
+        return 0;
+      }
+      else {
+        if (position === 1) return Math.floor((pool * 0.60) / 2);
+        if (position === 2) return Math.floor((pool * 0.40) / 2);
+        return 0;
+      }
     }
     else if (tournamentType === "2V2") {
       return position === 1 ? Math.floor(pool / 2) : 0;
     }
     else if (tournamentType === "SQUAD") {
-      if (position === 1) return Math.floor((pool * 0.50) / 4);
-      if (position === 2) return Math.floor((pool * 0.30) / 4);
-      if (position === 3) return Math.floor((pool * 0.20) / 4);
-      return 0;
+      if (players >= 48) {
+        if (position === 1) return Math.floor((pool * 0.35) / 4);
+        if (position === 2) return Math.floor((pool * 0.25) / 4);
+        if (position === 3) return Math.floor((pool * 0.18) / 4);
+        if (position === 4) return Math.floor((pool * 0.12) / 4);
+        if (position === 5) return Math.floor((pool * 0.10) / 4);
+        return 0;
+      }
+      else if (players >= 32) {
+        if (position === 1) return Math.floor((pool * 0.40) / 4);
+        if (position === 2) return Math.floor((pool * 0.30) / 4);
+        if (position === 3) return Math.floor((pool * 0.20) / 4);
+        if (position === 4) return Math.floor((pool * 0.10) / 4);
+        return 0;
+      }
+      else if (players >= 24) {
+        if (position === 1) return Math.floor((pool * 0.50) / 4);
+        if (position === 2) return Math.floor((pool * 0.30) / 4);
+        if (position === 3) return Math.floor((pool * 0.20) / 4);
+        return 0;
+      }
+      else if (players >= 16) {
+        if (position === 1) return Math.floor((pool * 0.60) / 4);
+        if (position === 2) return Math.floor((pool * 0.40) / 4);
+        return 0;
+      }
+      else {
+        if (position === 1) return Math.floor((pool * 1.00) / 4);
+        return 0;
+      }
     }
     else if (tournamentType === "1V1") {
       return position === 1 ? pool : 0;
@@ -811,8 +921,8 @@ export default function FireBaadshahArena() {
         winCoins = getPrizeByPosition(totalPrizePool, Number(player.approvedPosition), totalPlayers, tournamentType, entryFee);
       } else {
         winCoins = calculatePrize(Number(player.approvedPosition), totalPrizePool, totalPlayers, tournamentType);
-        if (tournamentType === "DUO" && winCoins > 0) {
-          winCoins = Math.max(winCoins, entryFee + 5);
+        if ((tournamentType === "DUO" || tournamentType === "SQUAD") && winCoins > 0) {
+          winCoins = Math.max(winCoins, entryFee);
         }
       }
       return {
@@ -828,9 +938,9 @@ export default function FireBaadshahArena() {
       return;
     }
     
-    // Scale prizes for DUO if total exceeds prize pool
-    if (tournamentType === "DUO") {
-      const minPrize = entryFee + 5;
+    // Scale prizes for DUO/SQUAD if total exceeds prize pool due to minimum guarantee
+    if (tournamentType === "DUO" || tournamentType === "SQUAD") {
+      const minPrize = entryFee;
       let totalSpent = finalDistribution.reduce((sum, p) => sum + p.winCoins, 0);
       
       if (totalSpent > totalPrizePool) {
@@ -977,8 +1087,21 @@ export default function FireBaadshahArena() {
 
 
   // ================= Maintenance Mode Check =================
-  if (maintenanceMode && !isAdmin) {
-    return <MaintenanceMode maintenanceMode={maintenanceMode} maintenanceDuration={maintenanceDuration} maintenanceEndsAt={maintenanceEndsAt} onToggle={isAdmin ? toggleMaintenance : null} />;
+  const isMaintenanceBypassed = user && maintenanceAllowedUsers && (maintenanceAllowedUsers.includes(user.email) || maintenanceAllowedUsers.includes(user.uid));
+  
+  if (maintenanceMode && !isAdmin && !isMaintenanceBypassed) {
+    return (
+      <>
+        <MaintenanceMode 
+          maintenanceMode={maintenanceMode} 
+          maintenanceDuration={maintenanceDuration} 
+          maintenanceEndsAt={maintenanceEndsAt} 
+          onToggle={isAdmin ? toggleMaintenance : null} 
+          onTestLogin={() => setShowLogin(true)}
+        />
+        {showLogin && <Login onClose={() => setShowLogin(false)} />}
+      </>
+    );
   }
 
   // ================= Loading Screen Check =================
@@ -1066,26 +1189,36 @@ export default function FireBaadshahArena() {
 
       {/* System Mode Switcher */}
       <div className="max-w-7xl mx-auto px-6 mb-8 flex flex-col items-center gap-4">
-        <div className="bg-black/60 border border-orange-500/10 rounded-2xl p-1.5 flex gap-2 w-full max-w-md shadow-lg shadow-black/80">
+        <div className="bg-black/60 border border-orange-500/10 rounded-2xl p-1.5 flex flex-wrap sm:flex-nowrap gap-2 w-full max-w-2xl shadow-lg shadow-black/80">
           <button
             onClick={() => setCurrentSystemMode("classic")}
-            className={`flex-1 py-3 px-4 rounded-xl font-black text-sm transition-all duration-300 flex items-center justify-center gap-2 ${
+            className={`flex-1 py-3 px-2 sm:px-4 rounded-xl font-black text-xs sm:text-sm transition-all duration-300 flex items-center justify-center gap-1 sm:gap-2 ${
               currentSystemMode === "classic"
                 ? "bg-gradient-to-r from-orange-500 to-red-600 text-black shadow-lg"
                 : "text-gray-400 hover:text-white"
             }`}
           >
-            🏆 CLASSIC MATCHES
+            🏆 CLASSIC
           </button>
           <button
             onClick={() => setCurrentSystemMode("perkill")}
-            className={`flex-1 py-3 px-4 rounded-xl font-black text-sm transition-all duration-300 flex items-center justify-center gap-2 ${
+            className={`flex-1 py-3 px-2 sm:px-4 rounded-xl font-black text-xs sm:text-sm transition-all duration-300 flex items-center justify-center gap-1 sm:gap-2 ${
               currentSystemMode === "perkill"
                 ? "bg-gradient-to-r from-orange-500 to-red-600 text-black shadow-lg"
                 : "text-gray-400 hover:text-white"
             }`}
           >
-            ⚔️ PER KILL MODE
+            ⚔️ PER KILL
+          </button>
+          <button
+            onClick={() => setCurrentSystemMode("weekly")}
+            className={`flex-1 py-3 px-2 sm:px-4 rounded-xl font-black text-xs sm:text-sm transition-all duration-300 flex items-center justify-center gap-1 sm:gap-2 ${
+              currentSystemMode === "weekly"
+                ? "bg-gradient-to-r from-orange-500 to-red-600 text-black shadow-lg"
+                : "text-gray-400 hover:text-white"
+            }`}
+          >
+            📅 WEEKLY
           </button>
         </div>
 
@@ -1109,7 +1242,7 @@ export default function FireBaadshahArena() {
         )}
       </div>
 
-      {currentSystemMode === "classic" ? (
+      {currentSystemMode === "classic" && (
         <>
           {/* Game Modes */}
           <GameModes 
@@ -1152,7 +1285,9 @@ export default function FireBaadshahArena() {
             playerResults={playerResults}
           />
         </>
-      ) : (
+      )}
+      
+      {currentSystemMode === "perkill" && (
         <>
           {/* Upcoming Per Kill Matches */}
           <UpcomingPerKillMatches
@@ -1184,6 +1319,16 @@ export default function FireBaadshahArena() {
         </>
       )}
 
+      {currentSystemMode === "weekly" && (
+        <WeeklyDashboard 
+          user={user} 
+          isAdmin={isAdmin} 
+          weeklyTournaments={weeklyTournaments} 
+          joinWeeklyTournament={joinWeeklyTournament} 
+          updateStatus={updateStatus}
+        />
+      )}
+
 
 
       {/* Leaderboard and TournamentWinners temporarily disabled to prevent excessive Firestore reads */}
@@ -1202,6 +1347,23 @@ export default function FireBaadshahArena() {
             onAddCoins={addManualCoins}
             onGiveLoyalBonus={giveLoyalBonus}
           />
+
+          {/* Admin Weekly Tournaments Dashboard */}
+          <div className="max-w-7xl mx-auto px-6 mb-8">
+            <AdminWeeklyDashboard 
+              weeklyTournaments={weeklyTournaments} 
+              createWeeklyTournament={createWeeklyTournament} 
+              updateStatus={updateStatus} 
+              updateTeamRank={updateTeamRank} 
+              cancelWeeklyTournament={cancelWeeklyTournament}
+              updateRoomDetails={updateRoomDetails}
+              distributeWeeklyRewards={distributeWeeklyRewards}
+              generateLobbies={generateLobbies}
+              updateLobbyDetails={updateLobbyDetails}
+              advancePhase={advancePhase}
+              updateTournamentRules={updateTournamentRules}
+            />
+          </div>
 
           {/* Result Analytics */}
           {!showResultAnalyticsPopup ? (
@@ -1283,7 +1445,7 @@ export default function FireBaadshahArena() {
           {adminPage === "perkill_results" && <PerKillMatchResults isAdmin={isAdmin} liveTournaments={livePerKillTournaments} joinedPlayers={joinedPerKillPlayers} matchResults={perKillMatchResults} publishResults={publishPerKillResults} cancelTournament={cancelPerKillTournament} publishRoomDetails={publishPerKillRoomDetails} updateTournamentTime={updatePerKillTournamentTime} onDeleteMatchResult={deletePerKillMatchHistory} onDeleteAllMatchResults={deleteAllPerKillMatchHistory} />}
           {adminPage === "users" && <UserProfileCheck allUsers={allUsers} onSearchUser={searchUser} searchedUser={searchedUser} onBlockUser={blockUser} onAddCoins={addManualCoins} onDeductCoins={deductManualCoins} />}
           {adminPage === "coins" && <ManualCoins onAddCoins={addManualCoins} />}
-          {adminPage === "maintenance" && <MaintenanceMode maintenanceMode={maintenanceMode} maintenanceDuration={maintenanceDuration} maintenanceEndsAt={maintenanceEndsAt} onToggle={toggleMaintenance} />}
+          {adminPage === "maintenance" && <MaintenanceMode maintenanceMode={maintenanceMode} maintenanceDuration={maintenanceDuration} maintenanceEndsAt={maintenanceEndsAt} onToggle={toggleMaintenance} allowedUsers={maintenanceAllowedUsers} onUpdateAllowedUsers={updateMaintenanceAllowedUsers} />}
           {adminPage === "announcements" && <AdminAnnouncements />}
           {adminPage === "app_update" && <AppUpdateAdmin />}
 
@@ -1328,6 +1490,11 @@ export default function FireBaadshahArena() {
       
       {showBlockedUsers && (
         <BlockedUsersPopup onClose={() => setShowBlockedUsers(false)} />
+      )}
+
+      {/* Custom Offline Block Popup */}
+      {offlineBlockedUser && (
+        <OfflineBlockPopup onClose={() => setOfflineBlockedUser(false)} />
       )}
       
       {showHistory && <HistoryPopup user={user} joinedHistory={joinedHistory} playerResults={playerResults} matchResults={matchResults} onClose={() => setShowHistory(false)} onDeleteHistory={() => deleteAllUserMatchHistory(user?.email)} onDeleteMatch={deleteMatchHistory} userStats={userStats} />}

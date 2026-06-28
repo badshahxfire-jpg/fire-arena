@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import ReactDOM from "react-dom";
 
 const THEMES = [
   {
@@ -6,7 +7,7 @@ const THEMES = [
     name: "Fire",
     emoji: "🔥",
     hue: 0,
-    bodyBg: "linear-gradient(135deg, #0a0a0f 0%, #1a0a2e 30%, #0f0f1a 60%, #050508 100%)",
+    bodyBg: "radial-gradient(circle at top right, #3a0d0d 0%, #1a0000 40%, #000000 100%)",
     desc: "Default",
   },
   {
@@ -14,7 +15,7 @@ const THEMES = [
     name: "Ghost",
     emoji: "👻",
     hue: 0,
-    bodyBg: "radial-gradient(circle at top, #1a1a2e 0%, #050508 60%, #000000 100%)",
+    bodyBg: "radial-gradient(circle at center, #1e1e24 0%, #0a0a0c 60%, #000000 100%)",
     desc: "Ethereal UI",
   },
   {
@@ -22,7 +23,7 @@ const THEMES = [
     name: "Emerald",
     emoji: "💚",
     hue: 140,
-    bodyBg: "linear-gradient(135deg, #050f0a 0%, #0a2e1a 30%, #0a1a0f 60%, #030805 100%)",
+    bodyBg: "linear-gradient(135deg, #001f10 0%, #003d1f 50%, #001209 100%)",
     desc: "Deep Green",
   },
   {
@@ -30,7 +31,7 @@ const THEMES = [
     name: "Venom",
     emoji: "🕷️",
     hue: 280,
-    bodyBg: "linear-gradient(135deg, #05020a 0%, #1a0a2e 30%, #0a1a0f 60%, #030508 100%)",
+    bodyBg: "conic-gradient(from 180deg at 50% 50%, #290038 0deg, #002b1f 180deg, #290038 360deg)",
     desc: "Dark Web",
   },
   {
@@ -38,7 +39,7 @@ const THEMES = [
     name: "Blood",
     emoji: "🦇",
     hue: 350,
-    bodyBg: "radial-gradient(ellipse at bottom, #2e0a0a 0%, #0a0202 60%, #000000 100%)",
+    bodyBg: "repeating-linear-gradient(45deg, #2b0000 0px, #1c0000 20px, #000000 20px, #000000 40px)",
     desc: "Crimson Glow",
   },
   {
@@ -46,7 +47,7 @@ const THEMES = [
     name: "Gold",
     emoji: "⚡",
     hue: 40,
-    bodyBg: "linear-gradient(135deg, #0f0d05 0%, #2e2a0a 30%, #1a180f 60%, #080705 100%)",
+    bodyBg: "radial-gradient(ellipse at bottom, #4a3c00 0%, #1f1800 50%, #000000 100%)",
     desc: "Rich Yellow",
   },
   {
@@ -54,7 +55,7 @@ const THEMES = [
     name: "Cyber",
     emoji: "🕶️",
     hue: 180,
-    bodyBg: "linear-gradient(135deg, #051414 0%, #0a3e3e 30%, #0a2020 60%, #030808 100%)",
+    bodyBg: "linear-gradient(to bottom, #002933 0%, #00141a 50%, #000000 100%)",
     desc: "Neon Cyan",
   },
   {
@@ -62,7 +63,7 @@ const THEMES = [
     name: "Synth",
     emoji: "🌆",
     hue: 300,
-    bodyBg: "linear-gradient(135deg, #140514 0%, #3e0a3e 30%, #200a20 60%, #080308 100%)",
+    bodyBg: "linear-gradient(to top, #2b002b 0%, #00001a 50%, #1a0033 100%)",
     desc: "Neon Magenta",
   },
   {
@@ -70,7 +71,7 @@ const THEMES = [
     name: "Toxic",
     emoji: "☢️",
     hue: 80,
-    bodyBg: "linear-gradient(135deg, #101405 0%, #323e0a 30%, #1a200a 60%, #060803 100%)",
+    bodyBg: "radial-gradient(circle at top left, #293800 0%, #0f1400 60%, #000000 100%)",
     desc: "Acid Green",
   },
 ];
@@ -296,6 +297,36 @@ function generateThemeCSS(theme) {
         border-bottom: 2px solid rgba(132, 204, 22, 0.7) !important;
       }
     `;
+  } else if (theme.id === "magic") {
+    // Magic Theme: Deep Blue that applies a global hue rotation to the ENTIRE app, changing all buttons
+    structuralCSS = `
+      #root {
+        filter: hue-rotate(210deg) saturate(1.2);
+      }
+      /* Revert images so they don't look weird */
+      img {
+        filter: hue-rotate(-210deg) saturate(0.8);
+      }
+    `;
+  } else if (theme.id === "daylight") {
+    // Daylight Theme: Applies invert and hue-rotate to create a perfect light mode while keeping brand colors
+    structuralCSS = `
+      html, body {
+        background: #ffffff !important;
+      }
+      #root {
+        filter: invert(0.95) hue-rotate(180deg) saturate(1.2);
+      }
+      /* Revert images so they don't look inverted */
+      img, video {
+        filter: hue-rotate(-180deg) invert(1.05) saturate(0.8);
+      }
+      /* Make sure glass backgrounds look good inverted */
+      .cyber-card, .bg-black {
+        background-color: rgba(0, 0, 0, 0.9) !important;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
+      }
+    `;
   }
 
   return `
@@ -315,19 +346,19 @@ function generateThemeCSS(theme) {
 
     /* Accent color overrides via hue-rotate on key containers */
     .cyber-neon {
-      filter: hue-rotate(${hue - 25}deg);
+      filter: hue-rotate(${hue}deg);
     }
 
     .cyber-card {
-      filter: hue-rotate(${hue - 25}deg);
+      filter: hue-rotate(${hue}deg);
     }
 
-    .cyber-btn:not(:hover) {
-      filter: hue-rotate(${hue - 25}deg);
+    .cyber-btn {
+      filter: hue-rotate(${hue}deg);
     }
 
     .cyber-prize {
-      filter: hue-rotate(${hue - 25}deg);
+      filter: hue-rotate(${hue}deg);
     }
 
     /* Glass border overrides */
@@ -411,15 +442,15 @@ export default function ThemeSwitcher() {
 
   const currentTheme = THEMES.find((t) => t.id === activeTheme) || THEMES[0];
 
-  return (
-    <div ref={panelRef} className="fixed bottom-6 left-6 z-[999]">
+  return ReactDOM.createPortal(
+    <div ref={panelRef} className="fixed bottom-6 left-6 z-[99999]">
       {/* Floating Toggle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="group w-12 h-12 rounded-2xl bg-black/80 backdrop-blur-xl border border-white/10 hover:border-white/30 shadow-2xl flex items-center justify-center text-xl transition-all duration-300 hover:scale-110"
         title="Change Theme"
       >
-        <span className="group-hover:animate-spin" style={{ animationDuration: "1s" }}>
+        <span className="group-hover:animate-spin flex items-center justify-center w-full h-full" style={{ animationDuration: "1s" }}>
           🎨
         </span>
       </button>
@@ -471,6 +502,7 @@ export default function ThemeSwitcher() {
           </div>
         </div>
       )}
-    </div>
+    </div>,
+    document.body
   );
 }

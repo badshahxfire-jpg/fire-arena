@@ -62,6 +62,7 @@ export function useAuth(ADMIN_UID) {
   const [loginLoading, setLoginLoading] = useState(false);
   const [registerLoading, setRegisterLoading] = useState(false);
   const [registerBlocked, setRegisterBlocked] = useState(false);
+  const [offlineBlockedUser, setOfflineBlockedUser] = useState(false);
 
   const deviceId = getDeviceId();
 
@@ -316,7 +317,11 @@ export function useAuth(ADMIN_UID) {
       // Check if user is blocked
       const userDoc = await getDoc(doc(db, "users", loggedInUser.uid));
       if (userDoc.exists() && userDoc.data().blocked) {
-        alert("Your Account Is Blocked 🚫");
+        if (userDoc.data().blockReason === "Offline Regular") {
+          setOfflineBlockedUser(true);
+        } else {
+          alert("Your Account Is Blocked 🚫");
+        }
         await signOut(auth);
         return false;
       }
@@ -396,6 +401,8 @@ export function useAuth(ADMIN_UID) {
     loginLoading,
     registerLoading,
     registerBlocked,
+    offlineBlockedUser,
+    setOfflineBlockedUser,
     loginUser,
     registerUser,
     logoutUser,

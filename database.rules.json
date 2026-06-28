@@ -95,6 +95,14 @@
     "loyalBonuses": {
       ".read": "auth != null",
       ".write": "auth != null && auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1'"
+    },
+    "weeklyTournaments": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "slotLocks": {
+      ".read": "auth != null",
+      ".write": "auth != null && auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1'"
     }
   }
 }

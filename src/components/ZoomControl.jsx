@@ -9,10 +9,39 @@ export default function ZoomControl() {
   const dragRef = useRef({ startX: 0, startY: 0, initialX: 0, initialY: 0 });
 
   useEffect(() => {
-    // Set initial position based on window size
-    setPosition({ x: window.innerWidth - 60, y: 100 });
+    const savedPos = localStorage.getItem("zoomControlPos");
+    const savedOrient = localStorage.getItem("zoomControlHorizontal");
+    if (savedPos) {
+      try {
+        const parsed = JSON.parse(savedPos);
+        // Ensure it's not totally off-screen
+        parsed.x = Math.max(0, Math.min(parsed.x, window.innerWidth - 60));
+        parsed.y = Math.max(0, Math.min(parsed.y, window.innerHeight - 60));
+        setPosition(parsed);
+      } catch (e) {
+        setPosition({ x: window.innerWidth - 60, y: 100 });
+      }
+    } else {
+      setPosition({ x: window.innerWidth - 60, y: 100 });
+    }
+    
+    if (savedOrient) {
+      setIsHorizontal(savedOrient === "true");
+    }
     setIsMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (isMounted) {
+      localStorage.setItem("zoomControlPos", JSON.stringify(position));
+    }
+  }, [position, isMounted]);
+
+  useEffect(() => {
+    if (isMounted) {
+      localStorage.setItem("zoomControlHorizontal", String(isHorizontal));
+    }
+  }, [isHorizontal, isMounted]);
 
   const handleZoomIn = (e) => {
     e.stopPropagation();
@@ -72,7 +101,7 @@ export default function ZoomControl() {
 
   return (
     <div 
-      className={`fixed z-[999] flex ${isHorizontal ? 'flex-row items-center' : 'flex-col items-center'} gap-2 bg-black/80 backdrop-blur-xl border border-cyan-500/30 rounded-2xl p-1.5 shadow-2xl transition-all duration-300 ${isDragging ? 'cursor-grabbing scale-105 shadow-cyan-500/20' : 'cursor-grab'}`}
+      className={`fixed z-[999] flex ${isHorizontal ? 'flex-row items-center' : 'flex-col items-center'} gap-2 bg-black/80 backdrop-blur-xl border border-cyan-500/30 rounded-2xl p-1.5 shadow-2xl ${isDragging ? 'cursor-grabbing scale-105 shadow-cyan-500/20 transition-none' : 'cursor-grab transition-all duration-300'}`}
       style={{ left: `${position.x}px`, top: `${position.y}px`, touchAction: 'none' }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}

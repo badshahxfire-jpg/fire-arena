@@ -87,6 +87,11 @@ export default function BlockedUsersPopup({ onClose }) {
                       <div className="flex items-center gap-2 sm:gap-4 text-[10px] sm:text-xs text-gray-400 min-w-0">
                         <span className="truncate">🎮 In-Game Name: <span className="text-gray-300">{user.inGameName || "N/A"}</span></span>
                       </div>
+                      {user.blockReason && (
+                        <p className="text-[10px] text-red-300 italic truncate mt-0.5">
+                          Reason: {user.blockReason}
+                        </p>
+                      )}
                     </div>
                   </div>
 

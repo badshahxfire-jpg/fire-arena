@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 
-export default function MaintenanceMode({ maintenanceMode, maintenanceDuration, maintenanceEndsAt, onToggle }) {
+export default function MaintenanceMode({ maintenanceMode, maintenanceDuration, maintenanceEndsAt, onToggle, allowedUsers = [], onUpdateAllowedUsers, onTestLogin }) {
   const [duration, setDuration] = useState(maintenanceDuration || "");
   const [timeLeft, setTimeLeft] = useState("");
+  const [newAllowedUser, setNewAllowedUser] = useState("");
 
   const handleToggle = () => {
     onToggle(duration);
@@ -83,6 +84,67 @@ export default function MaintenanceMode({ maintenanceMode, maintenanceDuration, 
           )}
         </div>
       </div>
+
+      {onUpdateAllowedUsers && (
+        <div className="bg-[#111] rounded-[40px] p-8 border border-blue-500/10 cyber-card mt-8">
+          <h3 className="text-2xl font-black text-blue-400 mb-4 flex items-center gap-2">
+            🔑 ALLOWED USERS (BYPASS MAINTENANCE)
+          </h3>
+          <p className="text-gray-400 mb-6 text-sm">Add UIDs or Emails of users (like yourself) who can log in even when the app is in maintenance mode.</p>
+          
+          <div className="flex gap-4 mb-6">
+            <input
+              type="text"
+              placeholder="Enter UID or Email to whitelist"
+              value={newAllowedUser}
+              onChange={(e) => setNewAllowedUser(e.target.value)}
+              className="flex-1 max-w-sm bg-black rounded-xl px-4 py-3 outline-none border border-blue-500/20 text-white"
+            />
+            <button
+              onClick={() => {
+                if(newAllowedUser.trim() && !allowedUsers.includes(newAllowedUser.trim())) {
+                  onUpdateAllowedUsers([...allowedUsers, newAllowedUser.trim()]);
+                  setNewAllowedUser("");
+                }
+              }}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold transition"
+            >
+              ADD USER
+            </button>
+          </div>
+
+          {allowedUsers.length > 0 ? (
+            <div className="space-y-3">
+              {allowedUsers.map((user, idx) => (
+                <div key={idx} className="flex justify-between items-center bg-black/40 p-4 rounded-xl border border-gray-800 max-w-md">
+                  <span className="text-white font-mono">{user}</span>
+                  <button 
+                    onClick={() => {
+                      onUpdateAllowedUsers(allowedUsers.filter(u => u !== user));
+                    }}
+                    className="text-red-500 hover:text-red-400 font-bold text-sm"
+                  >
+                    REMOVE
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 text-sm">No allowed users added yet.</p>
+          )}
+        </div>
+      )}
+
+      {onTestLogin && (
+        <div className="text-center mt-12">
+          <button 
+            onClick={onTestLogin}
+            className="text-gray-600 hover:text-gray-400 text-sm underline transition"
+          >
+            Admin / Tester Login Bypass
+          </button>
+        </div>
+      )}
     </section>
   );
 }

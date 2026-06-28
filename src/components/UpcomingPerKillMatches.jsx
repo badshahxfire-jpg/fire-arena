@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import JoinPopup from "./Popups/JoinPopup";
 import { getDoc, doc, updateDoc } from "firebase/firestore";
 import { db } from "../firebase";
 
@@ -17,14 +18,7 @@ export default function UpcomingPerKillMatches({
 }) {
   const [selectedTournament, setSelectedTournament] = useState(null);
   const [showJoinPopup, setShowJoinPopup] = useState(false);
-  const [selectedSlot, setSelectedSlot] = useState(null);
   
-  // Input fields
-  const [ingameName, setIngameName] = useState("");
-  const [gameUid, setGameUid] = useState("");
-  const [gameLevel, setGameLevel] = useState("");
-  const [mobileNumber, setMobileNumber] = useState("");
-
   const [showPlayersPopup, setShowPlayersPopup] = useState(false);
   const [selectedViewTournament, setSelectedViewTournament] = useState(null);
   const [loadingAction, setLoadingAction] = useState(null);
@@ -129,70 +123,47 @@ export default function UpcomingPerKillMatches({
       return dateA - dateB;
     });
 
+  const getTeamSizeForType = (tournamentType) => {
+    if (tournamentType === "SOLO") return 1;
+    if (tournamentType === "DUO" || tournamentType === "2V2") return 2;
+    if (tournamentType === "3V3") return 3;
+    if (tournamentType === "SQUAD") return 4;
+    return 1;
+  };
+
+  const getTeamJoinedCount = (tournament) => {
+    const players = joinedPlayers.filter(player => player.tournamentId === tournament.id);
+    const teamSize = getTeamSizeForType(tournament.tournamentType);
+    if (teamSize === 1) return players.length;
+    return Math.ceil(players.length / teamSize);
+  };
+
+  const getTotalSlotsForType = (tournament) => {
+    const totalTeams = Number(tournament.totalTeams) || 48;
+    const tournamentType = tournament.tournamentType;
+    if (tournamentType === "SOLO") return totalTeams;
+    if (tournamentType === "DUO" || tournamentType === "2V2") return Math.floor(totalTeams / 2);
+    if (tournamentType === "3V3") return Math.floor(totalTeams / 3);
+    if (tournamentType === "SQUAD") return Math.floor(totalTeams / 4);
+    return totalTeams;
+  };
+
   const handleOpenJoin = (tournament) => {
     if (!user) {
       alert("Please login first to join matches! ❌");
       return;
     }
     setSelectedTournament(tournament);
-    setSelectedSlot(null);
-    setIngameName(leaderProfile?.ingameName || "");
-    setGameUid(leaderProfile?.gameUid || "");
-    setGameLevel("");
-    setMobileNumber(leaderProfile?.mobileNumber || "");
     setShowJoinPopup(true);
   };
 
-  const handleConfirmJoin = async () => {
-    if (!selectedSlot) {
-      alert("Please select a slot number! ❌");
-      return;
-    }
-    if (!ingameName || !gameUid || !gameLevel || !mobileNumber) {
-      alert("Please fill in all player details! ❌");
-      return;
-    }
-
-    // Auto-save and lock Game UID, Mobile Number & In-game Name if they weren't set/locked in profile yet
-    if (user) {
-      const updates = {};
-      if (!leaderProfile || !leaderProfile.gameUidLocked) {
-        updates.gameUid = gameUid.trim();
-        updates.gameUidLocked = true;
-      }
-      if (!leaderProfile || !leaderProfile.mobileNumberLocked) {
-        updates.mobileNumber = mobileNumber.trim();
-        updates.mobileNumberLocked = true;
-      }
-      if (!leaderProfile || !leaderProfile.ingameNameLocked) {
-        updates.ingameName = ingameName.trim();
-        updates.ingameNameLocked = true;
-      }
-      if (Object.keys(updates).length > 0) {
-        try {
-          await updateDoc(doc(db, "users", user.uid), updates);
-          setLeaderProfile(prev => ({
-            ...prev,
-            ...updates
-          }));
-        } catch (err) {
-          console.error("Error auto-saving profile fields on PerKill join:", err);
-        }
-      }
-    }
-
-    const success = await onJoin(user, selectedTournament, {
-      ingameName,
-      gameUid,
-      gameLevel,
-      mobileNumber,
-      selectedSlot: Number(selectedSlot)
-    });
-
+  const handleJoinAdapter = async (tournament, joinData) => {
+    const success = await onJoin(user, tournament, joinData);
     if (success) {
       setShowJoinPopup(false);
       setSelectedTournament(null);
     }
+    return success;
   };
 
   const getSlotStatus = (tournamentId, slotNumber) => {
@@ -360,10 +331,19 @@ export default function UpcomingPerKillMatches({
                         <span className="text-orange-400 font-black">🪙 {tournament.thirdBonus} Bonus</span>
                       </div>
                     )}
+                    
                     <div className="flex justify-between border-t border-gray-800 pt-2.5">
-                      <span className="text-gray-400">👥 Filled Slots</span>
-                      <span className="font-bold text-white">{joinedCount} / {tournament.totalTeams}</span>
+                      <span className="text-gray-400">{getTeamSizeForType(tournament.tournamentType) === 1 ? "👥 Filled Slots" : "👥 Teams"}</span>
+                      <span className="font-bold text-white">{getTeamJoinedCount(tournament)} / {getTotalSlotsForType(tournament)}</span>
                     </div>
+
+                    {(tournament.tournamentType === "DUO" || tournament.tournamentType === "SQUAD") && (
+                      <div className="bg-black/30 px-2 py-1 rounded border border-gray-700/50 flex-shrink-0 mt-2">
+                        <p className="text-[10px] text-gray-400 font-bold tracking-wider">
+                          📌 {tournament.tournamentType === "DUO" ? "2 Players per Team" : "4 Players per Squad"} | Total {getTotalSlotsForType(tournament)} {tournament.tournamentType === "DUO" ? "Teams" : "Squads"}
+                        </p>
+                      </div>
+                    )}
 
                     {joinedCount < 10 && (
                       <div className="bg-rose-500/10 text-rose-400 border border-rose-500/20 p-2.5 rounded-xl text-[11px] font-bold text-center mt-2">
@@ -493,140 +473,17 @@ export default function UpcomingPerKillMatches({
 
       {/* POPUP: SLOT SELECTION & REGISTRATION */}
       {showJoinPopup && selectedTournament && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 px-4 py-6 overflow-y-auto">
-          <div className="bg-[#0f0f12] w-full max-w-4xl rounded-3xl p-6 border border-orange-500/20 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-800">
-              <h3 className="text-2xl font-black text-orange-500">🎯 Match Registration: {selectedTournament.tournamentTitle}</h3>
-              <button onClick={() => setShowJoinPopup(false)} className="text-gray-400 hover:text-white text-3xl">&times;</button>
-            </div>
-
-            {/* Step 1: Choose Slot */}
-            <div className="mb-8">
-              <p className="text-sm font-bold text-gray-300 mb-3">1. Select your Slot Number:</p>
-              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3 max-h-[220px] overflow-y-auto p-2 bg-black/40 rounded-2xl border border-gray-800 custom-scrollbar">
-                {Array.from({ length: selectedTournament.totalTeams }, (_, i) => i + 1).map(num => {
-                  const status = getSlotStatus(selectedTournament.id, num);
-                  const isSelected = selectedSlot === num;
-
-                  if (status.booked) {
-                    return (
-                      <button
-                        key={num}
-                        disabled
-                        className="bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl py-3 text-xs font-bold cursor-not-allowed opacity-60 flex flex-col items-center justify-center"
-                      >
-                        <span>#{num}</span>
-                        <span className="text-[8px] text-gray-500 line-clamp-1">{status.ingameName}</span>
-                      </button>
-                    );
-                  }
-
-                  return (
-                    <button
-                      key={num}
-                      onClick={() => setSelectedSlot(num)}
-                      className={`rounded-xl py-3 text-sm font-black border transition ${
-                        isSelected 
-                          ? "bg-orange-500 text-black border-orange-500 shadow-lg shadow-orange-500/20" 
-                          : "bg-black/60 text-gray-300 border-gray-800 hover:border-orange-500/40"
-                      }`}
-                    >
-                      #{num}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Step 2: Player Details */}
-            <div className="mb-8">
-              <p className="text-sm font-bold text-gray-300 mb-4">2. Enter player profile information:</p>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs text-gray-400 font-bold block mb-1">IN-GAME NAME</label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={ingameName}
-                      onChange={(e) => setIngameName(e.target.value)}
-                      placeholder="Enter exactly as shown in-game"
-                      className="bg-black border border-gray-800 rounded-xl w-full px-4 py-3 text-white outline-none focus:border-orange-500/40 transition disabled:opacity-60 disabled:cursor-not-allowed"
-                      disabled={!!leaderProfile?.ingameNameLocked}
-                    />
-                    {!!leaderProfile?.ingameNameLocked && (
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs flex items-center gap-1 font-bold">
-                        🔒 Locked
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <label className="text-xs text-gray-400 font-bold block mb-1">GAME UID</label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={gameUid}
-                      onChange={(e) => setGameUid(e.target.value)}
-                      placeholder="Enter game UID numbers"
-                      className="bg-black border border-gray-800 rounded-xl w-full px-4 py-3 text-white outline-none focus:border-orange-500/40 transition disabled:opacity-60 disabled:cursor-not-allowed"
-                      disabled={!!leaderProfile?.gameUidLocked}
-                    />
-                    {!!leaderProfile?.gameUidLocked && (
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs flex items-center gap-1 font-bold">
-                        🔒 Locked
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <label className="text-xs text-gray-400 font-bold block mb-1">GAME LEVEL</label>
-                  <input
-                    type="number"
-                    value={gameLevel}
-                    onChange={(e) => setGameLevel(e.target.value)}
-                    placeholder="e.g. 50"
-                    className="bg-black border border-gray-800 rounded-xl w-full px-4 py-3 text-white outline-none focus:border-orange-500/40 transition"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-400 font-bold block mb-1">MOBILE NUMBER</label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={mobileNumber}
-                      onChange={(e) => setMobileNumber(e.target.value)}
-                      placeholder="WhatsApp number preferred"
-                      className="bg-black border border-gray-800 rounded-xl w-full px-4 py-3 text-white outline-none focus:border-orange-500/40 transition disabled:opacity-60 disabled:cursor-not-allowed"
-                      disabled={!!leaderProfile?.mobileNumberLocked}
-                    />
-                    {!!leaderProfile?.mobileNumberLocked && (
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs flex items-center gap-1 font-bold">
-                        🔒 Locked
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-4 border-t border-gray-800 pt-6">
-              <button
-                onClick={() => setShowJoinPopup(false)}
-                className="w-1/3 bg-gray-800 hover:bg-gray-700 text-white font-bold py-3.5 rounded-xl transition"
-              >
-                CANCEL
-              </button>
-              <button
-                onClick={handleConfirmJoin}
-                disabled={joinLoading}
-                className="w-2/3 bg-gradient-to-r from-orange-500 to-red-600 text-black font-black text-lg py-3.5 rounded-xl hover:scale-[1.01] transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {joinLoading ? "JOINING MATCH..." : `CONFIRM JOIN (🪙 ${selectedTournament.entryFee} Entry Fee)`}
-              </button>
-            </div>
-          </div>
-        </div>
+        <JoinPopup
+          tournament={selectedTournament}
+          user={user}
+          joinedPlayers={joinedPlayers}
+          onJoin={handleJoinAdapter}
+          joinLoading={joinLoading}
+          onClose={() => {
+            setShowJoinPopup(false);
+            setSelectedTournament(null);
+          }}
+        />
       )}
 
       {/* POPUP: VIEW SLOTS / PLAYERS */}

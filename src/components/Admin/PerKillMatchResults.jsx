@@ -27,11 +27,11 @@ export default function PerKillMatchResults({
   if (!isAdmin) return null;
 
   const getSlotStatus = (tournamentId, slotNumber) => {
-    const playerInSlot = joinedPlayers.find(
+    const playersInSlot = joinedPlayers.filter(
       p => p.tournamentId === tournamentId && Number(p.selectedSlot) === Number(slotNumber)
     );
-    if (playerInSlot) {
-      return { booked: true, ...playerInSlot };
+    if (playersInSlot.length > 0) {
+      return { booked: true, players: playersInSlot };
     }
     return { booked: false };
   };
@@ -117,6 +117,31 @@ export default function PerKillMatchResults({
     setShowTimePopup(false);
   };
 
+  const getTeamSizeForType = (tournamentType) => {
+    if (tournamentType === "SOLO") return 1;
+    if (tournamentType === "DUO" || tournamentType === "2V2") return 2;
+    if (tournamentType === "3V3") return 3;
+    if (tournamentType === "SQUAD") return 4;
+    return 1;
+  };
+
+  const getTeamJoinedCount = (tournament) => {
+    const players = joinedPlayers.filter(player => player.tournamentId === tournament.id);
+    const teamSize = getTeamSizeForType(tournament.tournamentType);
+    if (teamSize === 1) return players.length;
+    return Math.ceil(players.length / teamSize);
+  };
+
+  const getTotalSlotsForType = (tournament) => {
+    const totalTeams = Number(tournament.totalTeams) || 48;
+    const tournamentType = tournament.tournamentType;
+    if (tournamentType === "SOLO") return totalTeams;
+    if (tournamentType === "DUO" || tournamentType === "2V2") return Math.floor(totalTeams / 2);
+    if (tournamentType === "3V3") return Math.floor(totalTeams / 3);
+    if (tournamentType === "SQUAD") return Math.floor(totalTeams / 4);
+    return totalTeams;
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-20 text-white">
       {/* Header */}
@@ -151,7 +176,7 @@ export default function PerKillMatchResults({
                     <div className="text-xs sm:text-sm text-gray-400 mb-3 sm:mb-4 space-y-0.5 sm:space-y-1">
                       <p>📅 Date: {tournament.matchDate}</p>
                       <p>🕒 Time: {tournament.matchTime}</p>
-                      <p>👥 Joined: <span className="text-white font-bold">{playersCount}</span> / {tournament.totalTeams}</p>
+                      <p>👥 {getTeamSizeForType(tournament.tournamentType) === 1 ? "Joined" : "Teams Joined"}: <span className="text-white font-bold">{getTeamJoinedCount(tournament)}</span> / {getTotalSlotsForType(tournament)}</p>
                     </div>
                   </div>
 
@@ -246,7 +271,7 @@ export default function PerKillMatchResults({
             <div className="overflow-y-auto custom-scrollbar pr-2 sm:pr-4 flex-grow">
               {matchResults.length > 0 ? (
                 <div className="space-y-6">
-                {matchResults.map(result => (
+                {[...matchResults].reverse().map(result => (
                   <div key={result.id} className="bg-[#111] rounded-3xl p-6 border border-green-500/10 cyber-card hover:border-green-500/30 transition-colors">
                     <div className="flex justify-between items-start flex-wrap gap-4 border-b border-gray-800 pb-4 mb-4">
                       <div>
@@ -348,56 +373,90 @@ export default function PerKillMatchResults({
               </div>
 
               <div className="space-y-3 mb-6">
-                <p className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">Players Registered (Type kills and select Position):</p>
-                {tournamentPlayers.map(player => {
-                  const kills = playerKills[player.userId] || 0;
-                  const currentPos = Number(playerPositions[player.userId] || 0);
-                  const bonus = currentPos === 1 ? scaledBooyahBonus : currentPos === 2 ? scaledSecondBonus : currentPos === 3 ? scaledThirdBonus : 0;
-                  const estimatedEarnings = (kills * selectedTournament.perKillRate) + bonus;
+                <p className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-2">
+                  {selectedTournament.tournamentType === "SOLO" || selectedTournament.tournamentType === "1V1" ? "Players Registered" : "Teams Registered"} (Type kills and select Position):
+                </p>
+                {(() => {
+                  const groupedPlayers = {};
+                  tournamentPlayers.forEach(player => {
+                    const key = player.selectedSlot || 'unknown';
+                    if(!groupedPlayers[key]) {
+                      groupedPlayers[key] = {
+                        slot: key,
+                        teamName: player.teamName || "SOLO",
+                        players: []
+                      };
+                    }
+                    groupedPlayers[key].players.push(player);
+                  });
 
-                  return (
-                    <div key={player.id} className="bg-black/40 border border-gray-800 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div>
-                        <p className="font-black text-orange-400 text-lg">{player.ingameName}</p>
-                        <p className="text-xs text-gray-400">Slot {player.selectedSlot} | Game UID: {player.gameUid}</p>
-                      </div>
+                  return Object.values(groupedPlayers).map(team => (
+                    <div key={team.slot} className="mb-4 bg-[#1a1a1a] p-3 sm:p-4 rounded-2xl border border-gray-700/50">
+                      {(selectedTournament.tournamentType === "DUO" || selectedTournament.tournamentType === "SQUAD") && (
+                        <h4 className="text-orange-400 font-bold mb-3 border-b border-gray-700/50 pb-2 flex items-center gap-2">
+                          <span className="bg-black px-2 py-0.5 rounded border border-gray-700 text-xs text-gray-300">Slot {team.slot}</span>
+                          Team: {team.teamName}
+                        </h4>
+                      )}
+                      <div className="space-y-3">
+                        {team.players.map(player => {
+                          const kills = playerKills[player.userId] || 0;
+                          const currentPos = Number(playerPositions[player.userId] || 0);
+                          const bonus = currentPos === 1 ? scaledBooyahBonus : currentPos === 2 ? scaledSecondBonus : currentPos === 3 ? scaledThirdBonus : 0;
+                          const estimatedEarnings = (kills * selectedTournament.perKillRate) + bonus;
 
-                      <div className="flex items-center gap-4 flex-wrap">
-                        {/* Kills Input */}
-                        <div className="flex items-center gap-2">
-                          <label className="text-xs text-gray-400 font-bold">KILLS:</label>
-                          <input
-                            type="number"
-                            value={kills}
-                            onChange={(e) => handleKillChange(player.userId, e.target.value)}
-                            className="bg-black border border-gray-800 rounded-lg w-16 px-2 py-1 text-center font-bold text-white"
-                          />
-                        </div>
+                          return (
+                            <div key={player.id} className="bg-black/40 border border-gray-800 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                              <div>
+                                <p className="font-black text-orange-400 text-lg flex items-center gap-2">
+                                  {player.ingameName}
+                                  {player.isLeader && <span className="bg-yellow-500/20 text-yellow-400 text-[10px] px-2 py-0.5 rounded border border-yellow-500/30">LEADER</span>}
+                                </p>
+                                <p className="text-xs text-gray-400">
+                                  {(selectedTournament.tournamentType === "SOLO" || selectedTournament.tournamentType === "1V1") && `Slot ${player.selectedSlot} | `}Game UID: {player.gameUid}
+                                </p>
+                              </div>
 
-                        {/* Position Selector Dropdown */}
-                        <div className="flex items-center gap-2">
-                          <label className="text-xs text-gray-400 font-bold">POSITION:</label>
-                          <select
-                            value={currentPos}
-                            onChange={(e) => handlePositionChange(player.userId, e.target.value)}
-                            className="bg-black border border-gray-800 rounded-lg px-2 py-1 text-white text-xs font-bold"
-                          >
-                            <option value="0">None</option>
-                            <option value="1">🥇 1st / Booyah</option>
-                            <option value="2">🥈 2nd Place</option>
-                            <option value="3">🥉 3rd Place</option>
-                          </select>
-                        </div>
+                              <div className="flex items-center gap-4 flex-wrap">
+                                {/* Kills Input */}
+                                <div className="flex items-center gap-2">
+                                  <label className="text-xs text-gray-400 font-bold">KILLS:</label>
+                                  <input
+                                    type="number"
+                                    value={kills}
+                                    onChange={(e) => handleKillChange(player.userId, e.target.value)}
+                                    className="bg-black border border-gray-800 rounded-lg w-16 px-2 py-1 text-center font-bold text-white"
+                                  />
+                                </div>
 
-                        {/* Estimated Earnings */}
-                        <div className="text-right min-w-[80px]">
-                          <p className="text-gray-500 text-[10px]">Estimated Won</p>
-                          <p className="text-green-400 font-bold">🪙 {estimatedEarnings}</p>
-                        </div>
+                                {/* Position Selector Dropdown */}
+                                <div className="flex items-center gap-2">
+                                  <label className="text-xs text-gray-400 font-bold">POSITION:</label>
+                                  <select
+                                    value={currentPos}
+                                    onChange={(e) => handlePositionChange(player.userId, e.target.value)}
+                                    className="bg-black border border-gray-800 rounded-lg px-2 py-1 text-white text-xs font-bold"
+                                  >
+                                    <option value="0">None</option>
+                                    <option value="1">🥇 1st / Booyah</option>
+                                    <option value="2">🥈 2nd Place</option>
+                                    <option value="3">🥉 3rd Place</option>
+                                  </select>
+                                </div>
+
+                                {/* Estimated Earnings */}
+                                <div className="text-right min-w-[80px]">
+                                  <p className="text-gray-500 text-[10px]">Estimated Won</p>
+                                  <p className="text-green-400 font-bold">🪙 {estimatedEarnings}</p>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
-                  );
-                })}
+                  ));
+                })()}
               </div>
             </div>
 
@@ -502,15 +561,15 @@ export default function PerKillMatchResults({
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {Array.from({ length: selectedViewTournament.totalTeams }, (_, i) => i + 1).map(num => {
+              {Array.from({ length: getTotalSlotsForType(selectedViewTournament) }, (_, i) => i + 1).map(num => {
                 const status = getSlotStatus(selectedViewTournament.id, num);
                 return (
                   <div 
                     key={num} 
-                    className={`p-4 rounded-2xl border text-sm flex flex-col justify-between ${
+                    className={`p-4 rounded-2xl border text-sm flex flex-col ${
                       status.booked 
-                        ? "bg-orange-500/5 border-orange-500/20" 
-                        : "bg-black/40 border-gray-900"
+                        ? "bg-orange-500/5 border-orange-500/20 justify-start" 
+                        : "bg-black/40 border-gray-900 justify-between"
                     }`}
                   >
                     <div className="flex justify-between items-center mb-2">
@@ -518,14 +577,21 @@ export default function PerKillMatchResults({
                       <span className={`w-2 h-2 rounded-full ${status.booked ? 'bg-orange-500' : 'bg-gray-700'}`}></span>
                     </div>
                     {status.booked ? (
-                      <div className="space-y-1">
-                        <p className="font-bold text-white line-clamp-1">{status.ingameName}</p>
-                        <p className="text-[10px] text-gray-400">UID: {status.gameUid}</p>
-                        <p className="text-[10px] text-blue-400">Level: {status.gameLevel}</p>
-                        <p className="text-[10px] text-green-400 font-mono">📞 {status.mobileNumber || "N/A"}</p>
+                      <div className="space-y-3">
+                        {status.players.map((p, idx) => (
+                          <div key={idx} className="border-b border-orange-500/10 pb-2 last:border-0 last:pb-0">
+                            <p className="font-bold text-white line-clamp-1 flex items-center gap-1">
+                              {p.ingameName}
+                              {p.isLeader && <span className="bg-yellow-500/20 text-yellow-400 text-[8px] px-1 rounded">L</span>}
+                            </p>
+                            <p className="text-[10px] text-gray-400">UID: {p.gameUid}</p>
+                            <p className="text-[10px] text-blue-400">Level: {p.gameLevel}</p>
+                            <p className="text-[10px] text-green-400 font-mono">📞 {p.mobileNumber || "N/A"}</p>
+                          </div>
+                        ))}
                       </div>
                     ) : (
-                      <p className="text-gray-600 font-bold">AVAILABLE</p>
+                      <p className="text-gray-600 font-bold mt-auto">AVAILABLE</p>
                     )}
                   </div>
                 );
