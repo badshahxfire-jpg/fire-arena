@@ -501,6 +501,9 @@ rtdb.ref("notifications").on("child_added", (userSnap) => {
     if (loadedNotificationIds.has(notifId)) return;
     loadedNotificationIds.add(notifId);
 
+    // If it's a silent push (like global updates), don't trigger a personal FCM push
+    if (notif.silentPush) return;
+
     console.log(`New notification detected for user ${userId}: ${notif.title}`);
     await sendPersonalPushNotification(userId, notif.title, notif.message);
   });
@@ -606,7 +609,8 @@ rtdb.ref("settings/appUpdate").on("value", async (snapshot) => {
         message: `Version ${updateData.latestVersion} is available. Release notes: ${updateData.releaseNotes || 'Bug fixes and performance improvements.'}`,
         time: new Date().toLocaleString(),
         seen: false,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        silentPush: true // Prevent duplicate FCM push from listener
       }));
     });
     await Promise.all(promises);
@@ -715,6 +719,8 @@ app.post("/api/send-personal-notification", verifyToken, async (req, res) => {
     }
     
     // 1. Save to RTDB for in-app notification (bell icon) ALWAYS
+    // The global listener in server.js will automatically detect this RTDB entry
+    // and trigger sendPersonalPushNotification! So we do NOT need to send it again here.
     try {
       await rtdb.ref(`notifications/${targetUserId}`).push({
         title,
@@ -722,43 +728,17 @@ app.post("/api/send-personal-notification", verifyToken, async (req, res) => {
         timestamp: admin.database.ServerValue.TIMESTAMP,
         seen: false
       });
+      
+      // If targetToken is missing, we still saved to RTDB, so it's a partial success
+      if (!targetToken) {
+        return res.json({ success: true, message: "Message saved to in-app notifications (User has no FCM token for popup)" });
+      }
+
+      return res.json({ success: true, message: "Personal notification sent successfully" });
     } catch (dbErr) {
       console.error("Failed to save to RTDB:", dbErr);
+      return res.status(500).json({ error: "Failed to send personal notification" });
     }
-
-    // 2. Check for FCM token to send Push Notification
-    const targetToken = targetUserDoc.data().fcmToken;
-    if (!targetToken) {
-      // User doesn't have a token, but we already saved to RTDB, so it's a partial success
-      return res.json({ success: true, message: "Message saved to in-app notifications (User has no FCM token for popup)" });
-    }
-
-    const messagePayload = {
-      notification: { 
-        title, 
-        body,
-        image: "https://fire-baadshah-arena.vercel.app/logo.png"
-      },
-      android: {
-        priority: "high",
-        notification: {
-          channelId: "fba_alerts",
-          sound: "default"
-        }
-      },
-      apns: {
-        payload: {
-          aps: {
-            contentAvailable: true,
-            sound: "default"
-          }
-        }
-      },
-      token: targetToken
-    };
-
-    const response = await admin.messaging().send(messagePayload);
-    return res.json({ success: true, message: "Personal notification sent successfully", response });
   } catch (error) {
     console.error("Error sending personal notification:", error);
     return res.status(500).json({ error: "Failed to send personal notification" });
