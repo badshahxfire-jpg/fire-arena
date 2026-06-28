@@ -651,8 +651,10 @@ app.post("/api/send-notification", verifyToken, async (req, res) => {
 
   try {
     // Verify admin
+    const ADMIN_UID = "FAVc9zfAgoYs1d1BDr2EoDwSw0x1";
     const userDoc = await db.collection("users").doc(req.user.uid).get();
-    if (!userDoc.exists || userDoc.data().role !== "admin") {
+    const isAdmin = req.user.uid === ADMIN_UID || (userDoc.exists && userDoc.data().role === "admin");
+    if (!isAdmin) {
       return res.status(403).json({ error: "Unauthorized. Admin only." });
     }
 
@@ -695,8 +697,10 @@ app.post("/api/send-personal-notification", verifyToken, async (req, res) => {
 
   try {
     // Verify admin
+    const ADMIN_UID = "FAVc9zfAgoYs1d1BDr2EoDwSw0x1";
     const userDoc = await db.collection("users").doc(req.user.uid).get();
-    if (!userDoc.exists || userDoc.data().role !== "admin") {
+    const isAdmin = req.user.uid === ADMIN_UID || (userDoc.exists && userDoc.data().role === "admin");
+    if (!isAdmin) {
       return res.status(403).json({ error: "Unauthorized. Admin only." });
     }
 
