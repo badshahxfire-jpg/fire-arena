@@ -78,6 +78,7 @@ import { playClickSound, playSuccessSound, playErrorSound } from "./utils/soundE
 import { useWeeklyTournaments } from "./hooks/useWeeklyTournaments";
 import WeeklyDashboard from "./components/Weekly/WeeklyDashboard";
 import AdminWeeklyDashboard from "./components/Admin/Weekly/AdminWeeklyDashboard";
+import CalculatorWidget from "./components/Admin/CalculatorWidget";
 
 const ADMIN_UID = "FAVc9zfAgoYs1d1BDr2EoDwSw0x1";
 
@@ -86,6 +87,8 @@ export default function FireBaadshahArena() {
   // ================= UI State =================
   const [showLogin, setShowLogin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+  const [showCalculator, setShowCalculator] = useState(false);
   const [showWallet, setShowWallet] = useState(false);
   const [showWithdrawPopup, setShowWithdrawPopup] = useState(false);
   const [showCoinHistory, setShowCoinHistory] = useState(false);
@@ -1595,6 +1598,25 @@ export default function FireBaadshahArena() {
       >
         🔄
       </button>
+
+      {/* Admin Calculator Widget */}
+      {isAdmin && (
+        <>
+          {/* Floating Button */}
+          {!showCalculator && (
+            <button
+              onClick={() => setShowCalculator(true)}
+              className="fixed bottom-24 right-6 z-[999] bg-orange-500 hover:bg-orange-600 text-black w-14 h-14 rounded-full font-black text-2xl shadow-[0_0_20px_rgba(249,115,22,0.4)] flex items-center justify-center transition-transform hover:scale-110"
+            >
+              🧮
+            </button>
+          )}
+          {/* Calculator Widget */}
+          {showCalculator && (
+            <CalculatorWidget onClose={() => setShowCalculator(false)} />
+          )}
+        </>
+      )}
 
       {/* Footer */}
       <Footer />
