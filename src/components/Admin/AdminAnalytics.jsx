@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import UserActivityPopup from './UserActivityPopup';
+import { db } from '../../firebase';
+import { doc, updateDoc, increment, collection, addDoc } from 'firebase/firestore';
 
 export default function AdminAnalytics({ 
   analytics, 
@@ -145,6 +147,47 @@ export default function AdminAnalytics({
             <h3 className="text-2xl font-black text-blue-400 mb-6 text-center">🛠️ DATA MIGRATION TOOLS</h3>
             
             <div className="space-y-6">
+              <div className="bg-black/50 p-6 rounded-2xl border border-gray-800">
+                <h4 className="text-yellow-400 font-bold mb-4">Fix Welcome Bonus (3 Users)</h4>
+                <p className="text-gray-400 text-xs mb-4">Click to automatically add 20 coins and disable the scratch card for the 3 users who registered today.</p>
+                <button
+                  onClick={async () => {
+                    if(!window.confirm("Add 20 coins to the 3 specific users?")) return;
+                    try {
+                      const emails = ["chotu757677@gmail.com", "singhsarita6539@gmail.com", "pprashantsingh976@gmail.com"];
+                      let count = 0;
+                      for (const u of allUsers) {
+                        if (emails.includes(u.email)) {
+                          const userRef = doc(db, "users", u.uid);
+                          await updateDoc(userRef, {
+                            coins: increment(20),
+                            welcomeBonusClaimed: true
+                          });
+                          
+                          const historyRef = collection(db, "coinHistory");
+                          await addDoc(historyRef, {
+                            uid: u.uid,
+                            amount: 20,
+                            type: "deposit",
+                            description: "Welcome Bonus (Admin Fixed)",
+                            date: new Date().toLocaleDateString("en-GB"),
+                            timestamp: new Date().toLocaleString()
+                          });
+                          count++;
+                        }
+                      }
+                      alert(`Successfully fixed welcome bonus for ${count} users!`);
+                    } catch (error) {
+                      console.error(error);
+                      alert("Error: " + error.message);
+                    }
+                  }}
+                  className="bg-green-600 hover:bg-green-500 text-white px-4 py-3 rounded-xl font-black transition-all duration-300 w-full"
+                >
+                  ✨ FIX 3 RECENT USERS
+                </button>
+              </div>
+
               <div className="bg-black/50 p-6 rounded-2xl border border-gray-800">
                 <h4 className="text-yellow-400 font-bold mb-4">Migrate Single User</h4>
                 <div className="flex flex-col gap-3">
