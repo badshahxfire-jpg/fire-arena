@@ -129,12 +129,12 @@ export default function AdminWeeklyDashboard({ weeklyTournaments, createWeeklyTo
       {/* Create Form Modal */}
       {showCreate && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-3 md:p-4 bg-black/90 backdrop-blur-md">
-          <div className="bg-gradient-to-b from-gray-900 to-black border border-orange-500/30 rounded-2xl w-full max-w-2xl shadow-2xl relative animate-in fade-in zoom-in duration-200 flex flex-col max-h-[90vh]">
+          <div className="bg-gradient-to-b from-gray-900 to-black border border-orange-500/30 rounded-2xl w-[95vw] md:w-full max-w-2xl shadow-2xl relative animate-in fade-in zoom-in duration-200 flex flex-col max-h-[85vh] md:max-h-[90vh]">
             {/* Header */}
-            <div className="p-5 md:p-8 shrink-0 border-b border-white/10 relative">
+            <div className="p-4 md:p-8 shrink-0 border-b border-white/10 relative">
               <button 
                 onClick={() => setShowCreate(false)}
-                className="absolute top-5 right-5 text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 w-8 h-8 rounded-full flex items-center justify-center transition-all z-10"
+                className="absolute top-4 md:top-5 right-4 md:right-5 text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 w-8 h-8 rounded-full flex items-center justify-center transition-all z-10"
               >
                 ✕
               </button>
@@ -142,7 +142,7 @@ export default function AdminWeeklyDashboard({ weeklyTournaments, createWeeklyTo
             </div>
             
             {/* Scrollable Content */}
-            <div className="p-5 md:p-8 overflow-y-auto no-scrollbar flex-1 space-y-4">
+            <div className="p-4 md:p-8 overflow-y-auto no-scrollbar flex-1 space-y-4">
               <div>
                 <label className="block text-xs font-bold text-gray-400 mb-1">Tournament Title</label>
                 <input
@@ -204,17 +204,20 @@ export default function AdminWeeklyDashboard({ weeklyTournaments, createWeeklyTo
                   </select>
                 </div>
               </div>
-              <div className="pt-4">
-                <button 
-                  onClick={() => {
-                    handleCreate();
-                    setShowCreate(false);
-                  }} 
-                  className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-black px-6 py-4 rounded-xl w-full shadow-lg transform transition-all active:scale-95"
-                >
-                  PUBLISH TOURNAMENT
-                </button>
               </div>
+            </div>
+
+            {/* Fixed Footer */}
+            <div className="p-4 md:p-8 shrink-0 border-t border-white/10 bg-black/40 rounded-b-2xl">
+              <button 
+                onClick={() => {
+                  handleCreate();
+                  setShowCreate(false);
+                }} 
+                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-black px-6 py-4 rounded-xl w-full shadow-lg transform transition-all active:scale-95"
+              >
+                PUBLISH TOURNAMENT
+              </button>
             </div>
           </div>
         </div>
@@ -257,16 +260,20 @@ export default function AdminWeeklyDashboard({ weeklyTournaments, createWeeklyTo
         {/* Edit Rules Modal */}
         {showEditRules && (
           <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-            <div className="bg-gray-900 border border-purple-500/30 p-6 rounded-2xl w-full max-w-2xl shadow-2xl relative animate-in fade-in zoom-in duration-200">
-              <button 
-                onClick={() => setShowEditRules(false)}
-                className="absolute top-4 right-4 text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 w-8 h-8 rounded-full flex items-center justify-center transition-all"
-              >
-                ✕
-              </button>
-              <h3 className="text-xl font-black text-purple-400 mb-6 uppercase">Edit Rules & Schedule</h3>
+            <div className="bg-gray-900 border border-purple-500/30 rounded-2xl w-[95vw] md:w-full max-w-2xl shadow-2xl relative animate-in fade-in zoom-in duration-200 flex flex-col max-h-[85vh] md:max-h-[90vh]">
+              {/* Header */}
+              <div className="p-4 md:p-6 shrink-0 border-b border-white/10 relative">
+                <button 
+                  onClick={() => setShowEditRules(false)}
+                  className="absolute top-4 md:top-6 right-4 md:right-6 text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 w-8 h-8 rounded-full flex items-center justify-center transition-all"
+                >
+                  ✕
+                </button>
+                <h3 className="text-xl font-black text-purple-400 m-0 uppercase pr-8">Edit Rules & Schedule</h3>
+              </div>
               
-              <div className="space-y-3 mb-6">
+              {/* Scrollable Content */}
+              <div className="p-4 md:p-6 overflow-y-auto no-scrollbar flex-1 space-y-3">
                  {editRules.map((rule, idx) => (
                     <div key={idx} className="flex gap-2">
                        <input 
@@ -291,7 +298,8 @@ export default function AdminWeeklyDashboard({ weeklyTournaments, createWeeklyTo
                     </div>
                  ))}
               </div>
-              <div className="flex gap-4">
+              {/* Fixed Footer */}
+              <div className="p-4 md:p-6 shrink-0 border-t border-white/10 bg-black/40 rounded-b-2xl flex gap-4">
                  <button 
                    onClick={() => setEditRules([...editRules, ""])}
                    className="flex-1 border border-dashed border-gray-600 text-gray-400 hover:text-white hover:border-white py-2 rounded-lg"
