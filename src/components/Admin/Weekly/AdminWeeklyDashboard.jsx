@@ -84,7 +84,7 @@ export default function AdminWeeklyDashboard({ weeklyTournaments, createWeeklyTo
 
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md overflow-y-auto flex items-start justify-center p-4 md:p-8">
-           <div className="bg-[#0f0f13] border border-orange-500/30 rounded-2xl w-full max-w-7xl p-6 md:p-8 relative mt-10 mb-10 animate-in fade-in zoom-in duration-200 shadow-2xl">
+           <div className="bg-[#0f0f13] border border-orange-500/30 rounded-2xl w-full max-w-7xl min-h-[60vh] p-6 md:p-8 relative mt-10 mb-10 shadow-2xl">
              <button 
                 onClick={() => setIsModalOpen(false)}
                 className="absolute top-4 right-4 text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 w-10 h-10 rounded-full flex items-center justify-center transition-all z-[110]"
