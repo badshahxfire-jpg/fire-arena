@@ -89,16 +89,26 @@ export function useAuth(ADMIN_UID) {
         let isUserStaff = false;
         
         // Fetch staff list if not super admin
-        if (!isUserSuperAdmin) {
-          try {
-            const staffDoc = await getDoc(doc(db, "adminData", "staffList"));
-            if (staffDoc.exists()) {
-              const staffEmails = staffDoc.data().emails || [];
-              isUserStaff = staffEmails.includes(currentUser.email);
+        try {
+          const staffDoc = await getDoc(doc(db, "adminData", "staffList"));
+          if (staffDoc.exists()) {
+            const staffEmails = staffDoc.data().emails || [];
+            if (currentUser.email && staffEmails.includes(currentUser.email.toLowerCase())) {
+              isUserStaff = true;
             }
-          } catch (err) {
-            console.error("Failed to fetch staff list:", err);
+            
+            // If Super Admin, sync staff list to RTDB automatically
+            if (isUserSuperAdmin) {
+              const joinedEmails = staffEmails.join(",");
+              try {
+                await set(ref(database, "adminData/staffEmails"), joinedEmails);
+              } catch (e) {
+                console.error("Failed to sync staff list to RTDB:", e);
+              }
+            }
           }
+        } catch (err) {
+          console.error("Failed to fetch staff list:", err);
         }
         
         const isUserAdmin = isUserSuperAdmin || isUserStaff;
