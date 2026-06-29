@@ -59,6 +59,7 @@ import CoinHistoryPopup from "./components/Popups/CoinHistoryPopup";
 import UpcomingGamesPopup from "./components/Popups/UpcomingGamesPopup";
 import ManualCoins from "./components/Admin/ManualCoins";
 import AdminMatchResults from "./components/Admin/AdminMatchResults";
+import StaffManagement from "./components/Admin/StaffManagement";
 
 // Per Kill System Components & Hook (Isolated)
 import { usePerKillTournaments } from "./hooks/usePerKillTournaments";
@@ -185,6 +186,7 @@ export default function FireBaadshahArena() {
     registerBlocked,
     offlineBlockedUser,
     setOfflineBlockedUser,
+    isSuperAdmin,
   } = useAuth(ADMIN_UID);
 
   const {
@@ -1456,20 +1458,33 @@ export default function FireBaadshahArena() {
             </div>
           )}
           
-          {/* Admin Tabs */}
-          <div className="max-w-7xl mx-auto px-6">
+          {/* Admin Panel Header & Switcher */}
+          <div className="max-w-7xl mx-auto px-6 mb-8 mt-12 text-center relative z-20">
+            <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 mb-6 drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]">
+              {isSuperAdmin ? "SUPER ADMIN DASHBOARD" : "STAFF DASHBOARD"}
+            </h1>
             <div className="flex flex-wrap justify-center gap-3 mb-8">
-              <button onClick={() => setShowTopupAdminPopup(true)} className={`px-4 py-3 rounded-2xl font-black text-sm md:text-base cyber-btn transition-all flex-1 min-w-[140px] max-w-[200px] text-center ${showTopupAdminPopup ? "bg-orange-500 text-black" : "bg-black text-white border border-orange-500/20"}`}>📥 TOPUP REQUESTS </button>
-              <button onClick={() => setShowWithdrawAdminPopup(true)} className={`px-4 py-3 rounded-2xl font-black text-sm md:text-base cyber-btn transition-all flex-1 min-w-[140px] max-w-[200px] text-center ${showWithdrawAdminPopup ? "bg-green-500 text-black" : "bg-black text-white border border-green-500/20"}`}>📤 WITHDRAW REQUESTS </button>
-              <button onClick={() => setAdminPage("create")} className={`px-4 py-3 rounded-2xl font-black text-sm md:text-base cyber-btn transition-all flex-1 min-w-[140px] max-w-[200px] text-center ${adminPage === "create" ? "bg-blue-500 text-black" : "bg-black text-white border border-blue-500/20"}`}>🎮 CREATE MATCH</button>
+              {isSuperAdmin && (
+                <>
+                  <button onClick={() => setShowTopupAdminPopup(true)} className={`px-4 py-3 rounded-2xl font-black text-sm md:text-base cyber-btn transition-all flex-1 min-w-[140px] max-w-[200px] text-center ${showTopupAdminPopup ? "bg-orange-500 text-black" : "bg-black text-white border border-orange-500/20"}`}>🚀 TOPUP REQUESTS </button>
+                  <button onClick={() => setShowWithdrawAdminPopup(true)} className={`px-4 py-3 rounded-2xl font-black text-sm md:text-base cyber-btn transition-all flex-1 min-w-[140px] max-w-[200px] text-center ${showWithdrawAdminPopup ? "bg-green-500 text-black" : "bg-black text-white border border-green-500/20"}`}>💸 WITHDRAW REQUESTS </button>
+                </>
+              )}
+              <button onClick={() => setAdminPage("create")} className={`px-4 py-3 rounded-2xl font-black text-sm md:text-base cyber-btn transition-all flex-1 min-w-[140px] max-w-[200px] text-center ${adminPage === "create" ? "bg-blue-500 text-black" : "bg-black text-white border border-blue-500/20"}`}>🎯 CREATE MATCH</button>
               <button onClick={() => setAdminPage("results")} className={`px-4 py-3 rounded-2xl font-black text-sm md:text-base cyber-btn transition-all flex-1 min-w-[140px] max-w-[200px] text-center ${adminPage === "results" ? "bg-purple-500 text-black" : "bg-black text-white border border-purple-500/20"}`}>🏆 RESULT HISTORY</button>
-              <button onClick={() => setAdminPage("perkill_create")} className={`px-4 py-3 rounded-2xl font-black text-sm md:text-base cyber-btn transition-all flex-1 min-w-[140px] max-w-[200px] text-center ${adminPage === "perkill_create" ? "bg-orange-600 text-black" : "bg-black text-white border border-orange-600/20"}`}>⚔️ PER KILL CREATE</button>
-              <button onClick={() => setAdminPage("perkill_results")} className={`px-4 py-3 rounded-2xl font-black text-sm md:text-base cyber-btn transition-all flex-1 min-w-[140px] max-w-[200px] text-center ${adminPage === "perkill_results" ? "bg-red-600 text-black" : "bg-black text-white border border-red-600/20"}`}>🎯 PER KILL CONTROL</button>
-              <button onClick={() => setAdminPage("users")} className={`px-4 py-3 rounded-2xl font-black text-sm md:text-base cyber-btn transition-all flex-1 min-w-[140px] max-w-[200px] text-center ${adminPage === "users" ? "bg-pink-500 text-black" : "bg-black text-white border border-pink-500/20"}`}>👤 USER CONTROL</button>
-              <button onClick={() => setAdminPage("coins")} className={`px-4 py-3 rounded-2xl font-black text-sm md:text-base cyber-btn transition-all flex-1 min-w-[140px] max-w-[200px] text-center ${adminPage === "coins" ? "bg-yellow-500 text-black" : "bg-black text-white border border-yellow-500/20"}`}>🪙 MANUAL COINS</button>
-              <button onClick={() => setAdminPage("maintenance")} className={`px-4 py-3 rounded-2xl font-black text-sm md:text-base cyber-btn transition-all flex-1 min-w-[140px] max-w-[200px] text-center ${adminPage === "maintenance" ? "bg-red-500 text-black" : "bg-black text-white border border-red-500/20"}`}>🚧 MAINTENANCE</button>
-              <button onClick={() => setAdminPage("announcements")} className={`px-4 py-3 rounded-2xl font-black text-sm md:text-base cyber-btn transition-all flex-1 min-w-[140px] max-w-[200px] text-center ${adminPage === "announcements" ? "bg-cyan-500 text-black" : "bg-black text-white border border-cyan-500/20"}`}>📢 ANNOUNCEMENTS</button>
-              <button onClick={() => setAdminPage("app_update")} className={`px-4 py-3 rounded-2xl font-black text-sm md:text-base cyber-btn transition-all flex-1 min-w-[140px] max-w-[200px] text-center ${adminPage === "app_update" ? "bg-blue-400 text-black" : "bg-black text-white border border-blue-400/20"}`}>🚀 APP UPDATE</button>
+              <button onClick={() => setAdminPage("perkill_create")} className={`px-4 py-3 rounded-2xl font-black text-sm md:text-base cyber-btn transition-all flex-1 min-w-[140px] max-w-[200px] text-center ${adminPage === "perkill_create" ? "bg-orange-600 text-black" : "bg-black text-white border border-orange-600/20"}`}>🔥 PER KILL CREATE</button>
+              <button onClick={() => setAdminPage("perkill_results")} className={`px-4 py-3 rounded-2xl font-black text-sm md:text-base cyber-btn transition-all flex-1 min-w-[140px] max-w-[200px] text-center ${adminPage === "perkill_results" ? "bg-red-600 text-black" : "bg-black text-white border border-red-600/20"}`}>💀 PER KILL CONTROL</button>
+              <button onClick={() => setAdminPage("users")} className={`px-4 py-3 rounded-2xl font-black text-sm md:text-base cyber-btn transition-all flex-1 min-w-[140px] max-w-[200px] text-center ${adminPage === "users" ? "bg-pink-500 text-black" : "bg-black text-white border border-pink-500/20"}`}>👥 USER CONTROL</button>
+              
+              {isSuperAdmin && (
+                <>
+                  <button onClick={() => setAdminPage("coins")} className={`px-4 py-3 rounded-2xl font-black text-sm md:text-base cyber-btn transition-all flex-1 min-w-[140px] max-w-[200px] text-center ${adminPage === "coins" ? "bg-yellow-500 text-black" : "bg-black text-white border border-yellow-500/20"}`}>💰 MANUAL COINS</button>
+                  <button onClick={() => setAdminPage("maintenance")} className={`px-4 py-3 rounded-2xl font-black text-sm md:text-base cyber-btn transition-all flex-1 min-w-[140px] max-w-[200px] text-center ${adminPage === "maintenance" ? "bg-red-500 text-black" : "bg-black text-white border border-red-500/20"}`}>🚧 MAINTENANCE</button>
+                  <button onClick={() => setAdminPage("announcements")} className={`px-4 py-3 rounded-2xl font-black text-sm md:text-base cyber-btn transition-all flex-1 min-w-[140px] max-w-[200px] text-center ${adminPage === "announcements" ? "bg-cyan-500 text-black" : "bg-black text-white border border-cyan-500/20"}`}>📢 ANNOUNCEMENTS</button>
+                  <button onClick={() => setAdminPage("app_update")} className={`px-4 py-3 rounded-2xl font-black text-sm md:text-base cyber-btn transition-all flex-1 min-w-[140px] max-w-[200px] text-center ${adminPage === "app_update" ? "bg-blue-400 text-black" : "bg-black text-white border border-blue-400/20"}`}>📥 APP UPDATE</button>
+                  <button onClick={() => setAdminPage("staff")} className={`px-4 py-3 rounded-2xl font-black text-sm md:text-base cyber-btn transition-all flex-1 min-w-[140px] max-w-[200px] text-center ${adminPage === "staff" ? "bg-purple-600 text-white" : "bg-black text-white border border-purple-600/20"}`}>👨‍💼 STAFF MANAGE</button>
+                </>
+              )}
             </div>
           </div>
 
@@ -1478,11 +1493,17 @@ export default function FireBaadshahArena() {
           {adminPage === "results" && <MatchResults matchResults={matchResults} isAdmin={isAdmin} joinedPlayers={joinedPlayers} user={user} onDeleteMatchResult={deleteMatchHistory} onDeleteAllMatchResults={() => deleteMatchHistory("ALL")} playerResults={playerResults} />}
           {adminPage === "perkill_create" && <CreatePerKillTournament onCreateTournament={createPerKillTournament} />}
           {adminPage === "perkill_results" && <PerKillMatchResults isAdmin={isAdmin} liveTournaments={livePerKillTournaments} joinedPlayers={joinedPerKillPlayers} matchResults={perKillMatchResults} publishResults={publishPerKillResults} cancelTournament={cancelPerKillTournament} publishRoomDetails={publishPerKillRoomDetails} updateTournamentTime={updatePerKillTournamentTime} onDeleteMatchResult={deletePerKillMatchHistory} onDeleteAllMatchResults={deleteAllPerKillMatchHistory} />}
-          {adminPage === "users" && <UserProfileCheck allUsers={allUsers} onSearchUser={searchUser} searchedUser={searchedUser} onBlockUser={blockUser} onAddCoins={addManualCoins} onDeductCoins={deductManualCoins} />}
-          {adminPage === "coins" && <ManualCoins onAddCoins={addManualCoins} />}
-          {adminPage === "maintenance" && <MaintenanceMode maintenanceMode={maintenanceMode} maintenanceDuration={maintenanceDuration} maintenanceEndsAt={maintenanceEndsAt} onToggle={toggleMaintenance} allowedUsers={maintenanceAllowedUsers} onUpdateAllowedUsers={updateMaintenanceAllowedUsers} />}
-          {adminPage === "announcements" && <AdminAnnouncements />}
-          {adminPage === "app_update" && <AppUpdateAdmin />}
+          {adminPage === "users" && <UserProfileCheck allUsers={allUsers} onSearchUser={searchUser} searchedUser={searchedUser} onBlockUser={blockUser} onAddCoins={addManualCoins} onDeductCoins={deductManualCoins} isSuperAdmin={isSuperAdmin} />}
+          
+          {isSuperAdmin && (
+            <>
+              {adminPage === "coins" && <ManualCoins onAddCoins={addManualCoins} />}
+              {adminPage === "maintenance" && <MaintenanceMode maintenanceMode={maintenanceMode} maintenanceDuration={maintenanceDuration} maintenanceEndsAt={maintenanceEndsAt} onToggle={toggleMaintenance} allowedUsers={maintenanceAllowedUsers} onUpdateAllowedUsers={updateMaintenanceAllowedUsers} />}
+              {adminPage === "announcements" && <AdminAnnouncements />}
+              {adminPage === "app_update" && <AppUpdateAdmin />}
+              {adminPage === "staff" && <StaffManagement />}
+            </>
+          )}
 
         </>
       )}

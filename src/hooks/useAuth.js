@@ -58,6 +58,7 @@ const getDeviceId = () => {
 export function useAuth(ADMIN_UID) {
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loginLoading, setLoginLoading] = useState(false);
   const [registerLoading, setRegisterLoading] = useState(false);
@@ -79,11 +80,30 @@ export function useAuth(ADMIN_UID) {
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        const isUserAdmin = currentUser.uid === ADMIN_UID;
+        const isUserSuperAdmin = currentUser.uid === ADMIN_UID;
+        setIsSuperAdmin(isUserSuperAdmin);
+        
+        let isUserStaff = false;
+        
+        // Fetch staff list if not super admin
+        if (!isUserSuperAdmin) {
+          try {
+            const staffDoc = await getDoc(doc(db, "adminData", "staffList"));
+            if (staffDoc.exists()) {
+              const staffEmails = staffDoc.data().emails || [];
+              isUserStaff = staffEmails.includes(currentUser.email);
+            }
+          } catch (err) {
+            console.error("Failed to fetch staff list:", err);
+          }
+        }
+        
+        const isUserAdmin = isUserSuperAdmin || isUserStaff;
         setIsAdmin(isUserAdmin);
+        
         if (isUserAdmin) {
           try {
             localStorage.setItem("isAdminDevice", "true");
@@ -93,6 +113,7 @@ export function useAuth(ADMIN_UID) {
         }
       } else {
         setIsAdmin(false);
+        setIsSuperAdmin(false);
       }
       setLoading(false);
     });
@@ -287,6 +308,7 @@ export function useAuth(ADMIN_UID) {
 
       setUser(newUser);
       if (newUser.uid === ADMIN_UID) {
+        setIsSuperAdmin(true);
         setIsAdmin(true);
       }
       
@@ -339,8 +361,25 @@ export function useAuth(ADMIN_UID) {
       }
 
       setUser(loggedInUser);
-      const isUserAdmin = loggedInUser.uid === ADMIN_UID;
+      const isUserSuperAdmin = loggedInUser.uid === ADMIN_UID;
+      setIsSuperAdmin(isUserSuperAdmin);
+      
+      let isUserStaff = false;
+      if (!isUserSuperAdmin) {
+        try {
+          const staffDoc = await getDoc(doc(db, "adminData", "staffList"));
+          if (staffDoc.exists()) {
+            const staffEmails = staffDoc.data().emails || [];
+            isUserStaff = staffEmails.includes(loggedInUser.email);
+          }
+        } catch (err) {
+          console.error("Failed to fetch staff list:", err);
+        }
+      }
+      
+      const isUserAdmin = isUserSuperAdmin || isUserStaff;
       setIsAdmin(isUserAdmin);
+      
       if (isUserAdmin) {
         try {
           localStorage.setItem("isAdminDevice", "true");
@@ -363,6 +402,7 @@ export function useAuth(ADMIN_UID) {
     await signOut(auth);
     setUser(null);
     setIsAdmin(false);
+    setIsSuperAdmin(false);
     alert("Logged Out");
   };
 
@@ -439,6 +479,7 @@ export function useAuth(ADMIN_UID) {
   return {
     user,
     isAdmin,
+    isSuperAdmin,
     loading,
     loginLoading,
     registerLoading,

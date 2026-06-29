@@ -62,5 +62,13 @@ service cloud.firestore {
       // Nobody can update or delete transactions once written
       allow update, delete: if false;
     }
+
+    // Rules for 'adminData' collection
+    match /adminData/{documentId} {
+      // Any authenticated user can read admin data (needed for staff check, settings, etc.)
+      allow read: if isAuthenticated();
+      // Only the Super Admin can write/modify admin data
+      allow write: if isAdmin();
+    }
   }
 }

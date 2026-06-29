@@ -5,7 +5,7 @@ import { updateDoc, doc } from "firebase/firestore";
 import { db } from "../../firebase";
 import { secureFetch } from "../../utils/backendApi";
 
-export default function UserProfileCheck({ allUsers = [], onSearchUser, searchedUser, onBlockUser, onAddCoins, onDeductCoins }) {
+export default function UserProfileCheck({ allUsers = [], onSearchUser, searchedUser, onBlockUser, onAddCoins, onDeductCoins, isSuperAdmin }) {
   const [searchUid, setSearchUid] = useState("");
   const [manualCoins, setManualCoins] = useState("");
   const [localSearchedUser, setLocalSearchedUser] = useState(null);
@@ -538,59 +538,116 @@ export default function UserProfileCheck({ allUsers = [], onSearchUser, searched
                   </button>
 
                   {/* Unlock Withdrawal Details Button */}
-                  <button
-                    onClick={handleToggleWithdrawalLock}
-                    disabled={loadingAction === "toggleWithdrawalLock"}
-                    className={`w-full py-2.5 rounded-xl font-black text-xs transition-all mt-2 disabled:opacity-50 ${
-                      displayUser.withdrawalDetails?.locked 
-                        ? "bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 border border-purple-500/30" 
-                        : "bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/30"
-                    }`}
-                  >
-                    {loadingAction === "toggleWithdrawalLock" 
-                      ? "⏳ WORKING..." 
-                      : displayUser.withdrawalDetails?.locked 
-                        ? "🔓 UNLOCK WITHDRAWAL DETAILS" 
-                        : "🔒 LOCK WITHDRAWAL DETAILS"}
+                  <button onClick={() => setShowWithdrawalDetails(!showWithdrawalDetails)} className="w-full bg-[#111] border border-blue-500/20 text-white py-3 rounded-xl font-black text-sm hover:bg-blue-500/10 transition-all flex items-center justify-between px-4">
+                    <span>🏦 WITHDRAWAL DETAILS</span>
+                    <span className="text-blue-400">{showWithdrawalDetails ? "▲" : "▼"}</span>
                   </button>
-
-                  {/* Wallet Control */}
-                  <div className="bg-[#1a1a2e] rounded-xl p-4 border border-orange-500/20 mt-4">
-                    <h3 className="text-lg font-black text-orange-400 mb-3">💰 WALLET CONTROL</h3>
-                    <input
-                      type="number"
-                      placeholder="Coins Amount"
-                      value={manualCoins}
-                      onChange={(e) => setManualCoins(e.target.value)}
-                      className="w-full bg-black rounded-xl px-3 py-2 outline-none border border-orange-500/20 mb-3 text-white text-sm"
-                    />
-                    <div className="grid grid-cols-2 gap-3">
-                      <button
-                        onClick={async () => {
-                          setLoadingAction("deduct");
-                          await onDeductCoins(displayUser.uid, manualCoins);
-                          setManualCoins("");
-                          setLoadingAction(null);
-                        }}
-                        disabled={loadingAction === "deduct"}
-                        className="bg-red-500 text-white py-2.5 rounded-xl font-black text-xs hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-wait"
-                      >
-                        {loadingAction === "deduct" ? "⏳ ..." : "➖ DEDUCT"}
-                      </button>
-                      <button
-                        onClick={async () => {
-                          setLoadingAction("add");
-                          await onAddCoins(displayUser.uid, manualCoins);
-                          setManualCoins("");
-                          setLoadingAction(null);
-                        }}
-                        disabled={loadingAction === "add"}
-                        className="bg-green-500 text-black py-2.5 rounded-xl font-black text-xs hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-wait"
-                      >
-                        {loadingAction === "add" ? "⏳ ..." : "➕ ADD"}
-                      </button>
+                  
+                  {isSuperAdmin && (
+                    <button
+                      onClick={handleToggleWithdrawalLock}
+                      disabled={loadingAction === "toggleWithdrawalLock"}
+                      className={`w-full ${displayUser.withdrawalDetails?.locked ? "bg-red-500 hover:bg-red-600" : "bg-emerald-500 hover:bg-emerald-600"} text-white py-3 rounded-xl font-black text-sm mt-3 transition-all disabled:opacity-50 disabled:cursor-wait flex justify-center items-center gap-2`}
+                    >
+                      {loadingAction === "toggleWithdrawalLock" ? "⌛ ..." : 
+                        displayUser.withdrawalDetails?.locked 
+                          ? "🔓 UNLOCK WITHDRAWAL DETAILS" 
+                          : "🔒 LOCK WITHDRAWAL DETAILS"}
+                    </button>
+                  )}                  {showWithdrawalDetails && (
+                    <div className="bg-[#111] border border-blue-500/20 rounded-xl p-4 mt-2 space-y-3">
+                      <div>
+                        <p className="text-gray-500 text-[10px] font-bold uppercase mb-1">Account Holder Name</p>
+                        <p className="text-white text-sm font-medium bg-black px-3 py-2 rounded-lg border border-gray-800">
+                          {displayUser.withdrawalDetails?.accountName || "Not Provided"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500 text-[10px] font-bold uppercase mb-1">Mobile Number</p>
+                        <p className="text-white text-sm font-medium bg-black px-3 py-2 rounded-lg border border-gray-800">
+                          {displayUser.withdrawalDetails?.mobileNumber || "Not Provided"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500 text-[10px] font-bold uppercase mb-1">UPI ID</p>
+                        <p className="text-white text-sm font-medium bg-black px-3 py-2 rounded-lg border border-gray-800 break-all">
+                          {displayUser.withdrawalDetails?.upiId || "Not Provided"}
+                        </p>
+                      </div>
+                      <div className="flex justify-between items-center pt-2 border-t border-gray-800 mt-2">
+                        <span className="text-gray-400 text-xs">Status:</span>
+                        <span className={`text-xs font-bold px-2 py-1 rounded-md ${displayUser.withdrawalDetails?.locked ? "bg-red-500/20 text-red-400" : "bg-green-500/20 text-green-400"}`}>
+                          {displayUser.withdrawalDetails?.locked ? "LOCKED" : "UNLOCKED"}
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  )}
+
+                  {isSuperAdmin && (
+                    <>
+                      {/* Wallet Control */}
+                      <div className="bg-[#1a1a2e] rounded-xl p-4 border border-orange-500/20 mt-4">
+                        <h3 className="text-lg font-black text-orange-400 mb-3">💰 WALLET CONTROL</h3>
+                        <input
+                          type="number"
+                          placeholder="Coins Amount"
+                          value={manualCoins}
+                          onChange={(e) => setManualCoins(e.target.value)}
+                          className="w-full bg-black rounded-xl px-3 py-2 outline-none border border-orange-500/20 mb-3 text-white text-sm"
+                        />
+                        <div className="grid grid-cols-2 gap-3">
+                          <button
+                            onClick={async () => {
+                              setLoadingAction("deduct");
+                              await onDeductCoins(displayUser.uid, manualCoins);
+                              setManualCoins("");
+                              setLoadingAction(null);
+                            }}
+                            disabled={loadingAction === "deduct"}
+                            className="bg-red-500 text-white py-2.5 rounded-xl font-black text-xs hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-wait"
+                          >
+                            {loadingAction === "deduct" ? "⌛ ..." : "➖ DEDUCT"}
+                          </button>
+                          
+                          <button
+                            onClick={async () => {
+                              setLoadingAction("add");
+                              await onAddCoins(displayUser.uid, manualCoins);
+                              setManualCoins("");
+                              setLoadingAction(null);
+                            }}
+                            disabled={loadingAction === "add"}
+                            className="bg-green-500 text-white py-2.5 rounded-xl font-black text-xs hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-wait"
+                          >
+                            {loadingAction === "add" ? "⌛ ..." : "➕ ADD COINS"}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Admin Actions */}
+                      <div className="grid grid-cols-2 gap-3 mt-4">
+                        <button
+                          onClick={async () => {
+                            setLoadingAction("block");
+                            await onBlockUser(displayUser.uid, !displayUser.blocked);
+                            setLoadingAction(null);
+                          }}
+                          disabled={loadingAction === "block"}
+                          className={`py-3 rounded-xl font-black text-xs transition-all disabled:opacity-50 disabled:cursor-wait flex items-center justify-center gap-2 ${displayUser.blocked ? "bg-green-500 text-white" : "bg-red-500 text-white"}`}
+                        >
+                          {loadingAction === "block" ? "⌛ ..." : displayUser.blocked ? "✅ UNBLOCK USER" : "🚫 BLOCK USER"}
+                        </button>
+                        
+                        <button
+                          onClick={handleToggleNameChangeLock}
+                          disabled={loadingAction === "toggleNameChangeLock"}
+                          className={`py-3 rounded-xl font-black text-xs transition-all disabled:opacity-50 disabled:cursor-wait flex items-center justify-center gap-2 ${displayUser.nameChanged ? "bg-blue-500 hover:bg-blue-600 text-white" : "bg-orange-500 hover:bg-orange-600 text-white"}`}
+                        >
+                          {loadingAction === "toggleNameChangeLock" ? "⌛ ..." : displayUser.nameChanged ? "🔓 UNLOCK NAME" : "🔒 LOCK NAME"}
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center p-8 bg-black/40 rounded-2xl border border-purple-500/10 text-center h-[300px]">
