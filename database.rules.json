@@ -6,6 +6,10 @@
       ".read": "auth != null",
       ".write": "auth != null"
     },
+    "adminData": {
+      ".read": "auth != null",
+      ".write": "auth != null && auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1'"
+    },
     "joinedPlayers": {
       ".read": "auth != null",
       ".write": "auth != null",
@@ -55,7 +59,7 @@
     },
     "matchResults": {
       ".read": "auth != null",
-      ".write": "auth != null && auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1'"
+      ".write": "auth != null && (auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1' || (root.child('adminData/staffEmails').val() != null && root.child('adminData/staffEmails').val().contains(auth.token.email)))"
     },
     "playerResults": {
       ".read": "auth != null",
@@ -63,15 +67,15 @@
     },
     "settings": {
       ".read": "auth != null",
-      ".write": "auth != null && auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1'"
+      ".write": "auth != null && (auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1' || (root.child('adminData/staffEmails').val() != null && root.child('adminData/staffEmails').val().contains(auth.token.email)))"
     },
     "tournaments": {
       ".read": "auth != null",
-      ".write": "auth != null && auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1'"
+      ".write": "auth != null && (auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1' || (root.child('adminData/staffEmails').val() != null && root.child('adminData/staffEmails').val().contains(auth.token.email)))"
     },
     "perKillTournaments": {
       ".read": "auth != null",
-      ".write": "auth != null && auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1'"
+      ".write": "auth != null && (auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1' || (root.child('adminData/staffEmails').val() != null && root.child('adminData/staffEmails').val().contains(auth.token.email)))"
     },
     "joinedPerKillPlayers": {
       ".read": "auth != null",
@@ -80,11 +84,11 @@
     },
     "perKillResults": {
       ".read": "auth != null",
-      ".write": "auth != null && auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1'"
+      ".write": "auth != null && (auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1' || (root.child('adminData/staffEmails').val() != null && root.child('adminData/staffEmails').val().contains(auth.token.email)))"
     },
     "announcements": {
       ".read": "auth != null",
-      ".write": "auth != null && auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1'"
+      ".write": "auth != null && (auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1' || (root.child('adminData/staffEmails').val() != null && root.child('adminData/staffEmails').val().contains(auth.token.email)))"
     },
     "users": {
       "$userId": {
@@ -94,7 +98,7 @@
     },
     "loyalBonuses": {
       ".read": "auth != null",
-      ".write": "auth != null && auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1'"
+      ".write": "auth != null && (auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1' || (root.child('adminData/staffEmails').val() != null && root.child('adminData/staffEmails').val().contains(auth.token.email)))"
     },
     "weeklyTournaments": {
       ".read": "auth != null",
@@ -102,7 +106,8 @@
     },
     "slotLocks": {
       ".read": "auth != null",
-      ".write": "auth != null && auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1'"
+      ".write": "auth != null && (auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1' || (root.child('adminData/staffEmails').val() != null && root.child('adminData/staffEmails').val().contains(auth.token.email)))"
     }
   }
 }
+

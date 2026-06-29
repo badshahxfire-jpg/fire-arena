@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { doc, getDoc, setDoc, arrayUnion, arrayRemove } from "firebase/firestore";
-import { db } from "../../firebase";
+import { ref as dbRef, set as dbSet } from "firebase/database";
+import { db, database } from "../../firebase";
 
 export default function StaffManagement() {
   const [staffList, setStaffList] = useState([]);
@@ -16,12 +17,15 @@ export default function StaffManagement() {
     try {
       setLoading(true);
       const staffDoc = await getDoc(doc(db, "adminData", "staffList"));
-      if (staffDoc.exists()) {
         setStaffList(staffDoc.data().emails || []);
+        // Sync to RTDB on fetch to ensure it's up to date
+        const joinedEmails = (staffDoc.data().emails || []).join(",");
+        await dbSet(dbRef(database, "adminData/staffEmails"), joinedEmails);
       } else {
         // Create document if it doesn't exist
         await setDoc(doc(db, "adminData", "staffList"), { emails: [] });
         setStaffList([]);
+        await dbSet(dbRef(database, "adminData/staffEmails"), "");
       }
     } catch (error) {
       console.error("Failed to fetch staff:", error);
@@ -55,9 +59,13 @@ export default function StaffManagement() {
       await setDoc(staffRef, {
         emails: arrayUnion(emailToAdd)
       }, { merge: true });
-      
       // Update local state
-      setStaffList([...staffList, emailToAdd]);
+      const updatedList = [...staffList, emailToAdd];
+      setStaffList(updatedList);
+      
+      // Sync to RTDB
+      await dbSet(dbRef(database, "adminData/staffEmails"), updatedList.join(","));
+      
       setNewStaffEmail("");
       alert(`✅ ${emailToAdd} has been added as Staff!`);
     } catch (error) {
@@ -83,7 +91,12 @@ export default function StaffManagement() {
       }, { merge: true });
       
       // Update local state
-      setStaffList(staffList.filter(email => email !== emailToRemove));
+      const updatedList = staffList.filter(e => e !== emailToRemove);
+      setStaffList(updatedList);
+      
+      // Sync to RTDB
+      await dbSet(dbRef(database, "adminData/staffEmails"), updatedList.join(","));
+      
       alert(`🚫 ${emailToRemove} has been removed from Staff!`);
     } catch (error) {
       console.error("Failed to remove staff:", error);
