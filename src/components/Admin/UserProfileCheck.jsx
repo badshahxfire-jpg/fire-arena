@@ -12,6 +12,7 @@ export default function UserProfileCheck({ allUsers = [], onSearchUser, searched
   const [showHistoryPopup, setShowHistoryPopup] = useState(false);
   const [showCoinHistoryPopup, setShowCoinHistoryPopup] = useState(false);
   const [loadingAction, setLoadingAction] = useState(null);
+  const [showWithdrawalDetails, setShowWithdrawalDetails] = useState(false);
 
   const handleToggleUidLock = async () => {
     if (!displayUser) return;
