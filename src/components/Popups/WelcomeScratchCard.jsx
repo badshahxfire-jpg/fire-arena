@@ -90,12 +90,12 @@ export default function WelcomeScratchCard({ onClaim, onClose }) {
     const step = 24; // Sample every 6th pixel (4 channels per pixel, so 6 * 4 = 24) to optimize speed
     
     for (let i = 3; i < pixels.length; i += step) {
-      if (pixels[i] === 0) {
+      if (pixels[i] < 128) {
         transparentCount++;
       }
     }
 
-    const totalSamples = pixels.length / step;
+    const totalSamples = Math.floor(pixels.length / step);
     const percentage = (transparentCount / totalSamples) * 100;
 
     if (percentage > 55 && !isScratched) {
