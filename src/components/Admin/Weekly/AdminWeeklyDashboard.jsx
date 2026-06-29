@@ -129,16 +129,20 @@ export default function AdminWeeklyDashboard({ weeklyTournaments, createWeeklyTo
       {/* Create Form Modal */}
       {showCreate && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-3 md:p-4 bg-black/90 backdrop-blur-md">
-          <div className="bg-gradient-to-b from-gray-900 to-black border border-orange-500/30 p-5 md:p-8 rounded-2xl w-full max-w-2xl shadow-2xl relative animate-in fade-in zoom-in duration-200 overflow-y-auto max-h-[95vh]">
-            <button 
-              onClick={() => setShowCreate(false)}
-              className="absolute top-3 right-3 text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 w-8 h-8 rounded-full flex items-center justify-center transition-all z-10"
-            >
-              ✕
-            </button>
-            <h3 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-600 mb-6 uppercase tracking-tight">Create New Weekly Tournament</h3>
+          <div className="bg-gradient-to-b from-gray-900 to-black border border-orange-500/30 rounded-2xl w-full max-w-2xl shadow-2xl relative animate-in fade-in zoom-in duration-200 flex flex-col max-h-[90vh]">
+            {/* Header */}
+            <div className="p-5 md:p-8 shrink-0 border-b border-white/10 relative">
+              <button 
+                onClick={() => setShowCreate(false)}
+                className="absolute top-5 right-5 text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 w-8 h-8 rounded-full flex items-center justify-center transition-all z-10"
+              >
+                ✕
+              </button>
+              <h3 className="text-xl md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-600 uppercase tracking-tight m-0 pr-8">Create New Weekly Tournament</h3>
+            </div>
             
-            <div className="space-y-4">
+            {/* Scrollable Content */}
+            <div className="p-5 md:p-8 overflow-y-auto no-scrollbar flex-1 space-y-4">
               <div>
                 <label className="block text-xs font-bold text-gray-400 mb-1">Tournament Title</label>
                 <input
