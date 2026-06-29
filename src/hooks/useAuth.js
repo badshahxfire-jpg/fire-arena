@@ -365,7 +365,9 @@ export function useAuth(ADMIN_UID) {
       });
       
       try {
-        localStorage.setItem("loginSessionTimestamp", Date.now().toString());
+        const forceLogoutAt = userDoc.exists() ? (userDoc.data().forceLogoutAt || 0) : 0;
+        const newSessionTime = Math.max(Date.now(), forceLogoutAt + 1000);
+        localStorage.setItem("loginSessionTimestamp", newSessionTime.toString());
       } catch (e) {
         console.warn(e);
       }
