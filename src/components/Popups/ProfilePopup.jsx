@@ -3,7 +3,7 @@ import { updateDoc, doc } from "firebase/firestore";
 import { db } from "../../firebase";
 import { generateReferralCode } from "../../utils/generateReferralCode";
 
-export default function ProfilePopup({ user, playerData, coins, onClose, onChangeName, onOpenReferral }) {
+export default function ProfilePopup({ user, playerData, coins, onClose, onChangeName, onChangePassword, onOpenReferral }) {
   const [newPlayerName, setNewPlayerName] = useState("");
   const [showCopied, setShowCopied] = useState(false);
   const [referralCode, setReferralCode] = useState(null);
@@ -22,6 +22,12 @@ export default function ProfilePopup({ user, playerData, coins, onClose, onChang
   const [showIngameEdit, setShowIngameEdit] = useState(false);
   const [tempIngame, setTempIngame] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
+  
+  // Password change state
+  const [showPasswordEdit, setShowPasswordEdit] = useState(false);
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   // AUTO-GENERATE REFERRAL CODE IF MISSING
   useEffect(() => {
@@ -68,6 +74,27 @@ export default function ProfilePopup({ user, playerData, coins, onClose, onChang
       onChangeName(tempName);
       setShowNameEdit(false);
       setTempName("");
+    }
+  };
+
+  const handleChangePasswordSubmit = async () => {
+    if (!oldPassword || !newPassword) {
+      alert("Please enter both old and new passwords.");
+      return;
+    }
+    if (newPassword.length < 6) {
+      alert("New password must be at least 6 characters long.");
+      return;
+    }
+    
+    setIsChangingPassword(true);
+    const success = await onChangePassword(oldPassword, newPassword);
+    setIsChangingPassword(false);
+    
+    if (success) {
+      setShowPasswordEdit(false);
+      setOldPassword("");
+      setNewPassword("");
     }
   };
 
@@ -262,6 +289,60 @@ export default function ProfilePopup({ user, playerData, coins, onClose, onChang
                 {showCopied === "email" ? "✅ COPIED" : "📋 COPY"}
               </button>
             </div>
+          </div>
+
+          {/* PASSWORD */}
+          <div className="bg-black border border-dashed border-gray-600 rounded-3xl p-6">
+            <p className="text-gray-400">PASSWORD</p>
+            {!showPasswordEdit ? (
+              <div className="flex items-center justify-between mt-2">
+                <h3 className="text-xl font-black text-gray-500">********</h3>
+                <button
+                  onClick={() => setShowPasswordEdit(true)}
+                  className="bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 px-3 py-1.5 rounded-xl text-xs font-bold transition-all"
+                >
+                  ✏️ CHANGE
+                </button>
+              </div>
+            ) : (
+              <div className="mt-4 space-y-4">
+                <input
+                  type="password"
+                  placeholder="Old Password"
+                  value={oldPassword}
+                  onChange={(e) => setOldPassword(e.target.value)}
+                  autoComplete="new-password"
+                  className="w-full bg-[#151515] text-white p-3 rounded-xl border border-gray-700 outline-none focus:border-orange-500"
+                />
+                <input
+                  type="password"
+                  placeholder="New Password (min 6 chars)"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  autoComplete="new-password"
+                  className="w-full bg-[#151515] text-white p-3 rounded-xl border border-gray-700 outline-none focus:border-orange-500"
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleChangePasswordSubmit}
+                    disabled={isChangingPassword}
+                    className="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 rounded-xl font-bold transition-all"
+                  >
+                    {isChangingPassword ? "UPDATING..." : "SAVE"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowPasswordEdit(false);
+                      setOldPassword("");
+                      setNewPassword("");
+                    }}
+                    className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 rounded-xl font-bold transition-all"
+                  >
+                    CANCEL
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* USER UID with COPY BUTTON */}

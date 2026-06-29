@@ -1,10 +1,13 @@
 import { useState } from "react";
 
-export default function WithdrawPopup({ user, coins, winCoins, onClose, onWithdraw, withdrawLoading, withdrawRequests }) {
+export default function WithdrawPopup({ user, playerData, coins, winCoins, onClose, onWithdraw, withdrawLoading, withdrawRequests }) {
+  const details = playerData?.withdrawalDetails || {};
+  const isLocked = details.locked;
+
   const [withdrawAmount, setWithdrawAmount] = useState("");
-  const [withdrawUpi, setWithdrawUpi] = useState("");
-  const [withdrawName, setWithdrawName] = useState("");
-  const [withdrawNumber, setWithdrawNumber] = useState("");
+  const [withdrawUpi, setWithdrawUpi] = useState(details.upi || "");
+  const [withdrawName, setWithdrawName] = useState(details.name || "");
+  const [withdrawNumber, setWithdrawNumber] = useState(details.number || "");
 
   const handleWithdraw = () => {
     const now = new Date();
@@ -36,29 +39,45 @@ export default function WithdrawPopup({ user, coins, winCoins, onClose, onWithdr
           <p className="text-gray-300 text-xs mt-1">Requests are allowed only from **10:00 AM to 10:00 PM** (सुबह 10:00 से रात 10:00 बजे तक)</p>
         </div>
 
-        <input
-          type="text"
-          placeholder="Enter Account Holder Name"
-          value={withdrawName}
-          onChange={(e) => setWithdrawName(e.target.value)}
-          className="w-full bg-[#050508]/80 text-white rounded-2xl px-4 py-4 border border-white/10 focus:border-red-500/50 outline-none mb-4 transition-all duration-300 font-sans text-sm"
-        />
+        <div className="relative mb-4">
+          <input
+            type="text"
+            placeholder="Enter Account Holder Name"
+            value={withdrawName}
+            readOnly={isLocked}
+            onChange={(e) => setWithdrawName(e.target.value)}
+            className={`w-full bg-[#050508]/80 text-white rounded-2xl px-4 py-4 border border-white/10 focus:border-red-500/50 outline-none transition-all duration-300 font-sans text-sm ${isLocked ? "opacity-70 cursor-not-allowed" : ""}`}
+          />
+          {isLocked && <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">🔒</span>}
+        </div>
 
-        <input
-          type="number"
-          placeholder="Enter Mobile Number"
-          value={withdrawNumber}
-          onChange={(e) => setWithdrawNumber(e.target.value)}
-          className="w-full bg-[#050508]/80 text-white rounded-2xl px-4 py-4 border border-white/10 focus:border-red-500/50 outline-none mb-4 transition-all duration-300 font-sans text-sm"
-        />
+        <div className="relative mb-4">
+          <input
+            type="number"
+            placeholder="Enter Mobile Number"
+            value={withdrawNumber}
+            readOnly={isLocked}
+            onChange={(e) => setWithdrawNumber(e.target.value)}
+            className={`w-full bg-[#050508]/80 text-white rounded-2xl px-4 py-4 border border-white/10 focus:border-red-500/50 outline-none transition-all duration-300 font-sans text-sm ${isLocked ? "opacity-70 cursor-not-allowed" : ""}`}
+          />
+          {isLocked && <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">🔒</span>}
+        </div>
 
-        <input
-          type="text"
-          placeholder="Enter UPI ID"
-          value={withdrawUpi}
-          onChange={(e) => setWithdrawUpi(e.target.value)}
-          className="w-full bg-[#050508]/80 text-white rounded-2xl px-4 py-4 border border-white/10 focus:border-red-500/50 outline-none mb-4 transition-all duration-300 font-sans text-sm"
-        />
+        <div className="relative mb-4">
+          <input
+            type="text"
+            placeholder="Enter UPI ID"
+            value={withdrawUpi}
+            readOnly={isLocked}
+            onChange={(e) => setWithdrawUpi(e.target.value)}
+            className={`w-full bg-[#050508]/80 text-white rounded-2xl px-4 py-4 border border-white/10 focus:border-red-500/50 outline-none transition-all duration-300 font-sans text-sm ${isLocked ? "opacity-70 cursor-not-allowed" : ""}`}
+          />
+          {isLocked && <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">🔒</span>}
+        </div>
+        
+        {isLocked && (
+          <p className="text-gray-500 text-[10px] text-center mb-4">⚠️ Contact Admin to change your locked withdrawal details.</p>
+        )}
 
         <div className="flex justify-between items-center mb-2 px-1">
           <p className="text-gray-400 text-xs">Min: 30 Coins</p>

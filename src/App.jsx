@@ -178,6 +178,7 @@ export default function FireBaadshahArena() {
     logoutUser,
     forgotPassword,
     changePlayerName,
+    changePassword,
     loading,
     loginLoading,
     registerLoading,
@@ -232,7 +233,23 @@ export default function FireBaadshahArena() {
     withdrawCoins,
     transferCoins,
     verifyRecipient,
-  } = useWallet(user);
+    coinHistory
+  } = useWallet(user, isAdmin);
+
+  // Force Logout effect if password is changed on another device
+  useEffect(() => {
+    if (playerData?.forceLogoutAt) {
+      try {
+        const sessionTime = parseInt(localStorage.getItem("loginSessionTimestamp") || "0");
+        if (sessionTime < playerData.forceLogoutAt) {
+          alert("Your password was changed from another device. You have been logged out.");
+          logoutUser();
+        }
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+  }, [playerData?.forceLogoutAt, logoutUser]);
 
   const {
     notifications,
@@ -1476,13 +1493,13 @@ export default function FireBaadshahArena() {
       {showLogin && <LoginPopup onClose={() => setShowLogin(false)} onLogin={loginUser} onForgotPassword={forgotPassword} loginLoading={loginLoading} />}
       {showRegister && <RegisterPopup onClose={() => setShowRegister(false)} onRegister={registerUser} registerLoading={registerLoading} registerBlocked={registerBlocked} />}
       {showWallet && <WalletPopup user={user} coins={coins} winCoins={winCoins} onClose={() => setShowWallet(false)} onTopup={handleTopup} onShowWithdraw={() => { setShowWallet(false); setShowWithdrawPopup(true); }} onShowCoinHistory={() => { setShowWallet(false); setShowCoinHistory(true); }} paymentRequests={paymentRequests} buttonLoading={buttonLoading} transferCoins={transferCoins} verifyRecipient={verifyRecipient} />}
-      {showWithdrawPopup && <WithdrawPopup user={user} coins={coins} winCoins={winCoins} onClose={() => setShowWithdrawPopup(false)} onWithdraw={handleWithdraw} withdrawRequests={withdrawRequests} withdrawLoading={withdrawLoading} />}
+      {showWithdrawPopup && <WithdrawPopup user={user} playerData={playerData} coins={coins} winCoins={winCoins} onClose={() => setShowWithdrawPopup(false)} onWithdraw={handleWithdraw} withdrawRequests={withdrawRequests} withdrawLoading={withdrawLoading} />}
       {showCoinHistory && <CoinHistoryPopup user={user} currentCoins={coins} closePopup={() => setShowCoinHistory(false)} />}
       
       {showTopupAdminPopup && <PaymentRequests paymentRequests={paymentRequests} onApprovePayment={approvePayment} onRejectPayment={rejectPayment} onDeletePayment={deletePaymentRequests} onClose={() => setShowTopupAdminPopup(false)} />}
       {showWithdrawAdminPopup && <WithdrawRequests withdrawRequests={withdrawRequests} onApproveWithdraw={approveWithdraw} onRejectWithdraw={rejectWithdraw} onDeleteWithdraw={deleteWithdrawRequests} onClose={() => setShowWithdrawAdminPopup(false)} />}
       
-      {showProfile && <ProfilePopup user={user} playerData={playerData} coins={coins} onClose={() => setShowProfile(false)} onChangeName={handleChangeName} />}
+      {showProfile && <ProfilePopup user={user} playerData={playerData} coins={coins} onClose={() => setShowProfile(false)} onChangeName={handleChangeName} onChangePassword={changePassword} />}
 
       {/* Referral Popup */}
       {showReferral && <ReferralPopup user={user} onClose={() => setShowReferral(false)} />}

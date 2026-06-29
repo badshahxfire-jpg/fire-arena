@@ -7,7 +7,7 @@ import {
   signOut,
   sendPasswordResetEmail
 } from "../firebase";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
 import { doc, getDoc, updateDoc, increment, setDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
 import { ref, update as dbUpdate, get, push, set } from "firebase/database";
@@ -280,6 +280,7 @@ export function useAuth(ADMIN_UID) {
       // Mark this device as having a registered account locally
       try {
         localStorage.setItem("fb_registered", "true");
+        localStorage.setItem("loginSessionTimestamp", Date.now().toString());
       } catch (e) {
         console.warn(e);
       }
@@ -331,6 +332,12 @@ export function useAuth(ADMIN_UID) {
         lastLogin: new Date().toLocaleString()
       });
       
+      try {
+        localStorage.setItem("loginSessionTimestamp", Date.now().toString());
+      } catch (e) {
+        console.warn(e);
+      }
+
       setUser(loggedInUser);
       const isUserAdmin = loggedInUser.uid === ADMIN_UID;
       setIsAdmin(isUserAdmin);
@@ -394,6 +401,41 @@ export function useAuth(ADMIN_UID) {
     }
   };
 
+  // Change Password
+  const changePassword = async (oldPassword, newPassword) => {
+    if (!user) return false;
+    if (!oldPassword || !newPassword) {
+      alert("Please enter both old and new passwords");
+      return false;
+    }
+    
+    try {
+      // Re-authenticate user
+      const credential = EmailAuthProvider.credential(user.email, oldPassword);
+      await reauthenticateWithCredential(user, credential);
+      
+      // Update password
+      await updatePassword(user, newPassword);
+      
+      // Force logout other devices
+      const changeTime = Date.now();
+      try {
+        localStorage.setItem("loginSessionTimestamp", (changeTime + 1000).toString());
+      } catch (e) {}
+      await updateDoc(doc(db, "users", user.uid), { forceLogoutAt: changeTime });
+      
+      alert("Password Changed Successfully! ✅");
+      return true;
+    } catch (error) {
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
+         alert("Incorrect old password!");
+      } else {
+         alert(error.message);
+      }
+      return false;
+    }
+  };
+
   return {
     user,
     isAdmin,
@@ -408,5 +450,6 @@ export function useAuth(ADMIN_UID) {
     logoutUser,
     forgotPassword,
     changePlayerName,
+    changePassword,
   };
 }

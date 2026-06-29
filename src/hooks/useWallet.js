@@ -316,6 +316,22 @@ export function useWallet(user) {
         withdrawUpi
       });
       
+      // Save and lock withdrawal details if not already locked
+      try {
+        if (!playerData?.withdrawalDetails?.locked) {
+          await updateDoc(doc(db, "users", user.uid), {
+            withdrawalDetails: {
+              name: withdrawName,
+              number: withdrawNumber,
+              upi: withdrawUpi,
+              locked: true
+            }
+          });
+        }
+      } catch (err) {
+        console.warn("Failed to lock withdrawal details:", err);
+      }
+      
       alert("Withdraw Request Submitted 🔥 Please wait 10 minutes for processing.");
       return true;
     } catch (error) {

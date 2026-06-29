@@ -483,8 +483,13 @@ const searchUser = async (uid) => {
       const currentCoins = userSnap.data()?.coins || 0;
       const deductAmt = Math.min(currentCoins, Number(amount));
       
+      const newCoins = currentCoins - deductAmt;
+      const currentWinCoins = userSnap.data()?.winCoins || 0;
+      const newWinCoins = Math.min(currentWinCoins, newCoins);
+
       await updateDoc(userRef, {
-        coins: currentCoins - deductAmt,
+        coins: newCoins,
+        winCoins: newWinCoins
       });
       await logCoinTransaction(uid, deductAmt, "ADMIN_DEDUCT", "Coins deducted by admin", false);
       alert("Coins Deducted Successfully 🔥");
