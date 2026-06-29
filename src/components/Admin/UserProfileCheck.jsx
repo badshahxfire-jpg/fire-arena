@@ -544,18 +544,16 @@ export default function UserProfileCheck({ allUsers = [], onSearchUser, searched
                     <span className="text-blue-400">{showWithdrawalDetails ? "▲" : "▼"}</span>
                   </button>
                   
-                  {isSuperAdmin && (
-                    <button
-                      onClick={handleToggleWithdrawalLock}
-                      disabled={loadingAction === "toggleWithdrawalLock"}
-                      className={`w-full ${displayUser.withdrawalDetails?.locked ? "bg-red-500 hover:bg-red-600" : "bg-emerald-500 hover:bg-emerald-600"} text-white py-3 rounded-xl font-black text-sm mt-3 transition-all disabled:opacity-50 disabled:cursor-wait flex justify-center items-center gap-2`}
-                    >
-                      {loadingAction === "toggleWithdrawalLock" ? "⌛ ..." : 
-                        displayUser.withdrawalDetails?.locked 
-                          ? "🔓 UNLOCK WITHDRAWAL DETAILS" 
-                          : "🔒 LOCK WITHDRAWAL DETAILS"}
-                    </button>
-                  )}                  {showWithdrawalDetails && (
+                  <button
+                    onClick={handleToggleWithdrawalLock}
+                    disabled={loadingAction === "toggleWithdrawalLock"}
+                    className={`w-full ${displayUser.withdrawalDetails?.locked ? "bg-red-500 hover:bg-red-600" : "bg-emerald-500 hover:bg-emerald-600"} text-white py-3 rounded-xl font-black text-sm mt-3 transition-all disabled:opacity-50 disabled:cursor-wait flex justify-center items-center gap-2`}
+                  >
+                    {loadingAction === "toggleWithdrawalLock" ? "⌛ ..." : 
+                      displayUser.withdrawalDetails?.locked 
+                        ? "🔓 UNLOCK WITHDRAWAL DETAILS" 
+                        : "🔒 LOCK WITHDRAWAL DETAILS"}
+                  </button>                  {showWithdrawalDetails && (
                     <div className="bg-[#111] border border-blue-500/20 rounded-xl p-4 mt-2 space-y-3">
                       <div>
                         <p className="text-gray-500 text-[10px] font-bold uppercase mb-1">Account Holder Name</p>
