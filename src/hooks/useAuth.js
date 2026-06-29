@@ -344,6 +344,12 @@ export function useAuth(ADMIN_UID) {
     setLoginLoading(true);
     
     try {
+      // Temporarily set a huge timestamp to avoid race conditions with onAuthStateChanged
+      // which triggers App.jsx's forceLogoutAt effect before loginUser finishes
+      try {
+        localStorage.setItem("loginSessionTimestamp", "9999999999999");
+      } catch (e) {}
+
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const loggedInUser = userCredential.user;
       
