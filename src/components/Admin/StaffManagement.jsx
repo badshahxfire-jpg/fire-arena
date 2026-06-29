@@ -17,6 +17,7 @@ export default function StaffManagement() {
     try {
       setLoading(true);
       const staffDoc = await getDoc(doc(db, "adminData", "staffList"));
+      if (staffDoc.exists()) {
         setStaffList(staffDoc.data().emails || []);
         // Sync to RTDB on fetch to ensure it's up to date
         const joinedEmails = (staffDoc.data().emails || []).join(",");
