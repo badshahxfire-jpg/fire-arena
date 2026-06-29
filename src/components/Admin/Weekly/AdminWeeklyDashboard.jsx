@@ -204,7 +204,6 @@ export default function AdminWeeklyDashboard({ weeklyTournaments, createWeeklyTo
                   </select>
                 </div>
               </div>
-              </div>
             </div>
 
             {/* Fixed Footer */}
