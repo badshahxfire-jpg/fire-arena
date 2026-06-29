@@ -98,7 +98,7 @@ export default function WelcomeScratchCard({ onClaim, onClose }) {
     const totalSamples = Math.floor(pixels.length / step);
     const percentage = (transparentCount / totalSamples) * 100;
 
-    if (percentage > 55 && !isScratched) {
+    if (percentage > 20 && !isScratched) {
       setIsScratched(true);
       // Fade out and clear the rest
       ctx.clearRect(0, 0, canvas.width, canvas.height);
