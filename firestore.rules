@@ -12,9 +12,19 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    // Helper function to check if the user is the admin
-    function isAdmin() {
+    // Helper function to check if the user is the Super Admin
+    function isSuperAdmin() {
       return isAuthenticated() && request.auth.uid == 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1';
+    }
+
+    // Helper function to check if user is Staff
+    function isStaff() {
+      return isAuthenticated() && exists(/databases/$(database)/documents/adminData/staffList) && (request.auth.token.email in get(/databases/$(database)/documents/adminData/staffList).data.emails);
+    }
+
+    // Helper function to check if the user is ANY admin (Super Admin or Staff)
+    function isAdmin() {
+      return isSuperAdmin() || isStaff();
     }
 
     // Rules for the 'users' collection
@@ -65,10 +75,16 @@ service cloud.firestore {
 
     // Rules for 'adminData' collection
     match /adminData/{documentId} {
-      // Any authenticated user can read admin data (needed for staff check, settings, etc.)
       allow read: if isAuthenticated();
-      // Only the Super Admin can write/modify admin data
-      allow write: if isAdmin();
+      // Only Super Admin can modify staff list and admin data
+      allow write: if isSuperAdmin();
+    }
+
+    // Default rules for all other collections (tournaments, matchResults, etc.)
+    // This restores the ability for users to read matches and join them, and admins to manage them.
+    match /{document=**} {
+      allow read: if true;
+      allow write: if isAuthenticated();
     }
   }
 }
