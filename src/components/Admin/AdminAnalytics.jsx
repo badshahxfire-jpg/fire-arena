@@ -158,25 +158,19 @@ export default function AdminAnalytics({
                       let count = 0;
                       for (const u of allUsers) {
                         if (emails.includes(u.email)) {
-                          const userRef = doc(db, "users", u.uid);
-                          await updateDoc(userRef, {
-                            coins: increment(20),
-                            welcomeBonusClaimed: true
-                          });
-                          
-                          const historyRef = collection(db, "coinHistory");
+                          const historyRef = collection(db, "users", u.uid, "coinHistory");
                           await addDoc(historyRef, {
-                            uid: u.uid,
                             amount: 20,
-                            type: "deposit",
-                            description: "Welcome Bonus (Admin Fixed)",
-                            date: new Date().toLocaleDateString("en-GB"),
-                            timestamp: new Date().toLocaleString()
+                            type: "WELCOME_BONUS",
+                            reason: "Welcome Bonus (Admin Fixed)",
+                            isAddition: true,
+                            timestamp: new Date(),
+                            dateString: new Date().toLocaleString()
                           });
                           count++;
                         }
                       }
-                      alert(`Successfully fixed welcome bonus for ${count} users!`);
+                      alert(`Successfully added missing history for ${count} users!`);
                     } catch (error) {
                       console.error(error);
                       alert("Error: " + error.message);
@@ -184,7 +178,7 @@ export default function AdminAnalytics({
                   }}
                   className="bg-green-600 hover:bg-green-500 text-white px-4 py-3 rounded-xl font-black transition-all duration-300 w-full"
                 >
-                  ✨ FIX 3 RECENT USERS
+                  ✨ FIX MISSING HISTORY (3 USERS)
                 </button>
               </div>
 
