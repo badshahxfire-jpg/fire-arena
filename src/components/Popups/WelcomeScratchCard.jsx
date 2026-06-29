@@ -98,7 +98,7 @@ export default function WelcomeScratchCard({ onClaim, onClose }) {
     const totalSamples = Math.floor(pixels.length / step);
     const percentage = (transparentCount / totalSamples) * 100;
 
-    if (percentage > 20 && !isScratched) {
+    if (percentage > 10 && !isScratched) {
       setIsScratched(true);
       // Fade out and clear the rest
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -208,7 +208,7 @@ export default function WelcomeScratchCard({ onClaim, onClose }) {
         </div>
 
         {/* Scratch Box Area */}
-        <div className="relative w-full h-[180px] bg-black rounded-2xl overflow-hidden border border-purple-500/20 shadow-inner flex flex-col justify-center items-center">
+        <div className="relative w-full h-[220px] bg-black rounded-2xl overflow-hidden border border-purple-500/20 shadow-inner flex flex-col justify-center items-center z-10">
           
           {/* Inner Reward (Hidden underneath the scratch layer) */}
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-[#120c24] to-black">
@@ -217,8 +217,19 @@ export default function WelcomeScratchCard({ onClaim, onClose }) {
             <h3 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-500 cyber-prize mt-1">
               +20 COINS
             </h3>
+            
+            {isScratched && (
+              <button
+                onClick={handleClaimClick}
+                disabled={claimed}
+                className="mt-4 px-8 py-3 bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 text-black rounded-xl font-black text-sm md:text-base transition-all duration-300 hover:scale-[1.03] shadow-[0_0_20px_rgba(234,179,8,0.4)] disabled:opacity-50 relative z-20 pointer-events-auto cursor-pointer"
+              >
+                {claimed ? "CLAIMING... ⏳" : "🎁 CLAIM 20 COINS"}
+              </button>
+            )}
+            
             {isScratched && !claimed && (
-              <span className="text-[10px] text-green-400 mt-2 font-bold animate-pulse">
+              <span className="text-[10px] text-green-400 mt-2 font-bold animate-pulse absolute bottom-2">
                 ✨ SCRATCHED SUCCESSFULLY!
               </span>
             )}
@@ -242,15 +253,7 @@ export default function WelcomeScratchCard({ onClaim, onClose }) {
 
         {/* Bottom Actions */}
         <div className="mt-6 flex flex-col gap-3">
-          {isScratched ? (
-            <button
-              onClick={handleClaimClick}
-              disabled={claimed}
-              className="w-full bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 text-black py-4 rounded-2xl font-black text-base transition-all duration-300 hover:scale-[1.03] shadow-[0_0_20px_rgba(234,179,8,0.4)] disabled:opacity-50"
-            >
-              {claimed ? "CLAIMING... ⏳" : "🎁 CLAIM 20 COINS"}
-            </button>
-          ) : (
+          {!isScratched && (
             <div className="text-center py-3 text-sm text-gray-500 font-bold border border-dashed border-gray-700 rounded-2xl bg-black/40">
               👆 Scratch above to reveal reward!
             </div>
