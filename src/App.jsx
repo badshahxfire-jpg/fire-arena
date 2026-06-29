@@ -1199,6 +1199,7 @@ export default function FireBaadshahArena() {
         coins={coins}
         notifications={notifications}
         isAdmin={isAdmin}
+        isSuperAdmin={isSuperAdmin}
         isSoundMuted={isSoundMuted}
         toggleMute={toggleMute}
         onLogout={logoutUser}

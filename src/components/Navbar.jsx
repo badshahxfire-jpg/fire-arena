@@ -6,6 +6,7 @@ export default function Navbar({
   coins, 
   notifications, 
   isAdmin, 
+  isSuperAdmin,
   onLogout, 
   onShowTutorial, 
   onShowWallet, 
@@ -103,7 +104,9 @@ export default function Navbar({
               >
                 {isSoundMuted ? "🔇" : "🔊"}
               </button>
-              {isAdmin && <span className="bg-green-500/20 text-green-400 border border-green-500/30 px-4 py-2 rounded-full font-bold">ADMIN</span>}
+              {isAdmin && <span className={`border px-4 py-2 rounded-full font-bold ${isSuperAdmin ? "bg-green-500/20 text-green-400 border-green-500/30" : "bg-purple-500/20 text-purple-400 border-purple-500/30"}`}>
+                {isSuperAdmin ? "ADMIN" : "STAFF"}
+              </span>}
               <button onClick={onLogout} className="bg-gradient-to-r from-red-600 to-rose-700 text-white hover:from-red-500 hover:to-rose-600 px-5 py-2.5 rounded-2xl font-bold transition-all shadow-md">LOGOUT</button>
             </div>
 
@@ -157,7 +160,9 @@ export default function Navbar({
                 <button onClick={() => { onShowHistory(); setIsMobileMenuOpen(false); }} className="w-full text-left bg-blue-500/10 text-blue-400 border border-blue-500/20 p-3 rounded-xl font-bold">MATCHES HISTORY</button>
                 <button onClick={() => { onShowPerKillHistory(); setIsMobileMenuOpen(false); }} className="w-full text-left bg-red-500/10 text-red-400 border border-red-500/20 p-3 rounded-xl font-bold">⚔️ PER KILL HISTORY</button>
                 <button onClick={() => { onShowProfile(); setIsMobileMenuOpen(false); }} className="w-full text-left bg-purple-500/10 text-purple-400 border border-purple-500/20 p-3 rounded-xl font-bold">PROFILE</button>
-                {isAdmin && <div className="w-full text-center bg-green-500/20 text-green-400 border border-green-500/30 p-3 rounded-xl font-bold">ADMIN</div>}
+                {isAdmin && <div className={`w-full text-center border p-3 rounded-xl font-bold ${isSuperAdmin ? "bg-green-500/20 text-green-400 border-green-500/30" : "bg-purple-500/20 text-purple-400 border-purple-500/30"}`}>
+                  {isSuperAdmin ? "ADMIN" : "STAFF"}
+                </div>}
                 <button onClick={() => { onLogout(); setIsMobileMenuOpen(false); }} className="w-full bg-gradient-to-r from-red-600 to-rose-700 text-white p-3 rounded-xl font-bold text-center mt-2">LOGOUT</button>
               </div>
             )}
