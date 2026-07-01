@@ -655,6 +655,9 @@ export function useTournaments(user) {
       if (data) {
         for (let key of Object.keys(data)) {
           if (data[key].tournamentId === tournament.id) {
+            console.log(`[DEBUG] cancelTournament removing joinedPlayers/${key}`);
+            console.trace();
+            await push(ref(database, "debug_logs"), { action: "cancelTournament", key, time: Date.now() });
             await remove(ref(database, `joinedPlayers/${key}`));
           }
         }
@@ -673,6 +676,9 @@ export function useTournaments(user) {
   // Delete Match History
   const deleteMatchHistory = async (matchId) => {
     try {
+      console.log(`[DEBUG] deleteMatchHistory called for matchId: ${matchId}`);
+      console.trace();
+      await push(ref(database, "debug_logs"), { action: "deleteMatchHistory", matchId, time: Date.now() });
       await remove(ref(database, `joinedPlayers/${matchId}`));
       alert("Match History Deleted ✅");
       return true;
@@ -684,14 +690,18 @@ export function useTournaments(user) {
 
   // Delete All User Match History
   const deleteAllUserMatchHistory = async (userEmail) => {
-    if (!window.confirm("Delete all match history?")) return;
+    if (!window.confirm("Delete all COMPLETED match history? (Live matches will not be deleted)")) return;
     
     try {
-      const userMatches = joinedHistory.filter(item => item.userEmail === userEmail);
+      const liveTournamentIds = liveTournaments.map(t => t.id);
+      const userMatches = joinedHistory.filter(item => item.userEmail === userEmail && !liveTournamentIds.includes(item.tournamentId));
       for (const match of userMatches) {
+        console.log(`[DEBUG] deleteAllUserMatchHistory removing joinedPlayers/${match.id}`);
+        console.trace();
+        await push(ref(database, "debug_logs"), { action: "deleteAllUserMatchHistory", matchId: match.id, userEmail, time: Date.now() });
         await remove(ref(database, `joinedPlayers/${match.id}`));
       }
-      alert("All Match History Deleted ✅");
+      alert("Completed Match History Deleted ✅");
       return true;
     } catch (error) {
       alert(error.message);

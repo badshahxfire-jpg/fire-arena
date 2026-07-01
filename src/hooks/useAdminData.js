@@ -115,9 +115,9 @@ export function useAdminData(isAdmin) {
       }
     };
 
-    // Run cleanup once on admin load
-    cleanupOldData("joinedPlayers", "createdAt");
-    cleanupOldData("joinedPerKillPlayers", "createdAt");
+    // Run cleanup once on admin load (commented out to prevent accidental deletion due to locale date format parsing issues)
+    // cleanupOldData("joinedPlayers", "createdAt");
+    // cleanupOldData("joinedPerKillPlayers", "createdAt");
     
     // New cleanups
     cleanupOldData("paymentRequests", "time", (item) => item.status && item.status !== "PENDING");

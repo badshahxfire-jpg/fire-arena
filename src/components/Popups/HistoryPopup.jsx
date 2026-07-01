@@ -250,15 +250,17 @@ export default function HistoryPopup({
                     </div>
                   )}
                   
-                  {/* Delete Button */}
-                  <div className="p-3 bg-red-500/5">
-                    <button
-                      onClick={() => onDeleteMatch(item.id)}
-                      className="w-full bg-red-500/20 text-red-400 px-4 py-2 rounded-xl font-black text-sm hover:bg-red-500/30 transition"
-                    >
-                      🗑 DELETE THIS MATCH
-                    </button>
-                  </div>
+                  {/* Delete Button - Only show if match has results (completed) */}
+                  {(detail.position !== null || detail.totalPrizePool > 0 || allWinners.length > 0) && (
+                    <div className="p-3 bg-red-500/5">
+                      <button
+                        onClick={() => onDeleteMatch(item.id)}
+                        className="w-full bg-red-500/20 text-red-400 px-4 py-2 rounded-xl font-black text-sm hover:bg-red-500/30 transition"
+                      >
+                        🗑 DELETE COMPLETED MATCH
+                      </button>
+                    </div>
+                  )}
                 </div>
               );
             })
