@@ -387,12 +387,34 @@ async function sendGlobalPushNotification(title, body) {
   try {
     const usersSnapshot = await db.collection("users").get();
     const tokens = [];
+    
+    const updates = {};
+    const notificationId = Date.now().toString();
+    const notificationData = {
+      title: title,
+      message: body,
+      time: new Date().toLocaleString(),
+      type: "match_update",
+      seen: false
+    };
+
     usersSnapshot.forEach(docSnap => {
       const data = docSnap.data();
+      const uid = docSnap.id;
+      
       if (data.fcmToken) {
         tokens.push(data.fcmToken);
       }
+      
+      updates[`notifications/${uid}/${notificationId}`] = notificationData;
     });
+
+    try {
+      await rtdb.ref().update(updates);
+      console.log(`Successfully sent in-app notifications to ${usersSnapshot.size} users.`);
+    } catch (inAppErr) {
+      console.error("Failed to send in-app notifications:", inAppErr);
+    }
 
     if (tokens.length === 0) {
       console.log("No registered FCM tokens found for global push.");

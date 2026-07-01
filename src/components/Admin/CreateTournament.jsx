@@ -1,15 +1,30 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getPrizeDistribution } from "../../utils/prizeDistribution";
 
 export default function CreateTournament({ onCreateTournament }) {
-  const [tournamentTitle, setTournamentTitle] = useState("");
+  const [matchCount, setMatchCount] = useState(() => {
+    return parseInt(localStorage.getItem('survivalMatchCount') || '1', 10);
+  });
+  const [tournamentType, setTournamentType] = useState("SOLO");
+  const [tournamentTitle, setTournamentTitle] = useState(`Survival ${tournamentType} - ${matchCount}`);
+  const [userEditedTitle, setUserEditedTitle] = useState(false);
   const [entryFee, setEntryFee] = useState("");
   const [totalTeams, setTotalTeams] = useState("");
   const [matchTime, setMatchTime] = useState("");
   const [matchDate, setMatchDate] = useState("");
-  const [tournamentType, setTournamentType] = useState("SOLO");
   const [selectedMap, setSelectedMap] = useState("Bermuda");
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!userEditedTitle) {
+      setTournamentTitle(`Survival ${tournamentType} - ${matchCount}`);
+    }
+  }, [tournamentType, matchCount, userEditedTitle]);
+
+  const handleTitleChange = (e) => {
+    setTournamentTitle(e.target.value);
+    setUserEditedTitle(true);
+  };
 
   const fee = Number(entryFee || 0);
   const players = Number(totalTeams || 0);
@@ -37,6 +52,10 @@ export default function CreateTournament({ onCreateTournament }) {
         adminProfit,
         totalPrizePool,
       });
+      const newCount = matchCount + 1;
+      localStorage.setItem('survivalMatchCount', newCount.toString());
+      setMatchCount(newCount);
+      setUserEditedTitle(false);
     } finally {
       setIsLoading(false);
     }
@@ -115,12 +134,12 @@ export default function CreateTournament({ onCreateTournament }) {
         
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <input
-            type="text"
-            placeholder="Tournament Title"
-            value={tournamentTitle}
-            onChange={(e) => setTournamentTitle(e.target.value)}
-            className="bg-black rounded-2xl px-5 py-4 outline-none border border-orange-500/10 col-span-1 sm:col-span-2"
-          />
+          type="text"
+          placeholder="Tournament Title"
+          value={tournamentTitle}
+          onChange={handleTitleChange}
+          className="w-full bg-[#1a1a24] text-white p-4 rounded-2xl border border-gray-800 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all font-bold placeholder-gray-600 shadow-inner"
+        />
           <input
             type="number"
             placeholder="Entry Fee (in Coins)"

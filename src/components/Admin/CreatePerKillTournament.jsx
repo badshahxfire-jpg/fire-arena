@@ -1,7 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function CreatePerKillTournament({ onCreateTournament }) {
-  const [tournamentTitle, setTournamentTitle] = useState("");
+  const [matchCount, setMatchCount] = useState(() => {
+    return parseInt(localStorage.getItem('perKillMatchCount') || '1', 10);
+  });
+  const [tournamentType, setTournamentType] = useState("SOLO");
+  const [tournamentTitle, setTournamentTitle] = useState(`Per Kill ${tournamentType} - ${matchCount}`);
+  const [userEditedTitle, setUserEditedTitle] = useState(false);
   const [entryFee, setEntryFee] = useState("");
   const [perKillRate, setPerKillRate] = useState("");
   const [booyahBonus, setBooyahBonus] = useState("");
@@ -10,9 +15,19 @@ export default function CreatePerKillTournament({ onCreateTournament }) {
   const [totalTeams, setTotalTeams] = useState("48"); // Default to 48 players for FF/PUBG style matches
   const [matchTime, setMatchTime] = useState("");
   const [matchDate, setMatchDate] = useState("");
-  const [tournamentType, setTournamentType] = useState("SOLO");
   const [selectedMap, setSelectedMap] = useState("Bermuda");
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!userEditedTitle) {
+      setTournamentTitle(`Per Kill ${tournamentType} - ${matchCount}`);
+    }
+  }, [tournamentType, matchCount, userEditedTitle]);
+
+  const handleTitleChange = (e) => {
+    setTournamentTitle(e.target.value);
+    setUserEditedTitle(true);
+  };
 
   const handleCreate = async () => {
     if (!tournamentTitle || !entryFee || !perKillRate || !booyahBonus || !totalTeams || !matchTime || !matchDate) {
@@ -34,6 +49,10 @@ export default function CreatePerKillTournament({ onCreateTournament }) {
         tournamentType,
         selectedMap,
       });
+      const newCount = matchCount + 1;
+      localStorage.setItem('perKillMatchCount', newCount.toString());
+      setMatchCount(newCount);
+      setUserEditedTitle(false);
     } finally {
       setIsLoading(false);
     }
@@ -49,8 +68,8 @@ export default function CreatePerKillTournament({ onCreateTournament }) {
             type="text"
             placeholder="Tournament Title"
             value={tournamentTitle}
-            onChange={(e) => setTournamentTitle(e.target.value)}
-            className="bg-black rounded-2xl px-5 py-4 outline-none border border-orange-500/10 text-white col-span-1 sm:col-span-2"
+            onChange={handleTitleChange}
+            className="bg-black rounded-2xl px-5 py-4 outline-none border border-green-500/10 col-span-1 sm:col-span-2 text-white font-bold"
           />
           <input
             type="number"

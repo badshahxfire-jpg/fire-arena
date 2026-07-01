@@ -329,6 +329,34 @@ export default function MatchResults({
     );
   };
 
+  const handleShareResult = (item) => {
+    const sortedWinners = item.results?.slice().sort((a, b) => Number(a.position) - Number(b.position)) || [];
+    
+    let shareText = `🏆 MATCH RESULTS: ${item.tournamentTitle}\n`;
+    shareText += `🎮 ${item.tournamentType} | 🗺️ ${item.map}\n\n`;
+    
+    sortedWinners.forEach(player => {
+      const positionEmoji = Number(player.position) === 1 ? "🥇" : Number(player.position) === 2 ? "🥈" : Number(player.position) === 3 ? "🥉" : "🏅";
+      const coins = player.winCoins || playerResults.find(
+        r => (r.tournamentId === item.id || r.tournamentId === item.tournamentId) && r.userId === (player.uid || player.userId || player.id) && r.approved
+      )?.winCoins || 0;
+      
+      shareText += `${positionEmoji} #${player.position} ${player.name || player.playerName || 'Unknown'} (🪙 ${coins})\n`;
+    });
+    
+    shareText += `\n🔥 Play now on FireBaadshah Arena!`;
+
+    if (navigator.share) {
+      navigator.share({
+        title: 'Match Results',
+        text: shareText
+      }).catch((error) => console.log('Error sharing:', error));
+    } else {
+      navigator.clipboard.writeText(shareText);
+      alert("Match results copied to clipboard!");
+    }
+  };
+
   return (
     <>
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-20">
@@ -357,7 +385,15 @@ export default function MatchResults({
                 <span>{item.tournamentType}</span>
               </div>
               <h3 className="text-2xl sm:text-3xl font-black mb-4">{item.tournamentTitle}</h3>
-              <p className="text-blue-400 font-bold mb-4">🗺️ {item.map}</p>
+              <div className="flex justify-between items-center mb-4">
+                <p className="text-blue-400 font-bold m-0">🗺️ {item.map}</p>
+                <button 
+                  onClick={() => handleShareResult(item)}
+                  className="bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/30 px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2"
+                >
+                  🔗 Share
+                </button>
+              </div>
               <div className="space-y-3 mt-5">
                 {(() => {
                   const sortedWinners = item.results?.slice().sort((a, b) => Number(a.position) - Number(b.position)) || [];

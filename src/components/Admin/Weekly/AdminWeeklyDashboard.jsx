@@ -8,14 +8,33 @@ export default function AdminWeeklyDashboard({ weeklyTournaments, createWeeklyTo
   const [showEditRules, setShowEditRules] = useState(false);
   const [editRules, setEditRules] = useState([]);
   const [playersPerLobby, setPlayersPerLobby] = useState(48);
+  const [matchCount, setMatchCount] = useState(() => {
+    return parseInt(localStorage.getItem('weeklyMatchCount') || '1', 10);
+  });
+  const [userEditedTitle, setUserEditedTitle] = useState(false);
+
   const [newTournament, setNewTournament] = useState({
-    title: "",
+    title: `Weekly Solo - ${matchCount}`,
     description: "",
     prizePool: 10000,
     entryFee: 50,
     maxPlayers: 48,
     format: "Solo",
   });
+
+  useEffect(() => {
+    if (!userEditedTitle) {
+      setNewTournament(prev => ({
+        ...prev,
+        title: `Weekly ${prev.format} - ${matchCount}`
+      }));
+    }
+  }, [newTournament.format, matchCount, userEditedTitle]);
+
+  const handleTitleChange = (e) => {
+    setNewTournament({ ...newTournament, title: e.target.value });
+    setUserEditedTitle(true);
+  };
 
   const [selectedTournamentId, setSelectedTournamentId] = useState("");
   const [pageView, setPageView] = useState("active"); // active, completed
@@ -59,6 +78,10 @@ export default function AdminWeeklyDashboard({ weeklyTournaments, createWeeklyTo
     const success = await createWeeklyTournament(newTournament);
     if (success) {
       alert("Weekly Tournament Created!");
+      const newCount = matchCount + 1;
+      localStorage.setItem('weeklyMatchCount', newCount.toString());
+      setMatchCount(newCount);
+      setUserEditedTitle(false);
       setShowCreate(false);
     }
   };
@@ -149,8 +172,8 @@ export default function AdminWeeklyDashboard({ weeklyTournaments, createWeeklyTo
                   type="text"
                   placeholder="e.g. Weekly Showdown #1"
                   value={newTournament.title}
-                  onChange={e => setNewTournament({...newTournament, title: e.target.value})}
-                  className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 transition-colors"
+                  onChange={handleTitleChange}
+                  className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 transition-colors font-bold"
                 />
               </div>
               <div>
