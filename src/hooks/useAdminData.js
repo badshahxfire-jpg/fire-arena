@@ -67,8 +67,9 @@ export function useAdminData(isAdmin) {
 
     const parseDate = (dateStr) => {
       if (!dateStr) return 0;
-      let time = Date.parse(dateStr);
-      if (!isNaN(time)) return time;
+      if (typeof dateStr === 'number') return dateStr;
+
+      // FIRST try custom DD/MM/YYYY parsing to avoid American date format confusion
       try {
         const cleaned = dateStr.replace(/,/g, '').trim();
         const parts = cleaned.split(/\s+/);
@@ -78,10 +79,16 @@ export function useAdminData(isAdmin) {
             const day = parseInt(dateParts[0], 10);
             const month = parseInt(dateParts[1], 10) - 1;
             const year = parseInt(dateParts[2], 10);
-            return new Date(year, month, day).getTime();
+            const time = new Date(year, month, day).getTime();
+            if (!isNaN(time)) return time;
           }
         }
       } catch (e) {}
+
+      // Fallback to standard Date.parse if custom parsing fails
+      let time = Date.parse(dateStr);
+      if (!isNaN(time)) return time;
+      
       return 0;
     };
 
@@ -115,9 +122,9 @@ export function useAdminData(isAdmin) {
       }
     };
 
-    // Run cleanup once on admin load (commented out to prevent accidental deletion due to locale date format parsing issues)
-    // cleanupOldData("joinedPlayers", "createdAt");
-    // cleanupOldData("joinedPerKillPlayers", "createdAt");
+    // Run cleanup once on admin load
+    cleanupOldData("joinedPlayers", "createdAt");
+    cleanupOldData("joinedPerKillPlayers", "createdAt");
     
     // New cleanups
     cleanupOldData("paymentRequests", "time", (item) => item.status && item.status !== "PENDING");
