@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { ref, onValue } from "firebase/database";
+import { ref, onValue, remove } from "firebase/database";
 import { database } from "../../firebase";
 
-export default function BonusWinnersPopup({ onClose }) {
+export default function BonusWinnersPopup({ onClose, isAdmin }) {
   const [bonusWinners, setBonusWinners] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -45,12 +45,32 @@ export default function BonusWinnersPopup({ onClose }) {
               Top 10 players who received daily active streak bonuses from the admin.
             </p>
           </div>
-          <button
-            onClick={onClose}
-            className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all duration-300 font-bold text-sm"
-          >
-            ✕
-          </button>
+          <div className="flex items-center gap-3">
+            {isAdmin && bonusWinners.length > 0 && (
+              <button
+                onClick={async () => {
+                  if (window.confirm("Are you sure you want to clear the entire Bonus Winners list? Do this before announcing new winners!")) {
+                    try {
+                      await remove(ref(database, "loyalBonuses"));
+                      alert("Bonus Winners list cleared! ✅");
+                    } catch (error) {
+                      console.error(error);
+                      alert("Error clearing list.");
+                    }
+                  }
+                }}
+                className="bg-red-500/20 hover:bg-red-500 text-red-500 hover:text-white px-3 py-1.5 rounded-xl border border-red-500/30 font-bold text-xs transition-all duration-300"
+              >
+                🗑️ CLEAR LIST
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all duration-300 font-bold text-sm"
+            >
+              ✕
+            </button>
+          </div>
         </div>
 
         {/* Content Area */}

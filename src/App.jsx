@@ -1543,7 +1543,7 @@ export default function FireBaadshahArena() {
       
       {/* Top 10 Bonus Winners Popup */}
       {showBonusWinners && (
-        <BonusWinnersPopup onClose={() => setShowBonusWinners(false)} />
+        <BonusWinnersPopup onClose={() => setShowBonusWinners(false)} isAdmin={isAdmin} />
       )}
       
       {showBlockedUsers && (
