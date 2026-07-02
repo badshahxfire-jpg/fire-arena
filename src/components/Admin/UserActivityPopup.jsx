@@ -95,7 +95,7 @@ export default function UserActivityPopup({ allUsers = [], joinedPlayers = [], o
   const joinsByDay = useMemo(() => {
     const groups = {};
     joinedPlayers.forEach((jp) => {
-      const dateObj = parseDate(jp.createdAt);
+      const dateObj = parseDate(jp.createdAt || jp.joinedAt);
       if (dateObj) {
         const dateStr = getLocalDateString(dateObj);
         if (!groups[dateStr]) {
@@ -123,7 +123,7 @@ export default function UserActivityPopup({ allUsers = [], joinedPlayers = [], o
       
       const activeDays = new Set();
       userJoins.forEach((join) => {
-        const d = parseDate(join.createdAt);
+        const d = parseDate(join.createdAt || join.joinedAt);
         if (d) {
           activeDays.add(getLocalDateString(d));
         }
@@ -304,7 +304,7 @@ export default function UserActivityPopup({ allUsers = [], joinedPlayers = [], o
                         <div className="flex flex-col sm:items-end justify-between text-xs sm:text-right border-t sm:border-t-0 pt-2 sm:pt-0 border-white/5">
                           <p className="text-orange-400 font-bold">{join.tournamentTitle} ({join.tournamentType})</p>
                           <p className="text-gray-300">Name: {join.ingameName} | UID: {join.gameUid} | Lvl: {join.gameLevel}</p>
-                          <p className="text-gray-500 text-[10px]">Slot: {join.selectedSlot} | {join.createdAt}</p>
+                          <p className="text-gray-500 text-[10px]">Slot: {join.selectedSlot} | {join.createdAt || join.joinedAt}</p>
                         </div>
                       </div>
                     ))
