@@ -12,7 +12,7 @@
     },
     "joinedPlayers": {
       ".read": "auth != null",
-      ".write": "auth != null && (!data.exists() || newData.exists())",
+      ".write": "auth != null && (auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1' || (root.child('adminData/staffEmails').val() != null && root.child('adminData/staffEmails').val().contains(auth.token.email)) || (!data.exists() || newData.exists()))",
       ".indexOn": ["tournamentId"]
     },
     "withdrawRequests": {
