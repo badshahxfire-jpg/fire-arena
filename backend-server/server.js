@@ -82,6 +82,19 @@ app.post("/api/join-tournament", verifyToken, async (req, res) => {
   let actualSlot = null;
 
   try {
+    // PREVENT DUPLICATE JOINS: Check if any of the users are already in the tournament
+    const joinedRef = rtdb.ref("joinedPlayers");
+    const joinedSnap = await joinedRef.orderByChild("tournamentId").equalTo(tournamentId).once("value");
+    const joinedData = joinedSnap.val() || {};
+    const existingPlayers = Object.values(joinedData);
+    
+    for (const targetUid of userIdsToDeduct) {
+      const alreadyIn = existingPlayers.find(p => p.userId === targetUid);
+      if (alreadyIn) {
+        return res.status(400).json({ error: `You or a teammate have already joined this match!` });
+      }
+    }
+
     // Attempt slot locking if selectedSlot is provided
     if (selectedSlot !== undefined) {
       const slotNum = Number(selectedSlot);
