@@ -512,10 +512,11 @@ export function useTournaments(user) {
       
     } catch (error) {
       console.error("Join error:", error);
-      alert("Failed to join tournament: " + error.message);
-      return false;
-    } finally {
       setJoinLoading(false);
+      setTimeout(() => {
+        alert("Failed to join tournament: " + error.message);
+      }, 100);
+      return false;
     }
   };
 
