@@ -657,7 +657,6 @@ export function useTournaments(user) {
           if (data[key].tournamentId === tournament.id) {
             console.log(`[DEBUG] cancelTournament removing joinedPlayers/${key}`);
             console.trace();
-            await push(ref(database, "debug_logs"), { action: "cancelTournament", key, time: Date.now() });
             await remove(ref(database, `joinedPlayers/${key}`));
           }
         }
@@ -678,7 +677,6 @@ export function useTournaments(user) {
     try {
       console.log(`[DEBUG] deleteMatchHistory called for matchId: ${matchId}`);
       console.trace();
-      await push(ref(database, "debug_logs"), { action: "deleteMatchHistory", matchId, time: Date.now() });
       await remove(ref(database, `joinedPlayers/${matchId}`));
       alert("Match History Deleted ✅");
       return true;
@@ -698,7 +696,6 @@ export function useTournaments(user) {
       for (const match of userMatches) {
         console.log(`[DEBUG] deleteAllUserMatchHistory removing joinedPlayers/${match.id}`);
         console.trace();
-        await push(ref(database, "debug_logs"), { action: "deleteAllUserMatchHistory", matchId: match.id, userEmail, time: Date.now() });
         await remove(ref(database, `joinedPlayers/${match.id}`));
       }
       alert("Completed Match History Deleted ✅");
