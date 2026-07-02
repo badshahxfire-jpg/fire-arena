@@ -18,6 +18,22 @@ export function useAdminData(isAdmin) {
   const [maintenanceAllowedUsers, setMaintenanceAllowedUsers] = useState([]);
   const [searchedUser, setSearchedUser] = useState(null);
 
+  // Keep searchedUser in sync with allUsers (real-time updates)
+  useEffect(() => {
+    if (searchedUser && allUsers.length > 0) {
+      const updated = allUsers.find(u => u.uid === searchedUser.uid);
+      if (updated) {
+        if (updated.coins !== searchedUser.coins || 
+            updated.winCoins !== searchedUser.winCoins ||
+            updated.isBlocked !== searchedUser.isBlocked ||
+            updated.email !== searchedUser.email ||
+            updated.name !== searchedUser.name) {
+          setSearchedUser(prev => ({ ...prev, ...updated }));
+        }
+      }
+    }
+  }, [allUsers, searchedUser]);
+
   // Fetch Payment Requests
   useEffect(() => {
     if (!isAdmin) return;
@@ -159,18 +175,15 @@ export function useAdminData(isAdmin) {
   // Fetch Total Users (One-time fetch to save reads)
   useEffect(() => {
     if (!isAdmin) return;
-    const fetchUsers = async () => {
-      try {
-        const usersRef = collection(db, "users");
-        const snapshot = await getDocs(usersRef);
-        setTotalUsers(snapshot.size);
-        const list = snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() }));
-        setAllUsers(list);
-      } catch (error) {
-        console.log("Error fetching total users:", error);
-      }
-    };
-    fetchUsers();
+    const unsubscribeUsers = onSnapshot(collection(db, "users"), (snapshot) => {
+      setTotalUsers(snapshot.size);
+      const list = snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() }));
+      setAllUsers(list);
+    }, (error) => {
+      console.log("Error fetching total users:", error);
+    });
+
+    return () => unsubscribeUsers();
   }, [isAdmin]);
 
   // Fetch Tournaments
