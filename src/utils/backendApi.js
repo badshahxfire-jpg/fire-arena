@@ -13,8 +13,8 @@ export async function secureFetch(endpoint, data = {}) {
     throw new Error("User not logged in");
   }
 
-  // Get the Firebase ID Token
-  const token = await currentUser.getIdToken(true);
+  // Get the Firebase ID Token (use cached token if valid to prevent network errors)
+  const token = await currentUser.getIdToken();
 
   const response = await fetch(`${BACKEND_URL}${endpoint}`, {
     method: "POST",
