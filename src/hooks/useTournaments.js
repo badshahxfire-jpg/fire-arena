@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ref, onValue, push, update, remove, get, query, orderByChild, equalTo } from "firebase/database";
 import { doc, updateDoc, increment, getDoc } from "firebase/firestore";
 import { database, db } from "../firebase";
@@ -38,6 +38,7 @@ export function useTournaments(user) {
   const [joinedHistory, setJoinedHistory] = useState([]);
   const [matchResults, setMatchResults] = useState([]);
   const [joinLoading, setJoinLoading] = useState(false);
+  const isProcessingRef = useRef(false);
 
   // Fetch Live Tournaments
   useEffect(() => {
@@ -631,8 +632,11 @@ export function useTournaments(user) {
 
   // Cancel Tournament (Refund All)
   const cancelTournament = async (tournament) => {
+    if (isProcessingRef.current) return false;
+    
     if (!window.confirm("Cancel this tournament? All players will be refunded.")) return;
     
+    isProcessingRef.current = true;
     try {
       const tournamentPlayers = joinedPlayers.filter(player => player.tournamentId === tournament.id);
       
@@ -665,9 +669,11 @@ export function useTournaments(user) {
       await remove(ref(database, `liveTournaments/${tournament.id}`));
       await remove(ref(database, `slotLocks/${tournament.id}`));
       alert("Tournament Cancelled 🔥");
+      isProcessingRef.current = false;
       return true;
     } catch (error) {
       alert(error.message);
+      isProcessingRef.current = false;
       return false;
     }
   };

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ref, onValue, push, update, remove, get, query, orderByChild, equalTo } from "firebase/database";
 import { doc, updateDoc, getDoc } from "firebase/firestore";
 import { database, db, auth } from "../firebase";
@@ -37,6 +37,7 @@ export function usePerKillTournaments(user) {
   const [joinedPlayers, setJoinedPlayers] = useState([]);
   const [matchResults, setMatchResults] = useState([]);
   const [joinLoading, setJoinLoading] = useState(false);
+  const isProcessingRef = useRef(false);
 
   // Fetch Live Tournaments
   useEffect(() => {
@@ -385,7 +386,10 @@ export function usePerKillTournaments(user) {
 
   // Cancel Tournament (Refund all and delete)
   const cancelTournament = async (tournament) => {
+    if (isProcessingRef.current) return false;
     if (!window.confirm(`Are you sure you want to cancel and refund all players of Match: ${tournament.tournamentTitle}?`)) return;
+    
+    isProcessingRef.current = true;
     try {
       const tournamentPlayers = joinedPlayers.filter(player => player.tournamentId === tournament.id);
       
@@ -420,9 +424,13 @@ export function usePerKillTournaments(user) {
       await remove(ref(database, `perKillTournaments/${tournament.id}`));
       await remove(ref(database, `slotLocks/${tournament.id}`));
       alert("Match cancelled and refunds processed successfully!");
+      isProcessingRef.current = false;
+      return true;
     } catch (error) {
       console.error(error);
       alert("Error cancelling match: " + error.message);
+      isProcessingRef.current = false;
+      return false;
     }
   };
 
