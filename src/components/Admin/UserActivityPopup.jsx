@@ -23,9 +23,6 @@ export default function UserActivityPopup({ allUsers = [], joinedPlayers = [], o
   // Helper to parse localized date strings
   const parseDate = (dateStr) => {
     if (!dateStr) return null;
-    let time = Date.parse(dateStr);
-    if (!isNaN(time)) return new Date(time);
-
     try {
       const cleaned = dateStr.replace(/,/g, '').trim();
       const parts = cleaned.split(/\s+/);
@@ -48,8 +45,13 @@ export default function UserActivityPopup({ allUsers = [], joinedPlayers = [], o
         }
       }
     } catch (e) {
-      console.error("Failed to parse date:", dateStr, e);
+      console.error("Failed to parse date manually:", dateStr, e);
     }
+    
+    // Fallback to Date.parse if manual DD/MM/YYYY parsing fails
+    let time = Date.parse(dateStr);
+    if (!isNaN(time)) return new Date(time);
+
     return null;
   };
 
