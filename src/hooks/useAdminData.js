@@ -18,6 +18,10 @@ export function useAdminData(isAdmin) {
   const [maintenanceAllowedUsers, setMaintenanceAllowedUsers] = useState([]);
   const [searchedUser, setSearchedUser] = useState(null);
 
+  const updateLocalUser = (uid, updates) => {
+    setAllUsers(prev => prev.map(u => u.uid === uid ? { ...u, ...updates } : u));
+  };
+
   // Keep searchedUser in sync with allUsers (real-time updates)
   useEffect(() => {
     if (searchedUser && allUsers.length > 0) {
@@ -175,15 +179,18 @@ export function useAdminData(isAdmin) {
   // Fetch Total Users (One-time fetch to save reads)
   useEffect(() => {
     if (!isAdmin) return;
-    const unsubscribeUsers = onSnapshot(collection(db, "users"), (snapshot) => {
-      setTotalUsers(snapshot.size);
-      const list = snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() }));
-      setAllUsers(list);
-    }, (error) => {
-      console.log("Error fetching total users:", error);
-    });
-
-    return () => unsubscribeUsers();
+    const fetchUsers = async () => {
+      try {
+        const usersRef = collection(db, "users");
+        const snapshot = await getDocs(usersRef);
+        setTotalUsers(snapshot.size);
+        const list = snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() }));
+        setAllUsers(list);
+      } catch (error) {
+        console.log("Error fetching total users:", error);
+      }
+    };
+    fetchUsers();
   }, [isAdmin]);
 
   // Fetch Tournaments
@@ -438,6 +445,8 @@ const searchUser = async (uid) => {
       await updateDoc(doc(db, "users", uid), {
         coins: increment(Number(amount)),
       });
+      const user = allUsers.find(u => u.uid === uid);
+      updateLocalUser(uid, { coins: (user?.coins || 0) + Number(amount) });
       await logCoinTransaction(uid, Number(amount), "ADMIN_ADD", "Coins added by admin", true);
       alert("Coins Added Successfully 🔥");
       return true;
@@ -458,6 +467,8 @@ const searchUser = async (uid) => {
       await updateDoc(doc(db, "users", uid), {
         coins: increment(Number(amount)),
       });
+      const user = allUsers.find(u => u.uid === uid);
+      updateLocalUser(uid, { coins: (user?.coins || 0) + Number(amount) });
       // Log coin transaction
       await logCoinTransaction(uid, Number(amount), "LOYAL_BONUS", "Daily loyal active streak bonus", true);
       
@@ -511,6 +522,7 @@ const searchUser = async (uid) => {
         coins: newCoins,
         winCoins: newWinCoins
       });
+      updateLocalUser(uid, { coins: newCoins, winCoins: newWinCoins });
       await logCoinTransaction(uid, deductAmt, "ADMIN_DEDUCT", "Coins deducted by admin", false);
       alert("Coins Deducted Successfully 🔥");
       return true;
@@ -531,6 +543,7 @@ const searchUser = async (uid) => {
       }
       
       await updateDoc(doc(db, "users", uid), updateData);
+      updateLocalUser(uid, updateData);
       alert(isBlocked ? "User Unblocked 🔥" : "User Blocked 🚫");
       return true;
     } catch (error) {
