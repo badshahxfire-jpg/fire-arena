@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ref, onValue, push, update, remove, get, query, orderByChild, equalTo } from "firebase/database";
+import { ref, onValue, push, remove, update, get, set, runTransaction } from "firebase/database";
 import { doc, updateDoc, increment, getDoc } from "firebase/firestore";
 import { database, db } from "../firebase";
 import { logCoinTransaction } from "../utils/coinHistory";
@@ -457,27 +457,25 @@ export function useTournaments(user) {
           });
         }
         
-        // Update Prize Pool (count as 1 team/squad)
-        const existingTeamCount = joinedPlayers.filter(player => player.tournamentId === tournament.id && player.selectedSlot === teamSlot).length;
-        const isNewTeam = existingTeamCount === 0;
-        const joinedCount = joinedPlayers.filter(player => player.tournamentId === tournament.id).length / teamSize + (isNewTeam ? 1 : 0);
-        
+        // We MUST use a transaction here to prevent race conditions when multiple users join simultaneously.
+        // Reading from local joinedPlayers state causes the count to drop/desync during high traffic.
         let multiplier = 1;
         if (tournamentType === "DUO" || tournamentType === "2V2") multiplier = 2;
         else if (tournamentType === "SQUAD" || tournamentType === "4V4") multiplier = 4;
         else if (tournamentType === "3V3") multiplier = 3;
         else if (tournamentType === "1V2") multiplier = 2;
         
-        const realPlayerCount = joinedCount * multiplier;
-        const totalCollection = entryFee * realPlayerCount;
-        const adminProfit = Math.floor(totalCollection * 0.10);
-        const currentPrizePool = Math.floor(totalCollection - adminProfit);
-        
-        await update(ref(database, `liveTournaments/${tournament.id}`), {
-          joinedCount,
-          realPlayerCount,
-          currentPrizePool,
-          currentAdminProfit: adminProfit,
+        await runTransaction(ref(database, `liveTournaments/${tournament.id}`), (currentData) => {
+          if (currentData) {
+            currentData.joinedCount = (currentData.joinedCount || 0) + 1; // 1 team joined
+            currentData.realPlayerCount = (currentData.realPlayerCount || 0) + multiplier;
+            
+            const totalCollection = entryFee * currentData.realPlayerCount;
+            const adminProfit = Math.floor(totalCollection * 0.10);
+            currentData.currentPrizePool = Math.floor(totalCollection - adminProfit);
+            currentData.currentAdminProfit = adminProfit;
+          }
+          return currentData;
         });
         
         // Check referral bonus for all team members

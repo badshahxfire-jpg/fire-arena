@@ -89,6 +89,7 @@ export function useAdminData(isAdmin) {
       if (!dateStr) return 0;
       if (typeof dateStr === 'number') return dateStr;
 
+      let customTime = 0;
       // FIRST try custom DD/MM/YYYY parsing to avoid American date format confusion
       try {
         const cleaned = dateStr.replace(/,/g, '').trim();
@@ -100,16 +101,17 @@ export function useAdminData(isAdmin) {
             const month = parseInt(dateParts[1], 10) - 1;
             const year = parseInt(dateParts[2], 10);
             const time = new Date(year, month, day).getTime();
-            if (!isNaN(time)) return time;
+            if (!isNaN(time)) customTime = time;
           }
         }
       } catch (e) {}
 
       // Fallback to standard Date.parse if custom parsing fails
-      let time = Date.parse(dateStr);
-      if (!isNaN(time)) return time;
+      let standardTime = Date.parse(dateStr);
+      if (isNaN(standardTime)) standardTime = 0;
       
-      return 0;
+      // Return the newest date (largest timestamp) to be extremely safe against auto-deletions
+      return Math.max(customTime, standardTime);
     };
 
     const cleanupOldData = async (path, dateField = "createdAt", condition = null) => {
