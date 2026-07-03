@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ref, onValue, push, remove, update, get, set, runTransaction } from "firebase/database";
+import { ref, onValue, push, remove, update, get, set, runTransaction, query, orderByChild, equalTo } from "firebase/database";
 import { doc, updateDoc, increment, getDoc } from "firebase/firestore";
 import { database, db } from "../firebase";
 import { logCoinTransaction } from "../utils/coinHistory";
