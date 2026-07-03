@@ -535,19 +535,6 @@ export function useTournaments(user) {
           time: new Date().toLocaleString(),
           seen: false,
         });
-        
-        if (player.teamMembers && Array.isArray(player.teamMembers)) {
-          for (const member of player.teamMembers) {
-            if (member.userId !== player.userId) {
-              await push(ref(database, `notifications/${member.userId}`), {
-                title: "ROOM DETAILS AVAILABLE 🔥",
-                message: `Room ID: ${roomId} | Password: ${roomPassword}`,
-                time: new Date().toLocaleString(),
-                seen: false,
-              });
-            }
-          }
-        }
       }
       
       alert("Room Details Published & Notifications Sent 🔥");

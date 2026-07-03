@@ -58,6 +58,7 @@ export default function LiveMatches({ tournaments, joinedPlayers, user, isAdmin,
     }
     await onPublishRoom(tournamentId, roomId, roomPassword);
     setPublishedRooms((prev) => ({ ...prev, [tournamentId]: true }));
+    alert("Room Details Published & Notifications Sent to all players! 🔥");
   };
 
   // ================= SOLO MODE FUNCTIONS =================
@@ -575,14 +576,13 @@ export default function LiveMatches({ tournaments, joinedPlayers, user, isAdmin,
                       />
                       <button
                         onClick={() => handlePublishRoom(item.id, roomInputs[item.id]?.roomId, roomInputs[item.id]?.roomPassword)}
-                        disabled={isPublished}
                         className={`w-full py-2 rounded-xl font-bold text-sm transition-all duration-300 ${
                           isPublished
-                            ? "bg-green-600 text-white cursor-not-allowed"
+                            ? "bg-green-600 hover:bg-green-500 text-white shadow-lg shadow-green-500/30"
                             : "bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white"
                         }`}
                       >
-                        {isPublished ? "✅ PUBLISHED" : "📢 PUBLISH ROOM DETAILS"}
+                        {isPublished ? "✅ PUBLISHED (CLICK TO RESEND)" : "📢 PUBLISH ROOM DETAILS"}
                       </button>
                     </div>
 
