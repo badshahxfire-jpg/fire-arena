@@ -22,7 +22,7 @@ export default function AdminPromos({ liveTournaments = [], livePerKillTournamen
   const [linkedMatch, setLinkedMatch] = useState("");
 
   const isUpcoming = (t) => {
-    if (!t.matchDate || !t.matchTime) return true;
+    if (!t.matchDate || !t.matchTime || !t.tournamentTitle) return false;
     const tournamentTime = new Date(`${t.matchDate}T${t.matchTime}`);
     const diff = (tournamentTime - new Date()) / 1000 / 60;
     return diff > 10;
