@@ -57,6 +57,7 @@ import CreateTournament from "./components/Admin/CreateTournament";
 import MatchResults from "./components/Admin/MatchResults";
 import UserProfileCheck from "./components/Admin/UserProfileCheck";
 import MaintenanceMode from "./components/Admin/MaintenanceMode";
+import AdminPromos from "./components/Admin/AdminPromos";
 import CoinHistoryPopup from "./components/Popups/CoinHistoryPopup";
 import UpcomingGamesPopup from "./components/Popups/UpcomingGamesPopup";
 import ManualCoins from "./components/Admin/ManualCoins";
@@ -1528,6 +1529,7 @@ export default function FireBaadshahArena() {
                   <button onClick={() => setAdminPage("announcements")} className={`px-4 py-3 rounded-2xl font-black text-sm md:text-base cyber-btn transition-all flex-1 min-w-[140px] max-w-[200px] text-center ${adminPage === "announcements" ? "bg-cyan-500 text-black" : "bg-black text-white border border-cyan-500/20"}`}>📢 ANNOUNCEMENTS</button>
                   <button onClick={() => setAdminPage("app_update")} className={`px-4 py-3 rounded-2xl font-black text-sm md:text-base cyber-btn transition-all flex-1 min-w-[140px] max-w-[200px] text-center ${adminPage === "app_update" ? "bg-blue-400 text-black" : "bg-black text-white border border-blue-400/20"}`}>📥 APP UPDATE</button>
                   <button onClick={() => setAdminPage("staff")} className={`px-4 py-3 rounded-2xl font-black text-sm md:text-base cyber-btn transition-all flex-1 min-w-[140px] max-w-[200px] text-center ${adminPage === "staff" ? "bg-purple-600 text-white" : "bg-black text-white border border-purple-600/20"}`}>👨‍💼 STAFF MANAGE</button>
+                  <button onClick={() => setAdminPage("promos")} className={`px-4 py-3 rounded-2xl font-black text-sm md:text-base cyber-btn transition-all flex-1 min-w-[140px] max-w-[200px] text-center ${adminPage === "promos" ? "bg-orange-500 text-black" : "bg-black text-white border border-orange-500/20"}`}>🖼️ PROMO BANNERS</button>
                   <button onClick={() => setShowWelcomeBonus(true)} className={`px-4 py-3 rounded-2xl font-black text-sm md:text-base cyber-btn transition-all flex-1 min-w-[140px] max-w-[200px] text-center bg-black text-white border border-green-400/30 hover:bg-green-500/20`}>🎫 TEST SCRATCH CARD</button>
                 </>
               )}
@@ -1548,6 +1550,7 @@ export default function FireBaadshahArena() {
               {adminPage === "announcements" && <AdminAnnouncements />}
               {adminPage === "app_update" && <AppUpdateAdmin />}
               {adminPage === "staff" && <StaffManagement />}
+              {adminPage === "promos" && <AdminPromos />}
             </>
           )}
 
