@@ -116,6 +116,7 @@ export default function FireBaadshahArena() {
   const [showResultAnalyticsPopup, setShowResultAnalyticsPopup] = useState(false);
   const [selectedPublishTournament, setSelectedPublishTournament] = useState(null);
   const [currentSystemMode, setCurrentSystemMode] = useState("classic"); // "classic" or "perkill"
+  const [activeMatchTab, setActiveMatchTab] = useState("UPCOMING"); // "UPCOMING" or "LIVE"
   const [selectedPerKillMode, setSelectedPerKillMode] = useState("SOLO");
 
   // App Update States
@@ -1289,71 +1290,119 @@ export default function FireBaadshahArena() {
             onOtherGamesClick={() => setShowUpcomingGames(true)} 
           />
 
-          {/* Upcoming Matches */}
-          <UpcomingMatches
-            tournaments={liveTournaments}
-            selectedMode={selectedMode}
-            joinedPlayers={joinedPlayers}
-            user={user}
-            isAdmin={isAdmin}
-            onJoin={(tournament) => {
-              setSelectedTournament(tournament);
-              setShowJoinPopup(true);
-            }}
-            joinLoading={joinLoading}
-            onCancel={cancelTournament}
-            onEditTime={updateTournamentTime}
-            onEditSlots={updateTournamentSlots}
-            onViewPlayers={() => {}}
-          />
+          {/* Tabs for Match Type (Upcoming / Live) */}
+          <div className="max-w-7xl mx-auto px-4 md:px-6 my-4 flex justify-center">
+            <div className="bg-black/50 backdrop-blur-md p-1.5 rounded-2xl flex gap-2 w-full max-w-sm border border-white/5">
+              <button 
+                onClick={() => setActiveMatchTab("UPCOMING")}
+                className={`flex-1 py-3 rounded-xl font-bold text-sm md:text-base transition-all duration-300 ${activeMatchTab === "UPCOMING" ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/20" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
+              >
+                UPCOMING
+              </button>
+              <button 
+                onClick={() => setActiveMatchTab("LIVE")}
+                className={`flex-1 py-3 rounded-xl font-bold text-sm md:text-base transition-all duration-300 flex items-center justify-center gap-2 ${activeMatchTab === "LIVE" ? "bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-lg shadow-red-500/20" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
+              >
+                {activeMatchTab === "LIVE" && <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>}
+                LIVE
+              </button>
+            </div>
+          </div>
 
-          {/* Live Matches */}
-          <LiveMatches
-            tournaments={liveTournaments}
-            joinedPlayers={joinedPlayers}
-            user={user}
-            isAdmin={isAdmin}
-            onPublishRoom={publishRoomDetails}
-            onCancelMatch={cancelTournament}
-            onPublishResult={(tournament) => {
-              setSelectedPublishTournament(tournament);
-              setShowResultPopup(true);
-            }}
-            onGivePosition={handleGivePosition}
-            playerResults={playerResults}
-          />
+          {/* Matches Content Based on Tab */}
+          {activeMatchTab === "UPCOMING" ? (
+            <UpcomingMatches
+              tournaments={liveTournaments}
+              selectedMode={selectedMode}
+              joinedPlayers={joinedPlayers}
+              user={user}
+              isAdmin={isAdmin}
+              onJoin={(tournament) => {
+                setSelectedTournament(tournament);
+                setShowJoinPopup(true);
+              }}
+              joinLoading={joinLoading}
+              onCancel={cancelTournament}
+              onEditTime={updateTournamentTime}
+              onEditSlots={updateTournamentSlots}
+              onViewPlayers={() => {}}
+            />
+          ) : (
+            <LiveMatches
+              tournaments={liveTournaments}
+              joinedPlayers={joinedPlayers}
+              user={user}
+              isAdmin={isAdmin}
+              onPublishRoom={publishRoomDetails}
+              onCancelMatch={cancelTournament}
+              onPublishResult={(tournament) => {
+                setSelectedPublishTournament(tournament);
+                setShowResultPopup(true);
+              }}
+              onGivePosition={handleGivePosition}
+              playerResults={playerResults}
+            />
+          )}
         </>
       )}
       
       {currentSystemMode === "perkill" && (
         <>
-          {/* Upcoming Per Kill Matches */}
-          <UpcomingPerKillMatches
-            tournaments={livePerKillTournaments}
-            joinedPlayers={joinedPerKillPlayers}
-            user={user}
-            isAdmin={isAdmin}
-            onJoin={async (...args) => {
-              const success = await joinPerKillTournament(...args);
-              if (success) playSuccessSound();
-              else playErrorSound();
-              return success;
-            }}
-            joinLoading={perKillJoinLoading}
-            selectedMode={selectedPerKillMode}
-            matchResults={perKillMatchResults}
-            onCancel={cancelPerKillTournament}
-            onEditTime={updatePerKillTournamentTime}
-            onEditSlots={updatePerKillTournamentSlots}
-          />
+          {/* Tabs for Match Type (Upcoming / Live) for Per Kill */}
+          <div className="max-w-7xl mx-auto px-4 md:px-6 my-4 flex justify-center">
+            <div className="bg-black/50 backdrop-blur-md p-1.5 rounded-2xl flex gap-2 w-full max-w-sm border border-white/5">
+              <button 
+                onClick={() => setActiveMatchTab("UPCOMING")}
+                className={`flex-1 py-3 rounded-xl font-bold text-sm md:text-base transition-all duration-300 ${activeMatchTab === "UPCOMING" ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/20" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
+              >
+                UPCOMING
+              </button>
+              <button 
+                onClick={() => setActiveMatchTab("LIVE")}
+                className={`flex-1 py-3 rounded-xl font-bold text-sm md:text-base transition-all duration-300 flex items-center justify-center gap-2 ${activeMatchTab === "LIVE" ? "bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-lg shadow-red-500/20" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
+              >
+                {activeMatchTab === "LIVE" && <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>}
+                LIVE
+              </button>
+            </div>
+          </div>
 
-          {/* Live Per Kill Matches */}
-          <LivePerKillMatches
-            tournaments={livePerKillTournaments}
-            joinedPlayers={joinedPerKillPlayers}
-            user={user}
-            selectedMode={selectedPerKillMode}
-          />
+          {activeMatchTab === "UPCOMING" ? (
+            <UpcomingPerKillMatches
+              tournaments={livePerKillTournaments}
+              joinedPlayers={joinedPerKillPlayers}
+              user={user}
+              isAdmin={isAdmin}
+              onJoin={async (...args) => {
+                const success = await joinPerKillTournament(...args);
+                if (success) playSuccessSound();
+                else playErrorSound();
+                return success;
+              }}
+              joinLoading={perKillJoinLoading}
+              selectedMode={selectedPerKillMode}
+              matchResults={perKillMatchResults}
+              onCancel={cancelPerKillTournament}
+              onEditTime={updatePerKillTournamentTime}
+              onEditSlots={updatePerKillTournamentSlots}
+            />
+          ) : (
+            <LivePerKillMatches
+              tournaments={livePerKillTournaments}
+              joinedPlayers={joinedPerKillPlayers}
+              user={user}
+              isAdmin={isAdmin}
+              onPublishRoom={publishPerKillRoomDetails}
+              onCancelMatch={cancelPerKillTournament}
+              onPublishResult={async (...args) => {
+                const success = await publishPerKillResults(...args);
+                if (success) playSuccessSound();
+                else playErrorSound();
+                return success;
+              }}
+              selectedMode={selectedPerKillMode}
+            />
+          )}
         </>
       )}
 
