@@ -21,7 +21,7 @@ export default function AdminPromos() {
   const [editId, setEditId] = useState(null);
 
   useEffect(() => {
-    const promosRef = ref(database, "promos");
+    const promosRef = ref(database, "settings/promos");
     const unsubscribe = onValue(promosRef, (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
@@ -45,12 +45,12 @@ export default function AdminPromos() {
     setLoading(true);
     try {
       if (editId) {
-        await update(ref(database, `promos/${editId}`), {
+        await update(ref(database, `settings/promos/${editId}`), {
           title, desc, icon, bg: bgClass,
         });
         alert("Promo Banner updated successfully!");
       } else {
-        const promosRef = ref(database, "promos");
+        const promosRef = ref(database, "settings/promos");
         await push(promosRef, {
           title, desc, icon, bg: bgClass, timestamp: Date.now(),
         });
@@ -91,7 +91,7 @@ export default function AdminPromos() {
         { title: "REFER & EARN 💸", desc: "Invite your squad and earn free coins on their first match.", bg: "bg-gradient-to-r from-emerald-600 to-teal-600", icon: "🤝", timestamp: Date.now() + 2 }
       ];
       for (const p of defaults) {
-        await push(ref(database, "promos"), p);
+        await push(ref(database, "settings/promos"), p);
       }
       alert("Defaults restored!");
     } catch (e) {
@@ -104,7 +104,7 @@ export default function AdminPromos() {
   const handleDeletePromo = async (id) => {
     if (!window.confirm("Are you sure you want to delete this promo banner?")) return;
     try {
-      await remove(ref(database, `promos/${id}`));
+      await remove(ref(database, `settings/promos/${id}`));
     } catch (error) {
       console.error("Error deleting promo:", error);
       alert("Failed to delete promo");

@@ -8,7 +8,7 @@ export default function PromoCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
-    const promosRef = ref(database, "promos");
+    const promosRef = ref(database, "settings/promos");
     const unsubscribe = onValue(promosRef, (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
