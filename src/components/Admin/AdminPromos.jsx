@@ -11,7 +11,7 @@ const BACKGROUNDS = [
   { name: "Yellow/Amber (Gold)", class: "bg-gradient-to-r from-yellow-500 to-amber-600" },
 ];
 
-export default function AdminPromos() {
+export default function AdminPromos({ liveTournaments = [], livePerKillTournaments = [] }) {
   const [promos, setPromos] = useState([]);
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
@@ -19,6 +19,25 @@ export default function AdminPromos() {
   const [bgClass, setBgClass] = useState(BACKGROUNDS[0].class);
   const [loading, setLoading] = useState(false);
   const [editId, setEditId] = useState(null);
+  const [linkedMatch, setLinkedMatch] = useState("");
+
+  const upcomingMatches = [
+    ...liveTournaments.filter(t => t.status === "Upcoming").map(t => ({ ...t, _type: "classic" })),
+    ...livePerKillTournaments.filter(t => t.status === "Upcoming").map(t => ({ ...t, _type: "perkill" }))
+  ];
+
+  const handleMatchSelect = (e) => {
+    const val = e.target.value;
+    setLinkedMatch(val);
+    if (val) {
+      const match = upcomingMatches.find(m => m.id === val);
+      if (match) {
+        setTitle(`${match._type === "classic" ? "CLASSIC" : "PER KILL"} MATCH #${match.matchNo || ""}`);
+        setDesc(`Prize Pool: ₹${match.prizePool} | Entry: ₹${match.entryFee}`);
+        setIcon(match._type === "classic" ? "🏆" : "💀");
+      }
+    }
+  };
 
   useEffect(() => {
     const promosRef = ref(database, "settings/promos");
@@ -44,15 +63,21 @@ export default function AdminPromos() {
     
     setLoading(true);
     try {
+      let matchType = null;
+      if (linkedMatch) {
+        const m = upcomingMatches.find(x => x.id === linkedMatch);
+        if (m) matchType = m._type;
+      }
+
       if (editId) {
         await update(ref(database, `settings/promos/${editId}`), {
-          title, desc, icon, bg: bgClass,
+          title, desc, icon, bg: bgClass, matchId: linkedMatch || null, matchType
         });
         alert("Promo Banner updated successfully!");
       } else {
         const promosRef = ref(database, "settings/promos");
         await push(promosRef, {
-          title, desc, icon, bg: bgClass, timestamp: Date.now(),
+          title, desc, icon, bg: bgClass, matchId: linkedMatch || null, matchType, timestamp: Date.now(),
         });
         alert("Promo Banner added successfully!");
       }
@@ -70,6 +95,7 @@ export default function AdminPromos() {
     setIcon("🔥");
     setBgClass(BACKGROUNDS[0].class);
     setEditId(null);
+    setLinkedMatch("");
   };
 
   const handleEditClick = (promo) => {
@@ -77,6 +103,7 @@ export default function AdminPromos() {
     setDesc(promo.desc);
     setIcon(promo.icon);
     setBgClass(promo.bg);
+    setLinkedMatch(promo.matchId || "");
     setEditId(promo.id);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -138,6 +165,22 @@ export default function AdminPromos() {
           )}
         </div>
         
+        <div>
+          <label className="text-gray-400 text-xs font-bold mb-1 block">Link to Upcoming Match (Optional)</label>
+          <select
+            value={linkedMatch}
+            onChange={handleMatchSelect}
+            className="w-full bg-black border border-white/10 rounded-lg p-2.5 text-white mb-2"
+          >
+            <option value="">-- No Link (Custom Banner) --</option>
+            {upcomingMatches.map(m => (
+              <option key={m.id} value={m.id}>
+                {m._type === "classic" ? "Classic" : "Per Kill"} #{m.matchNo} | {m.mode} | ₹{m.prizePool}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="text-gray-400 text-xs font-bold mb-1 block">Title (Short)</label>
@@ -218,6 +261,11 @@ export default function AdminPromos() {
                     <p className="text-white/80 text-xs mt-1 font-medium max-w-sm drop-shadow-sm">
                       {promo.desc}
                     </p>
+                    {promo.matchId && (
+                      <span className="inline-block mt-2 px-2 py-0.5 bg-white/20 rounded text-[10px] font-bold text-white">
+                        🔗 Linked to Match
+                      </span>
+                    )}
                   </div>
                   <div className="text-4xl drop-shadow-2xl ml-2">
                     {promo.icon}

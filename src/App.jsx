@@ -1381,19 +1381,37 @@ export default function FireBaadshahArena() {
             >
               {activeMatchTab === "UPCOMING" ? (
                 <UpcomingPerKillMatches
-                  tournaments={upcomingPerKill}
-                  selectedMode={selectedPerKillMode}
-                  onJoin={handleJoinPerKillClick}
-                  joinLoading={perKillJoinLoading}
-                  matchResults={perKillMatchResults}
+                  tournaments={livePerKillTournaments}
+                  joinedPlayers={joinedPerKillPlayers}
+                  user={user}
                   isAdmin={isAdmin}
+                  onJoin={async (...args) => {
+                    const success = await joinPerKillTournament(...args);
+                    if (success) playSuccessSound();
+                    else playErrorSound();
+                    return success;
+                  }}
+                  joinLoading={perKillJoinLoading}
+                  selectedMode={selectedPerKillMode}
+                  matchResults={perKillMatchResults}
                   onCancel={cancelPerKillTournament}
                   onEditTime={updatePerKillTournamentTime}
                   onEditSlots={updatePerKillTournamentSlots}
                 />
               ) : (
                 <LivePerKillMatches
-                  tournaments={livePerKill}
+                  tournaments={livePerKillTournaments}
+                  joinedPlayers={joinedPerKillPlayers}
+                  user={user}
+                  isAdmin={isAdmin}
+                  onPublishRoom={publishPerKillRoomDetails}
+                  onCancelMatch={cancelPerKillTournament}
+                  onPublishResult={async (...args) => {
+                    const success = await publishPerKillResults(...args);
+                    if (success) playSuccessSound();
+                    else playErrorSound();
+                    return success;
+                  }}
                   selectedMode={selectedPerKillMode}
                 />
               )}
@@ -1550,7 +1568,7 @@ export default function FireBaadshahArena() {
               {adminPage === "announcements" && <AdminAnnouncements />}
               {adminPage === "app_update" && <AppUpdateAdmin />}
               {adminPage === "staff" && <StaffManagement />}
-              {adminPage === "promos" && <AdminPromos />}
+              {adminPage === "promos" && <AdminPromos liveTournaments={liveTournaments} livePerKillTournaments={livePerKillTournaments} />}
             </>
           )}
 

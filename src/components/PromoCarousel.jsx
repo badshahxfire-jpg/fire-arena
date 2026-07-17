@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { database } from "../firebase";
 import { ref, onValue } from "firebase/database";
 
-export default function PromoCarousel() {
+export default function PromoCarousel({ onPromoClick }) {
   const [promos, setPromos] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -45,9 +45,15 @@ export default function PromoCarousel() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -50 }}
             transition={{ duration: 0.5, ease: "easeInOut" }}
+            onClick={() => onPromoClick && onPromoClick(promos[currentIndex])}
             className={`absolute inset-0 flex items-center justify-between p-6 ${promos[currentIndex].bg}`}
           >
             <div className="flex-1">
+              {promos[currentIndex].matchId && (
+                <div className="inline-block px-2 py-0.5 mb-1 bg-white/20 rounded-full text-[10px] font-black text-white uppercase animate-pulse">
+                  🎯 Click to Join
+                </div>
+              )}
               <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-wide drop-shadow-md">
                 {promos[currentIndex].title}
               </h2>
