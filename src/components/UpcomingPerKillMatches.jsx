@@ -342,9 +342,17 @@ export default function UpcomingPerKillMatches({
                       </div>
                     )}
                     
-                    <div className="flex justify-between border-t border-gray-800 pt-2.5">
-                      <span className="text-gray-400">{getTeamSizeForType(tournament.tournamentType) === 1 ? "👥 Filled Slots" : "👥 Teams"}</span>
-                      <span className="font-bold text-white">{getTeamJoinedCount(tournament)} / {getTotalSlotsForType(tournament)}</span>
+                    <div className="flex flex-col gap-1.5 border-t border-gray-800 pt-2.5">
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">{getTeamSizeForType(tournament.tournamentType) === 1 ? "👥 Filled Slots" : "👥 Teams"}</span>
+                        <span className="font-bold text-white">{getTeamJoinedCount(tournament)} / {getTotalSlotsForType(tournament)}</span>
+                      </div>
+                      <div className="w-full bg-gray-800 rounded-full h-1.5 overflow-hidden border border-white/5">
+                        <div 
+                          className="bg-gradient-to-r from-orange-600 to-yellow-400 h-1.5 rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(255,165,0,0.5)]" 
+                          style={{ width: `${Math.min((getTeamJoinedCount(tournament) / getTotalSlotsForType(tournament)) * 100, 100)}%` }}
+                        ></div>
+                      </div>
                     </div>
 
                     {(tournament.tournamentType === "DUO" || tournament.tournamentType === "SQUAD") && (

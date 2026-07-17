@@ -217,11 +217,19 @@ export default function UpcomingMatches({
                       <span className="text-orange-400 font-black">🪙 {item.entryFee}</span>
                     </div>
                     
-                    <div className="flex justify-between">
-                      <span>{teamSize === 1 ? "👥 Players" : "👥 Teams"}</span>
-                      <span className="font-black">
-                        {`${teamJoinedCount}/${totalSlots}`}
-                      </span>
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex justify-between">
+                        <span>{teamSize === 1 ? "👥 Players" : "👥 Teams"}</span>
+                        <span className="font-black">
+                          {`${teamJoinedCount}/${totalSlots}`}
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-800 rounded-full h-1.5 overflow-hidden border border-white/5">
+                        <div 
+                          className="bg-gradient-to-r from-orange-600 to-yellow-400 h-1.5 rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(255,165,0,0.5)]" 
+                          style={{ width: `${Math.min((teamJoinedCount / totalSlots) * 100, 100)}%` }}
+                        ></div>
+                      </div>
                     </div>
                     
                     <div className="flex justify-between">
