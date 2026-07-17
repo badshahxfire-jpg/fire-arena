@@ -369,7 +369,9 @@ export default function UpcomingMatches({
                         title="View Players"
                       >
                         <span className="text-sm">👥</span>
-                        <span className="text-[10px] uppercase tracking-wider mt-0.5">Players</span>
+                        <span className="text-[10px] uppercase tracking-wider mt-0.5">
+                          Players <span className="opacity-75">({teamJoinedCount}/{totalSlots})</span>
+                        </span>
                       </button>
                       {item.tournamentRules && (
                         <button
@@ -857,7 +859,6 @@ export default function UpcomingMatches({
       {selectedPlayerListTournament && (
         <PlayerListPopup
           tournament={selectedPlayerListTournament}
-          joinedPlayers={joinedPlayers}
           onClose={() => setSelectedPlayerListTournament(null)}
         />
       )}

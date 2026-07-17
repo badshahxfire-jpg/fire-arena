@@ -374,22 +374,18 @@ export default function UpcomingPerKillMatches({
                     {/* Secondary Actions Row */}
                     <div className="flex gap-2 w-full">
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedPlayerListTournament(tournament);
-                        }}
+                        onClick={() => setSelectedPlayerListTournament(tournament)}
                         className="flex-1 py-2 bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500/20 hover:border-purple-500/40 rounded-xl font-bold duration-300 flex flex-col items-center justify-center hover:scale-[1.02] active:scale-[0.98]"
                         title="View Players"
                       >
                         <span className="text-sm">👥</span>
-                        <span className="text-[10px] uppercase tracking-wider mt-0.5">Players</span>
+                        <span className="text-[10px] uppercase tracking-wider mt-0.5">
+                          Players <span className="opacity-75">({joinedCount}/{tournament.totalTeams || 48})</span>
+                        </span>
                       </button>
                       {tournament.tournamentRules && (
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setExpandedRulesId(expandedRulesId === tournament.id ? null : tournament.id);
-                          }}
+                          onClick={() => setExpandedRulesId(expandedRulesId === tournament.id ? null : tournament.id)}
                           className={`flex-1 py-2 bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 hover:bg-yellow-500/20 hover:border-yellow-500/40 rounded-xl font-bold duration-300 flex flex-col items-center justify-center hover:scale-[1.02] active:scale-[0.98] ${expandedRulesId === tournament.id ? "bg-yellow-500/30" : ""}`}
                           title="Match Rules"
                         >
@@ -398,10 +394,7 @@ export default function UpcomingPerKillMatches({
                         </button>
                       )}
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleShareMatch(tournament);
-                        }}
+                        onClick={() => handleShareMatch(tournament)}
                         className="flex-1 py-2 bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 hover:border-blue-500/40 rounded-xl font-bold duration-300 flex flex-col items-center justify-center hover:scale-[1.02] active:scale-[0.98]"
                         title="Share Match"
                       >
@@ -427,10 +420,7 @@ export default function UpcomingPerKillMatches({
                       </button>
                     ) : (
                       <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleOpenJoin(tournament);
-                        }}
+                        onClick={() => handleOpenJoin(tournament)}
                         className="w-full bg-gradient-to-r from-orange-500 to-red-600 text-black font-black py-3.5 rounded-xl hover:scale-[1.02] duration-300 transition-all flex items-center justify-center gap-2"
                       >
                         🎯 JOIN NOW
@@ -671,7 +661,6 @@ export default function UpcomingPerKillMatches({
       {selectedPlayerListTournament && (
         <PlayerListPopup
           tournament={selectedPlayerListTournament}
-          joinedPlayers={joinedPlayers}
           onClose={() => setSelectedPlayerListTournament(null)}
         />
       )}
