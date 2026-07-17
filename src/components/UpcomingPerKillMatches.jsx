@@ -661,6 +661,7 @@ export default function UpcomingPerKillMatches({
       {selectedPlayerListTournament && (
         <PlayerListPopup
           tournament={selectedPlayerListTournament}
+          joinedPlayers={joinedPlayers}
           onClose={() => setSelectedPlayerListTournament(null)}
         />
       )}

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function PlayerListPopup({ tournament, joinedPlayers, onClose }) {
+export default function PlayerListPopup({ tournament, joinedPlayers = [], onClose }) {
   const [players, setPlayers] = useState([]);
 
   useEffect(() => {
@@ -9,37 +9,24 @@ export default function PlayerListPopup({ tournament, joinedPlayers, onClose }) 
 
     let allPlayers = [];
     
+    // Check joinedPlayers
     if (joinedPlayers && Array.isArray(joinedPlayers)) {
-      const tPlayers = joinedPlayers.filter(p => p.tournamentId === tournament.id);
-      tPlayers.forEach(p => {
+      const matchPlayers = joinedPlayers.filter(p => p.tournamentId === tournament.id);
+      matchPlayers.forEach(teamData => {
+        // Add leader
         allPlayers.push({
-          name: p.ingameName || p.inGameName || p.name || "Unknown",
+          name: teamData.inGameName || teamData.ingameName || teamData.playerName || "Unknown",
           isLeader: true,
         });
-        if (p.teammates && Array.isArray(p.teammates)) {
-          p.teammates.forEach(tm => {
+
+        // Add teammates
+        if (teamData.teammates && Array.isArray(teamData.teammates)) {
+          teamData.teammates.forEach((tm) => {
             allPlayers.push({
-              name: tm.ingameName || tm.inGameName || tm.name || "Unknown",
+              name: tm.inGameName || tm.ingameName || tm.playerName || "Unknown",
               isLeader: false,
             });
           });
-        }
-      });
-    } else if (tournament.registeredTeams) {
-      Object.entries(tournament.registeredTeams).forEach(([uid, teamData]) => {
-        if (teamData.status !== "ELIMINATED") {
-          allPlayers.push({
-            name: teamData.inGameName || teamData.ingameName || "Unknown",
-            isLeader: true,
-          });
-          if (teamData.teammates && Array.isArray(teamData.teammates)) {
-            teamData.teammates.forEach((tm) => {
-              allPlayers.push({
-                name: tm.inGameName || tm.ingameName || "Unknown",
-                isLeader: false,
-              });
-            });
-          }
         }
       });
     }
