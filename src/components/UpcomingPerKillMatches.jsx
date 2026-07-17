@@ -369,60 +369,61 @@ export default function UpcomingPerKillMatches({
                 </div>
 
                 <div className="space-y-3">
-                  <div className="flex gap-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedPlayerListTournament(tournament);
-                      }}
-                      className="px-3 bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500/20 hover:border-purple-500/40 rounded-xl font-bold duration-300 flex items-center justify-center gap-1 hover:scale-[1.02] active:scale-[0.98]"
-                      title="View Players"
-                    >
-                      <span className="text-sm">👥</span>
-                      <span className="text-[10px] uppercase tracking-wider hidden md:block">Players</span>
-                    </button>
-                    {tournament.tournamentRules && (
+                  {/* Action Buttons Container */}
+                  <div className="mt-4 flex flex-col gap-2">
+                    {/* Secondary Actions Row */}
+                    <div className="flex gap-2 w-full">
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setExpandedRulesId(expandedRulesId === tournament.id ? null : tournament.id);
-                        }}
-                        className={`px-3 bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 hover:bg-yellow-500/20 hover:border-yellow-500/40 rounded-xl font-bold duration-300 flex items-center justify-center gap-1 hover:scale-[1.02] active:scale-[0.98] ${expandedRulesId === tournament.id ? "bg-yellow-500/30" : ""}`}
-                        title="Match Rules"
+                        onClick={() => setSelectedPlayerListTournament(tournament)}
+                        className="flex-1 py-2 bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500/20 hover:border-purple-500/40 rounded-xl font-bold duration-300 flex flex-col items-center justify-center hover:scale-[1.02] active:scale-[0.98]"
+                        title="View Players"
                       >
-                        <span className="text-sm">📜</span>
-                        <span className="text-[10px] uppercase tracking-wider hidden md:block">Rules</span>
+                        <span className="text-sm">👥</span>
+                        <span className="text-[10px] uppercase tracking-wider mt-0.5">Players</span>
                       </button>
-                    )}
+                      {tournament.tournamentRules && (
+                        <button
+                          onClick={() => setExpandedRulesId(expandedRulesId === tournament.id ? null : tournament.id)}
+                          className={`flex-1 py-2 bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 hover:bg-yellow-500/20 hover:border-yellow-500/40 rounded-xl font-bold duration-300 flex flex-col items-center justify-center hover:scale-[1.02] active:scale-[0.98] ${expandedRulesId === tournament.id ? "bg-yellow-500/30" : ""}`}
+                          title="Match Rules"
+                        >
+                          <span className="text-sm">📜</span>
+                          <span className="text-[10px] uppercase tracking-wider mt-0.5">Rules</span>
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleShareMatch(tournament)}
+                        className="flex-1 py-2 bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 hover:border-blue-500/40 rounded-xl font-bold duration-300 flex flex-col items-center justify-center hover:scale-[1.02] active:scale-[0.98]"
+                        title="Share Match"
+                      >
+                        <span className="text-sm">📤</span>
+                        <span className="text-[10px] uppercase tracking-wider mt-0.5">Share</span>
+                      </button>
+                    </div>
+
+                    {/* Main Join Button */}
                     {alreadyJoined ? (
                       <button 
                         disabled 
-                        className="flex-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 py-3.5 rounded-xl font-bold text-center cursor-not-allowed"
+                        className="w-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 py-3.5 rounded-xl font-bold text-center cursor-not-allowed"
                       >
                         ✓ Already Joined
                       </button>
                     ) : joinedCount >= tournament.totalTeams ? (
                       <button 
                         disabled 
-                        className="flex-1 bg-red-500/10 text-red-500 border border-red-500/20 py-3.5 rounded-xl font-bold text-center cursor-not-allowed"
+                        className="w-full bg-red-500/10 text-red-500 border border-red-500/20 py-3.5 rounded-xl font-bold text-center cursor-not-allowed"
                       >
                         Match Full
                       </button>
                     ) : (
                       <button 
                         onClick={() => handleOpenJoin(tournament)}
-                        className="flex-1 bg-gradient-to-r from-orange-500 to-red-600 text-black font-black py-3.5 rounded-xl hover:scale-[1.02] duration-300 transition-all flex items-center justify-center gap-2"
+                        className="w-full bg-gradient-to-r from-orange-500 to-red-600 text-black font-black py-3.5 rounded-xl hover:scale-[1.02] duration-300 transition-all flex items-center justify-center gap-2"
                       >
                         🎯 JOIN NOW
                       </button>
                     )}
-                    <button
-                      onClick={() => handleShareMatch(tournament)}
-                      className="px-3 bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 hover:border-blue-500/40 rounded-xl font-bold duration-300 flex items-center justify-center hover:scale-[1.02] active:scale-[0.98]"
-                      title="Share Match"
-                    >
-                      <span className="text-base">📤</span>
-                    </button>
                   </div>
 
                   {expandedRulesId === tournament.id && tournament.tournamentRules && (

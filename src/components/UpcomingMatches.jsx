@@ -359,50 +359,48 @@ export default function UpcomingMatches({
                     </div>
                   )}
 
-                  {/* Action Buttons */}
-                  <div className="flex flex-col gap-2 mt-4">
-                    {/* Primary Action: JOIN */}
+                  {/* Action Buttons Container */}
+                  <div className="mt-4 flex flex-col gap-2">
+                    {/* Secondary Actions Row */}
+                    <div className="flex gap-2 w-full">
+                      <button
+                        onClick={() => setSelectedPlayerListTournament(item)}
+                        className="flex-1 py-2 bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500/20 hover:border-purple-500/40 rounded-xl font-bold duration-300 flex flex-col items-center justify-center hover:scale-[1.02] active:scale-[0.98]"
+                        title="View Players"
+                      >
+                        <span className="text-sm">👥</span>
+                        <span className="text-[10px] uppercase tracking-wider mt-0.5">Players</span>
+                      </button>
+                      {item.tournamentRules && (
+                        <button
+                          onClick={() => setExpandedRulesId(expandedRulesId === item.id ? null : item.id)}
+                          className={`flex-1 py-2 bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 hover:bg-yellow-500/20 hover:border-yellow-500/40 rounded-xl font-bold duration-300 flex flex-col items-center justify-center hover:scale-[1.02] active:scale-[0.98] ${expandedRulesId === item.id ? "bg-yellow-500/30" : ""}`}
+                          title="Match Rules"
+                        >
+                          <span className="text-sm">📜</span>
+                          <span className="text-[10px] uppercase tracking-wider mt-0.5">Rules</span>
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleShareMatch(item)}
+                        className="flex-1 py-2 bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 hover:border-blue-500/40 rounded-xl font-bold duration-300 flex flex-col items-center justify-center hover:scale-[1.02] active:scale-[0.98]"
+                        title="Share Match"
+                      >
+                        <span className="text-sm">📤</span>
+                        <span className="text-[10px] uppercase tracking-wider mt-0.5">Share</span>
+                      </button>
+                    </div>
+
+                    {/* Main Join Button */}
                     <button
                       onClick={() => onJoin(item)}
                       disabled={joinLoading}
-                      className={`w-full py-2.5 md:py-3 rounded-[14px] font-extrabold text-sm md:text-base tracking-wide duration-300
+                      className={`w-full py-3 md:py-3.5 rounded-xl font-extrabold text-sm md:text-base tracking-wide duration-300
                         bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-black hover:scale-[1.02] active:scale-[0.98] shadow-md shadow-orange-500/10 hover:shadow-orange-500/20
                         ${joinLoading ? "opacity-50 cursor-not-allowed" : ""}`}
                     >
                       {joinLoading ? "JOINING..." : `🚀 JOIN ${item.tournamentType}`}
                     </button>
-
-                    {/* Secondary Actions */}
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setSelectedPlayerListTournament(item)}
-                        className="flex-1 py-2 bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500/20 hover:border-purple-500/40 rounded-[14px] font-bold duration-300 flex items-center justify-center gap-1.5 hover:scale-[1.02] active:scale-[0.98]"
-                        title="View Players"
-                      >
-                        <span className="text-sm">👥</span>
-                        <span className="text-[10px] uppercase tracking-wider">Players</span>
-                      </button>
-                      
-                      {item.tournamentRules && (
-                        <button
-                          onClick={() => setExpandedRulesId(expandedRulesId === item.id ? null : item.id)}
-                          className={`flex-1 py-2 bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 hover:bg-yellow-500/20 hover:border-yellow-500/40 rounded-[14px] font-bold duration-300 flex items-center justify-center gap-1.5 hover:scale-[1.02] active:scale-[0.98] ${expandedRulesId === item.id ? "bg-yellow-500/30" : ""}`}
-                          title="Match Rules"
-                        >
-                          <span className="text-sm">📜</span>
-                          <span className="text-[10px] uppercase tracking-wider">Rules</span>
-                        </button>
-                      )}
-
-                      <button
-                        onClick={() => handleShareMatch(item)}
-                        className="flex-1 py-2 bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 hover:border-blue-500/40 rounded-[14px] font-bold duration-300 flex items-center justify-center gap-1.5 hover:scale-[1.02] active:scale-[0.98]"
-                        title="Share Match"
-                      >
-                        <span className="text-sm">📤</span>
-                        <span className="text-[10px] uppercase tracking-wider">Share</span>
-                      </button>
-                    </div>
                   </div>
 
                   {/* Rules Expansion */}
