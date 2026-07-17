@@ -33,14 +33,24 @@ export default function AdminPromos({ liveTournaments = [], livePerKillTournamen
     ...livePerKillTournaments.filter(isUpcoming).map(t => ({ ...t, _type: "perkill" }))
   ];
 
+  const getPrize = (m) => {
+    if (m._type === "classic") {
+      return Number(m.totalPrizePool) || Number(m.currentPrizePool) || Number(m.prizePool) || 0;
+    }
+    return (Math.max(0, Number(m.totalTeams || 48) - 1) * Number(m.perKillRate || 0)) +
+           Number(m.booyahBonus || 0) +
+           Number(m.secondBonus || 0) +
+           Number(m.thirdBonus || 0);
+  };
+
   const handleMatchSelect = (e) => {
     const val = e.target.value;
     setLinkedMatch(val);
     if (val) {
       const match = upcomingMatches.find(m => m.id === val);
       if (match) {
-        setTitle(`${match._type === "classic" ? "CLASSIC" : "PER KILL"} MATCH #${match.matchNo || ""}`);
-        setDesc(`Prize Pool: ₹${match.prizePool} | Entry: ₹${match.entryFee}`);
+        setTitle(`${match.tournamentTitle || "MATCH"}`);
+        setDesc(`Prize Pool: ₹${getPrize(match)} | Entry: ₹${match.entryFee || 0}`);
         setIcon(match._type === "classic" ? "🏆" : "💀");
       }
     }
@@ -182,7 +192,7 @@ export default function AdminPromos({ liveTournaments = [], livePerKillTournamen
             <option value="">-- No Link (Custom Banner) --</option>
             {upcomingMatches.map(m => (
               <option key={m.id} value={m.id}>
-                {m._type === "classic" ? "Classic" : "Per Kill"} #{m.matchNo} | {m.mode} | ₹{m.prizePool}
+                {m.tournamentTitle} | {m.tournamentType} | ₹{getPrize(m)}
               </option>
             ))}
           </select>
