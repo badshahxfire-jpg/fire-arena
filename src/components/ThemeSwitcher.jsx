@@ -380,7 +380,7 @@ function generateThemeCSS(theme) {
 
 export default function ThemeSwitcher() {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTheme, setActiveTheme] = useState("ghost");
+  const [activeTheme, setActiveTheme] = useState("blood");
   const panelRef = useRef(null);
 
   // Load saved theme on mount
@@ -393,10 +393,10 @@ export default function ThemeSwitcher() {
         applyTheme(theme);
       }
     } else {
-      // Default to ghost theme
-      const defaultTheme = THEMES.find((t) => t.id === "ghost");
+      // Default to blood theme
+      const defaultTheme = THEMES.find((t) => t.id === "blood");
       if (defaultTheme) {
-        setActiveTheme("ghost");
+        setActiveTheme("blood");
         applyTheme(defaultTheme);
       }
     }
