@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { getPrizeDistribution } from "../utils/prizeDistribution";
+import PlayerListPopup from "./PlayerListPopup";
+
 export default function UpcomingMatches({ 
   tournaments, 
   selectedMode, 
@@ -17,6 +19,7 @@ export default function UpcomingMatches({
   const [selectedViewTournament, setSelectedViewTournament] = useState(null);
   const [loadingAction, setLoadingAction] = useState(null);
   const [expandedRulesId, setExpandedRulesId] = useState(null);
+  const [selectedPlayerListTournament, setSelectedPlayerListTournament] = useState(null);
 
   const handleShareMatch = async (match) => {
     const appLink = window.location.origin;
@@ -358,6 +361,14 @@ export default function UpcomingMatches({
 
                   {/* Join and Share Buttons */}
                   <div className="flex gap-2 mt-4">
+                    <button
+                      onClick={() => setSelectedPlayerListTournament(item)}
+                      className="px-3 bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500/20 hover:border-purple-500/40 rounded-[14px] font-bold duration-300 flex items-center justify-center gap-1 hover:scale-[1.02] active:scale-[0.98]"
+                      title="View Players"
+                    >
+                      <span className="text-sm">👥</span>
+                      <span className="text-[10px] uppercase tracking-wider hidden md:block">Players</span>
+                    </button>
                     {item.tournamentRules && (
                       <button
                         onClick={() => setExpandedRulesId(expandedRulesId === item.id ? null : item.id)}
@@ -365,7 +376,7 @@ export default function UpcomingMatches({
                         title="Match Rules"
                       >
                         <span className="text-sm">📜</span>
-                        <span className="text-[10px] uppercase tracking-wider">Rules</span>
+                        <span className="text-[10px] uppercase tracking-wider hidden md:block">Rules</span>
                       </button>
                     )}
                     <button
@@ -835,6 +846,13 @@ export default function UpcomingMatches({
             </div>
           </div>
         </div>
+      )}
+      {/* Player List Popup */}
+      {selectedPlayerListTournament && (
+        <PlayerListPopup
+          tournament={selectedPlayerListTournament}
+          onClose={() => setSelectedPlayerListTournament(null)}
+        />
       )}
     </>
   );

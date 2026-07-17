@@ -1,5 +1,6 @@
 import "./App.css";
 import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { ref, update, remove, push, get, onValue } from "firebase/database";
 import { database, db, messaging } from "./firebase";
 import { doc, updateDoc, increment, getDoc, setDoc } from "firebase/firestore";
@@ -21,6 +22,7 @@ import { getPrizeByPosition } from "./utils/prizeDistribution";
 // Main Components
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
+import PromoCarousel from "./components/PromoCarousel";
 import GameModes from "./components/GameModes";
 import UpcomingMatches from "./components/UpcomingMatches";
 import LiveMatches from "./components/LiveMatches";
@@ -1221,10 +1223,11 @@ export default function FireBaadshahArena() {
       />
 
       {/* Hero Section */}
+      <Hero />
+      <PromoCarousel />
+
       {/* Announcement Banner */}
       <AnnouncementBanner />
-
-      <Hero />
 
       {/* System Mode Switcher */}
       <div className="max-w-7xl mx-auto px-6 mb-8 flex flex-col items-center gap-4">
@@ -1367,42 +1370,34 @@ export default function FireBaadshahArena() {
             </div>
           </div>
 
-          {activeMatchTab === "UPCOMING" ? (
-            <UpcomingPerKillMatches
-              tournaments={livePerKillTournaments}
-              joinedPlayers={joinedPerKillPlayers}
-              user={user}
-              isAdmin={isAdmin}
-              onJoin={async (...args) => {
-                const success = await joinPerKillTournament(...args);
-                if (success) playSuccessSound();
-                else playErrorSound();
-                return success;
-              }}
-              joinLoading={perKillJoinLoading}
-              selectedMode={selectedPerKillMode}
-              matchResults={perKillMatchResults}
-              onCancel={cancelPerKillTournament}
-              onEditTime={updatePerKillTournamentTime}
-              onEditSlots={updatePerKillTournamentSlots}
-            />
-          ) : (
-            <LivePerKillMatches
-              tournaments={livePerKillTournaments}
-              joinedPlayers={joinedPerKillPlayers}
-              user={user}
-              isAdmin={isAdmin}
-              onPublishRoom={publishPerKillRoomDetails}
-              onCancelMatch={cancelPerKillTournament}
-              onPublishResult={async (...args) => {
-                const success = await publishPerKillResults(...args);
-                if (success) playSuccessSound();
-                else playErrorSound();
-                return success;
-              }}
-              selectedMode={selectedPerKillMode}
-            />
-          )}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeMatchTab}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              {activeMatchTab === "UPCOMING" ? (
+                <UpcomingPerKillMatches
+                  tournaments={upcomingPerKill}
+                  selectedMode={selectedPerKillMode}
+                  onJoin={handleJoinPerKillClick}
+                  joinLoading={perKillJoinLoading}
+                  matchResults={perKillMatchResults}
+                  isAdmin={isAdmin}
+                  onCancel={cancelPerKillTournament}
+                  onEditTime={updatePerKillTournamentTime}
+                  onEditSlots={updatePerKillTournamentSlots}
+                />
+              ) : (
+                <LivePerKillMatches
+                  tournaments={livePerKill}
+                  selectedMode={selectedPerKillMode}
+                />
+              )}
+            </motion.div>
+          </AnimatePresence>
         </>
       )}
 

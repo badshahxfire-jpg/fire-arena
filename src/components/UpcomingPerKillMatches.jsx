@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import JoinPopup from "./Popups/JoinPopup";
 import { getDoc, doc, updateDoc } from "firebase/firestore";
 import { db } from "../firebase";
+import PlayerListPopup from "./PlayerListPopup";
 
 export default function UpcomingPerKillMatches({ 
   tournaments, 
@@ -23,6 +24,7 @@ export default function UpcomingPerKillMatches({
   const [selectedViewTournament, setSelectedViewTournament] = useState(null);
   const [loadingAction, setLoadingAction] = useState(null);
   const [expandedRulesId, setExpandedRulesId] = useState(null);
+  const [selectedPlayerListTournament, setSelectedPlayerListTournament] = useState(null);
   const [leaderProfile, setLeaderProfile] = useState(null);
 
   // Fetch leader profile data to autofill and enforce lock
@@ -35,9 +37,6 @@ export default function UpcomingPerKillMatches({
         if (userSnap.exists()) {
           const data = userSnap.data();
           setLeaderProfile(data);
-          setGameUid(data.gameUid || "");
-          setMobileNumber(data.mobileNumber || "");
-          setIngameName(data.ingameName || "");
         }
       } catch (error) {
         console.error("Error fetching leader profile in PerKill matches:", error);
@@ -176,16 +175,6 @@ export default function UpcomingPerKillMatches({
     return success;
   };
 
-  const getSlotStatus = (tournamentId, slotNumber) => {
-    const playerInSlot = joinedPlayers.find(
-      p => p.tournamentId === tournamentId && Number(p.selectedSlot) === Number(slotNumber)
-    );
-    if (playerInSlot) {
-      return { booked: true, ...playerInSlot };
-    }
-    return { booked: false };
-  };
-
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-20 text-white">
       {/* Disclaimer */}
@@ -235,7 +224,6 @@ export default function UpcomingPerKillMatches({
 
       {upcomingTournaments.length > 0 ? (
         <div className="relative">
-          {/* Slide buttons only visible on desktop */}
           <button
             onClick={() => {
               document.getElementById("upcomingPerKillSlider")?.scrollBy({ left: -350, behavior: "smooth" });
@@ -306,7 +294,6 @@ export default function UpcomingPerKillMatches({
                     </div>
                   </div>
 
-                  {/* Per Kill Info Box */}
                   <div className="bg-black/30 p-2.5 sm:p-4 rounded-2xl border border-gray-800 space-y-2 text-xs sm:text-sm mb-4 sm:mb-6">
                     <div className="flex justify-between">
                       <span className="text-gray-400">💰 Entry Fee</span>
@@ -364,12 +351,11 @@ export default function UpcomingPerKillMatches({
                     )}
 
                     {joinedCount < 10 && (
-                      <div className="bg-rose-500/10 text-rose-400 border border-rose-500/20 p-2.5 rounded-xl text-[11px] font-bold text-center mt-2">
+                      <div className="bg-rose-500/10 text-rose-400 border border-rose-500/20 p-2.5 rounded-xl text-[111px] font-bold text-center mt-2">
                         ⚠️ Underpopulated: Less than 10 players joined. Place bonuses will be heavily scaled down!
                       </div>
                     )}
 
-                    {/* Button to open calculator popup */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -384,14 +370,28 @@ export default function UpcomingPerKillMatches({
 
                 <div className="space-y-3">
                   <div className="flex gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedPlayerListTournament(tournament);
+                      }}
+                      className="px-3 bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500/20 hover:border-purple-500/40 rounded-xl font-bold duration-300 flex items-center justify-center gap-1 hover:scale-[1.02] active:scale-[0.98]"
+                      title="View Players"
+                    >
+                      <span className="text-sm">👥</span>
+                      <span className="text-[10px] uppercase tracking-wider hidden md:block">Players</span>
+                    </button>
                     {tournament.tournamentRules && (
                       <button
-                        onClick={() => setExpandedRulesId(expandedRulesId === tournament.id ? null : tournament.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setExpandedRulesId(expandedRulesId === tournament.id ? null : tournament.id);
+                        }}
                         className={`px-3 bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 hover:bg-yellow-500/20 hover:border-yellow-500/40 rounded-xl font-bold duration-300 flex items-center justify-center gap-1 hover:scale-[1.02] active:scale-[0.98] ${expandedRulesId === tournament.id ? "bg-yellow-500/30" : ""}`}
                         title="Match Rules"
                       >
                         <span className="text-sm">📜</span>
-                        <span className="text-[10px] uppercase tracking-wider">Rules</span>
+                        <span className="text-[10px] uppercase tracking-wider hidden md:block">Rules</span>
                       </button>
                     )}
                     {alreadyJoined ? (
@@ -425,7 +425,6 @@ export default function UpcomingPerKillMatches({
                     </button>
                   </div>
 
-                  {/* Rules Expansion */}
                   {expandedRulesId === tournament.id && tournament.tournamentRules && (
                     <div className="mt-3 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-xl animate-scale-in">
                       <div className="text-yellow-400 font-bold text-xs mb-1">📜 MATCH RULES:</div>
@@ -433,14 +432,6 @@ export default function UpcomingPerKillMatches({
                     </div>
                   )}
 
-                  <button
-                    onClick={() => { setSelectedViewTournament(tournament); setShowPlayersPopup(true); }}
-                    className="w-full bg-glass py-2.5 rounded-xl text-xs font-black tracking-wider text-purple-400 hover:text-white border border-purple-500/20 hover:bg-purple-500/10 transition-all"
-                  >
-                    👥 VIEW SLOTS / PLAYERS
-                  </button>
-
-                  {/* Admin Buttons */}
                   {isAdmin && (
                     <div className="pt-2 mt-2 border-t border-gray-800 space-y-2">
                       <button
@@ -507,7 +498,6 @@ export default function UpcomingPerKillMatches({
         </div>
       )}
 
-      {/* POPUP: SLOT SELECTION & REGISTRATION */}
       {showJoinPopup && selectedTournament && (
         <JoinPopup
           tournament={selectedTournament}
@@ -522,56 +512,6 @@ export default function UpcomingPerKillMatches({
         />
       )}
 
-      {/* POPUP: VIEW SLOTS / PLAYERS */}
-      {showPlayersPopup && selectedViewTournament && (
-        <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-50 px-4">
-          <div className="bg-[#0f0f12] w-full max-w-4xl rounded-3xl p-6 border border-orange-500/20 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6 border-b border-gray-800 pb-4">
-              <h3 className="text-2xl font-black text-orange-500">👥 MATCH SLOTS & PLAYERS</h3>
-              <button onClick={() => setShowPlayersPopup(false)} className="text-gray-400 hover:text-white text-3xl">&times;</button>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {Array.from({ length: selectedViewTournament.totalTeams }, (_, i) => i + 1).map(num => {
-                const status = getSlotStatus(selectedViewTournament.id, num);
-                return (
-                  <div 
-                    key={num} 
-                    className={`p-4 rounded-2xl border text-sm flex flex-col justify-between ${
-                      status.booked 
-                        ? "bg-orange-500/5 border-orange-500/20" 
-                        : "bg-black/40 border-gray-900"
-                    }`}
-                  >
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-xs text-gray-500 font-bold">SLOT #{num}</span>
-                      <span className={`w-2 h-2 rounded-full ${status.booked ? 'bg-orange-500' : 'bg-gray-700'}`}></span>
-                    </div>
-                    {status.booked ? (
-                      <div>
-                        <p className="font-bold text-white line-clamp-1">{status.ingameName}</p>
-                        <p className="text-[10px] text-gray-400">UID: {status.gameUid}</p>
-                        <p className="text-[10px] text-blue-400">Level: {status.gameLevel}</p>
-                      </div>
-                    ) : (
-                      <p className="text-gray-600 font-bold">AVAILABLE</p>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            <button
-              onClick={() => setShowPlayersPopup(false)}
-              className="w-full mt-6 py-3 rounded-xl bg-gray-800 hover:bg-gray-700 font-bold transition"
-            >
-              CLOSE
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* POPUP: HOW PER KILL WORKS */}
       {showRulesPopup && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 px-4">
           <div className="bg-[#0f0f12] w-full max-w-lg rounded-3xl p-6 border border-orange-500/20 shadow-2xl">
@@ -617,7 +557,6 @@ export default function UpcomingPerKillMatches({
           </div>
         </div>
       )}
-      {/* POPUP: LIVE EARNINGS CALCULATOR */}
       {showCalcPopup && selectedCalcTournament && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 px-4">
           <div className="bg-[#0f0f12] w-full max-w-md rounded-3xl p-6 border border-orange-500/20 shadow-2xl">
@@ -638,7 +577,6 @@ export default function UpcomingPerKillMatches({
             </p>
 
             <div className="space-y-4">
-              {/* Info Rates */}
               <div className="grid grid-cols-2 gap-3 text-xs bg-black/40 p-3 rounded-xl border border-white/5">
                 <div>
                   <span className="text-gray-500 block">Per Kill Rate</span>
@@ -650,7 +588,6 @@ export default function UpcomingPerKillMatches({
                 </div>
               </div>
 
-              {/* Inputs */}
               <div>
                 <label className="text-gray-400 text-xs block mb-1.5 font-bold">ESTIMATED KILLS</label>
                 <input
@@ -716,6 +653,13 @@ export default function UpcomingPerKillMatches({
             </button>
           </div>
         </div>
+      )}
+      {/* Player List Popup */}
+      {selectedPlayerListTournament && (
+        <PlayerListPopup
+          tournament={selectedPlayerListTournament}
+          onClose={() => setSelectedPlayerListTournament(null)}
+        />
       )}
     </div>
   );

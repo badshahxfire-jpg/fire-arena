@@ -17,6 +17,7 @@
     "@capacitor/push-notifications": "^8.1.1",
     "@capacitor/share": "^8.0.1",
     "firebase": "^12.13.0",
+    "framer-motion": "^12.42.2",
     "idb": "^8.0.3",
     "lines-and-columns": "^2.0.4",
     "react": "^19.2.6",
