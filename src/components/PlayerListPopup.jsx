@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function PlayerListPopup({ tournament, onClose }) {
+export default function PlayerListPopup({ tournament, joinedPlayers, onClose }) {
   const [players, setPlayers] = useState([]);
 
   useEffect(() => {
@@ -9,17 +9,29 @@ export default function PlayerListPopup({ tournament, onClose }) {
 
     let allPlayers = [];
     
-    // Check registeredTeams
-    if (tournament.registeredTeams) {
+    if (joinedPlayers && Array.isArray(joinedPlayers)) {
+      const tPlayers = joinedPlayers.filter(p => p.tournamentId === tournament.id);
+      tPlayers.forEach(p => {
+        allPlayers.push({
+          name: p.ingameName || p.inGameName || p.name || "Unknown",
+          isLeader: true,
+        });
+        if (p.teammates && Array.isArray(p.teammates)) {
+          p.teammates.forEach(tm => {
+            allPlayers.push({
+              name: tm.ingameName || tm.inGameName || tm.name || "Unknown",
+              isLeader: false,
+            });
+          });
+        }
+      });
+    } else if (tournament.registeredTeams) {
       Object.entries(tournament.registeredTeams).forEach(([uid, teamData]) => {
         if (teamData.status !== "ELIMINATED") {
-          // Add leader
           allPlayers.push({
             name: teamData.inGameName || teamData.ingameName || "Unknown",
             isLeader: true,
           });
-
-          // Add teammates
           if (teamData.teammates && Array.isArray(teamData.teammates)) {
             teamData.teammates.forEach((tm) => {
               allPlayers.push({
@@ -33,7 +45,7 @@ export default function PlayerListPopup({ tournament, onClose }) {
     }
 
     setPlayers(allPlayers);
-  }, [tournament]);
+  }, [tournament, joinedPlayers]);
 
   return (
     <AnimatePresence>

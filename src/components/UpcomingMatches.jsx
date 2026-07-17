@@ -857,6 +857,7 @@ export default function UpcomingMatches({
       {selectedPlayerListTournament && (
         <PlayerListPopup
           tournament={selectedPlayerListTournament}
+          joinedPlayers={joinedPlayers}
           onClose={() => setSelectedPlayerListTournament(null)}
         />
       )}
