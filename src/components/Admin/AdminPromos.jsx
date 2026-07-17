@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { database } from "../../firebase";
-import { ref, onValue, push, remove, set } from "firebase/database";
+import { ref, onValue, push, update, remove, set } from "firebase/database";
 
 const BACKGROUNDS = [
   { name: "Orange/Red (Fire)", class: "bg-gradient-to-r from-orange-600 to-red-600" },
@@ -18,6 +18,7 @@ export default function AdminPromos() {
   const [icon, setIcon] = useState("🔥");
   const [bgClass, setBgClass] = useState(BACKGROUNDS[0].class);
   const [loading, setLoading] = useState(false);
+  const [editId, setEditId] = useState(null);
 
   useEffect(() => {
     const promosRef = ref(database, "promos");
@@ -43,21 +44,59 @@ export default function AdminPromos() {
     
     setLoading(true);
     try {
-      const promosRef = ref(database, "promos");
-      await push(promosRef, {
-        title: title,
-        desc: desc,
-        icon: icon,
-        bg: bgClass,
-        timestamp: Date.now(),
-      });
-      
-      setTitle("");
-      setDesc("");
-      alert("Promo Banner added successfully!");
+      if (editId) {
+        await update(ref(database, `promos/${editId}`), {
+          title, desc, icon, bg: bgClass,
+        });
+        alert("Promo Banner updated successfully!");
+      } else {
+        const promosRef = ref(database, "promos");
+        await push(promosRef, {
+          title, desc, icon, bg: bgClass, timestamp: Date.now(),
+        });
+        alert("Promo Banner added successfully!");
+      }
+      resetForm();
     } catch (error) {
-      console.error("Error adding promo:", error);
-      alert("Failed to add promo");
+      console.error("Error saving promo:", error);
+      alert("Failed to save promo");
+    }
+    setLoading(false);
+  };
+
+  const resetForm = () => {
+    setTitle("");
+    setDesc("");
+    setIcon("🔥");
+    setBgClass(BACKGROUNDS[0].class);
+    setEditId(null);
+  };
+
+  const handleEditClick = (promo) => {
+    setTitle(promo.title);
+    setDesc(promo.desc);
+    setIcon(promo.icon);
+    setBgClass(promo.bg);
+    setEditId(promo.id);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleRestoreDefaults = async () => {
+    if (!window.confirm("This will add the 3 original default banners. Proceed?")) return;
+    setLoading(true);
+    try {
+      const defaults = [
+        { title: "MEGA TOURNAMENT 🏆", desc: "Join the biggest BGMI event this weekend! Prize pool up to ₹50,000.", bg: "bg-gradient-to-r from-orange-600 to-red-600", icon: "🔥", timestamp: Date.now() },
+        { title: "NEW PER KILL MATCHES 💀", desc: "Earn coins for every kill! The more you kill, the more you win.", bg: "bg-gradient-to-r from-purple-600 to-indigo-600", icon: "⚔️", timestamp: Date.now() + 1 },
+        { title: "REFER & EARN 💸", desc: "Invite your squad and earn free coins on their first match.", bg: "bg-gradient-to-r from-emerald-600 to-teal-600", icon: "🤝", timestamp: Date.now() + 2 }
+      ];
+      for (const p of defaults) {
+        await push(ref(database, "promos"), p);
+      }
+      alert("Defaults restored!");
+    } catch (e) {
+      console.error(e);
+      alert("Failed to restore");
     }
     setLoading(false);
   };
@@ -74,13 +113,30 @@ export default function AdminPromos() {
 
   return (
     <div className="bg-black/40 p-4 md:p-8 rounded-2xl border border-white/10 max-w-4xl mx-auto mt-6 shadow-2xl">
-      <h2 className="text-2xl font-black text-orange-500 mb-6 flex items-center gap-2">
-        <span>🖼️</span> Manage Promo Banners
-      </h2>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-black text-orange-500 flex items-center gap-2">
+          <span>🖼️</span> Manage Promo Banners
+        </h2>
+        <button 
+          onClick={handleRestoreDefaults}
+          className="px-3 py-1.5 bg-green-500/10 text-green-500 border border-green-500/20 hover:bg-green-500 hover:text-black rounded-lg text-xs font-bold transition-all"
+        >
+          RESTORE DEFAULTS
+        </button>
+      </div>
 
-      {/* Add New Promo Form */}
+      {/* Add/Edit New Promo Form */}
       <form onSubmit={handleAddPromo} className="bg-[#0f0f12] p-5 rounded-2xl border border-white/5 mb-8 space-y-4">
-        <h3 className="text-lg font-bold text-white mb-4">Create New Banner</h3>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-bold text-white">
+            {editId ? "Edit Banner" : "Create New Banner"}
+          </h3>
+          {editId && (
+            <button type="button" onClick={resetForm} className="text-xs text-gray-400 hover:text-white underline">
+              Cancel Edit
+            </button>
+          )}
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -140,7 +196,7 @@ export default function AdminPromos() {
           disabled={loading}
           className="w-full py-3 bg-gradient-to-r from-orange-500 to-red-600 rounded-xl font-bold text-black mt-4 hover:scale-[1.02] transition-transform disabled:opacity-50"
         >
-          {loading ? "Adding..." : "Add Promo Banner"}
+          {loading ? "Saving..." : editId ? "Update Banner" : "Add Promo Banner"}
         </button>
       </form>
 
@@ -169,12 +225,18 @@ export default function AdminPromos() {
                 </div>
 
                 {/* Actions */}
-                <div className="w-full md:w-1/3 p-4 flex justify-end bg-[#0a0a0f]">
+                <div className="w-full md:w-1/3 p-4 flex justify-end gap-2 bg-[#0a0a0f]">
+                  <button
+                    onClick={() => handleEditClick(promo)}
+                    className="px-4 py-2 bg-blue-500/10 text-blue-500 border border-blue-500/20 rounded-lg text-sm font-bold hover:bg-blue-500 hover:text-white transition-colors"
+                  >
+                    Edit
+                  </button>
                   <button
                     onClick={() => handleDeletePromo(promo.id)}
                     className="px-4 py-2 bg-red-500/10 text-red-500 border border-red-500/20 rounded-lg text-sm font-bold hover:bg-red-500 hover:text-white transition-colors"
                   >
-                    Delete Banner
+                    Delete
                   </button>
                 </div>
               </div>
