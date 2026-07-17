@@ -22,6 +22,8 @@ export default function UpcomingPerKillMatches({
   const [showPlayersPopup, setShowPlayersPopup] = useState(false);
   const [selectedViewTournament, setSelectedViewTournament] = useState(null);
   const [loadingAction, setLoadingAction] = useState(null);
+  const [showRulesPopup, setShowRulesPopup] = useState(false);
+  const [expandedRulesId, setExpandedRulesId] = useState(null);
   const [leaderProfile, setLeaderProfile] = useState(null);
 
   // Fetch leader profile data to autofill and enforce lock
@@ -375,6 +377,15 @@ export default function UpcomingPerKillMatches({
 
                 <div className="space-y-3">
                   <div className="flex gap-2">
+                    {tournament.tournamentRules && (
+                      <button
+                        onClick={() => setExpandedRulesId(expandedRulesId === tournament.id ? null : tournament.id)}
+                        className={`px-3 bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 hover:bg-yellow-500/20 hover:border-yellow-500/40 rounded-xl font-bold duration-300 flex items-center justify-center hover:scale-[1.02] active:scale-[0.98] ${expandedRulesId === tournament.id ? "bg-yellow-500/30" : ""}`}
+                        title="Match Rules"
+                      >
+                        <span className="text-sm">📜</span>
+                      </button>
+                    )}
                     {alreadyJoined ? (
                       <button 
                         disabled 
@@ -394,17 +405,25 @@ export default function UpcomingPerKillMatches({
                         onClick={() => handleOpenJoin(tournament)}
                         className="flex-1 bg-gradient-to-r from-orange-500 to-red-600 text-black font-black py-3.5 rounded-xl hover:scale-[1.02] duration-300 transition-all flex items-center justify-center gap-2"
                       >
-                        🎯 JOINE NOW
+                        🎯 JOIN NOW
                       </button>
                     )}
                     <button
                       onClick={() => handleShareMatch(tournament)}
-                      className="px-4 bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 hover:border-blue-500/40 rounded-xl font-bold duration-300 flex items-center justify-center hover:scale-[1.02] active:scale-[0.98]"
+                      className="px-3 bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 hover:border-blue-500/40 rounded-xl font-bold duration-300 flex items-center justify-center hover:scale-[1.02] active:scale-[0.98]"
                       title="Share Match"
                     >
-                      <span className="text-base md:text-lg">📤</span>
+                      <span className="text-base">📤</span>
                     </button>
                   </div>
+
+                  {/* Rules Expansion */}
+                  {expandedRulesId === tournament.id && tournament.tournamentRules && (
+                    <div className="mt-3 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-xl animate-scale-in">
+                      <div className="text-yellow-400 font-bold text-xs mb-1">📜 MATCH RULES:</div>
+                      <div className="text-gray-300 text-xs whitespace-pre-wrap leading-relaxed">{tournament.tournamentRules}</div>
+                    </div>
+                  )}
 
                   <button
                     onClick={() => { setSelectedViewTournament(tournament); setShowPlayersPopup(true); }}

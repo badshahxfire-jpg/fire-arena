@@ -16,6 +16,7 @@ export default function UpcomingMatches({
   const [showPlayersPopup, setShowPlayersPopup] = useState(false);
   const [selectedViewTournament, setSelectedViewTournament] = useState(null);
   const [loadingAction, setLoadingAction] = useState(null);
+  const [expandedRulesId, setExpandedRulesId] = useState(null);
 
   const handleShareMatch = async (match) => {
     const appLink = window.location.origin;
@@ -349,6 +350,15 @@ export default function UpcomingMatches({
 
                   {/* Join and Share Buttons */}
                   <div className="flex gap-2 mt-4">
+                    {item.tournamentRules && (
+                      <button
+                        onClick={() => setExpandedRulesId(expandedRulesId === item.id ? null : item.id)}
+                        className={`px-3 bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 hover:bg-yellow-500/20 hover:border-yellow-500/40 rounded-[14px] font-bold duration-300 flex items-center justify-center hover:scale-[1.02] active:scale-[0.98] ${expandedRulesId === item.id ? "bg-yellow-500/30" : ""}`}
+                        title="Match Rules"
+                      >
+                        <span className="text-sm">📜</span>
+                      </button>
+                    )}
                     <button
                       onClick={() => onJoin(item)}
                       disabled={joinLoading}
@@ -360,12 +370,20 @@ export default function UpcomingMatches({
                     </button>
                     <button
                       onClick={() => handleShareMatch(item)}
-                      className="px-4 bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 hover:border-blue-500/40 rounded-[14px] font-bold duration-300 flex items-center justify-center hover:scale-[1.02] active:scale-[0.98]"
+                      className="px-3 bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 hover:border-blue-500/40 rounded-[14px] font-bold duration-300 flex items-center justify-center hover:scale-[1.02] active:scale-[0.98]"
                       title="Share Match"
                     >
-                      <span className="text-base md:text-lg">📤</span>
+                      <span className="text-base">📤</span>
                     </button>
                   </div>
+
+                  {/* Rules Expansion */}
+                  {expandedRulesId === item.id && item.tournamentRules && (
+                    <div className="mt-3 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-xl animate-scale-in">
+                      <div className="text-yellow-400 font-bold text-xs mb-1">📜 MATCH RULES:</div>
+                      <div className="text-gray-300 text-xs whitespace-pre-wrap leading-relaxed">{item.tournamentRules}</div>
+                    </div>
+                  )}
 
                   {/* Admin Buttons */}
                   {isAdmin && (

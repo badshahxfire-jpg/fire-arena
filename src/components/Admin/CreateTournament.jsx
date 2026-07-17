@@ -13,6 +13,7 @@ export default function CreateTournament({ onCreateTournament }) {
   const [matchTime, setMatchTime] = useState("");
   const [matchDate, setMatchDate] = useState("");
   const [selectedMap, setSelectedMap] = useState("Bermuda");
+  const [tournamentRules, setTournamentRules] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -51,6 +52,7 @@ export default function CreateTournament({ onCreateTournament }) {
         selectedMap,
         adminProfit,
         totalPrizePool,
+        tournamentRules,
       });
       const newCount = matchCount + 1;
       localStorage.setItem('survivalMatchCount', newCount.toString());
@@ -192,6 +194,12 @@ export default function CreateTournament({ onCreateTournament }) {
             <option>Alpine</option>
             <option>Nexterra</option>
           </select>
+          <textarea
+            placeholder="Match Rules & Guidelines (Optional)"
+            value={tournamentRules}
+            onChange={(e) => setTournamentRules(e.target.value)}
+            className="w-full bg-[#1a1a24] text-white p-4 rounded-2xl border border-gray-800 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all font-bold placeholder-gray-600 shadow-inner col-span-1 sm:col-span-2 min-h-[100px] mt-2"
+          />
         </div>
 
         {/* Prize Distribution Preview */}
