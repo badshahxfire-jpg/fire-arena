@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import logo from "../assets/logo.png";
 
 export default function Navbar({ 
@@ -25,159 +25,174 @@ export default function Navbar({
   toggleMute,
   apkUrl
 }) {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const unreadCount = notifications.filter((item) => !item.seen).length;
 
   return (
     <nav className="sticky top-0 z-50 bg-glass/80 backdrop-blur-md border-b border-glass-orange shadow-glass-glow">
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 flex flex-col md:flex-row gap-4 md:gap-0 items-center justify-between relative">
-        {/* Logo Section */}
-        <div className="flex items-center justify-between w-full md:w-auto">
-          <div className="flex items-center gap-3">
-            <div className="cyber-float flex-shrink-0">
-              <img
-                src={logo}
-                alt="FIRE BAADSHAH ARENA"
-                className="w-14 h-14 object-contain"
-              />
-            </div>
-            <div>
-              <h1 className="text-2xl font-gaming font-extrabold leading-none text-orange-500 text-glow-orange tracking-wide cyber-neon">
-                FIRE BAADSHAH
-              </h1>
-              <p className="text-white text-xs font-gaming font-bold tracking-widest opacity-80">
-                ARENA
-              </p>
-            </div>
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between relative">
+        
+        {/* Left: Logo Section */}
+        <div className="flex items-center gap-3 cursor-pointer">
+          <div className="cyber-float flex-shrink-0">
+            <img
+              src={logo}
+              alt="FIRE BAADSHAH ARENA"
+              className="w-12 h-12 md:w-14 md:h-14 object-contain"
+            />
           </div>
-          
-          {/* Hamburger Icon for Mobile */}
-          {user && (
-            <div className="flex items-center gap-3 md:hidden">
-              {!window.Capacitor && apkUrl && (
-                <a href={apkUrl} target="_blank" rel="noopener noreferrer" className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white border border-blue-500/30 px-3 py-2 rounded-xl font-bold text-xs flex items-center gap-1 shadow-md shadow-blue-500/20">
-                  📲 APP
-                </a>
-              )}
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="text-orange-400 p-2 border border-orange-500/30 rounded-xl hover:bg-orange-500/10 transition-all"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  {isMobileMenuOpen ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  ) : (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  )}
-                </svg>
-              </button>
-            </div>
-          )}
+          <div>
+            <h1 className="text-xl md:text-2xl font-gaming font-extrabold leading-none text-orange-500 text-glow-orange tracking-wide cyber-neon">
+              FIRE BAADSHAH
+            </h1>
+            <p className="text-white text-[10px] md:text-xs font-gaming font-bold tracking-widest opacity-80 mt-0.5">
+              ARENA
+            </p>
+          </div>
         </div>
 
-        {/* User Menu or Auth Buttons */}
-        {user ? (
-          <>
-            {/* Desktop View: All buttons */}
-            <div className="hidden md:flex items-center justify-center gap-3 font-gaming text-sm flex-wrap">
+        {/* Right: Actions */}
+        <div className="flex items-center gap-2 md:gap-4 font-gaming">
+          {user ? (
+            <>
+              {/* Wallet Button */}
+              <button 
+                onClick={onShowWallet} 
+                className="hidden md:flex items-center gap-2 bg-gradient-to-r from-orange-500/20 to-red-500/20 text-orange-400 border border-orange-500/30 hover:border-orange-500 hover:bg-orange-500/30 px-4 py-2 rounded-xl font-bold transition-all shadow-md"
+              >
+                🪙 <span>{coins}</span>
+              </button>
+              
+              {/* Wallet (Mobile) */}
+              <button 
+                onClick={onShowWallet} 
+                className="md:hidden flex items-center gap-1 bg-orange-500/10 text-orange-400 border border-orange-500/30 px-3 py-1.5 rounded-lg font-bold text-sm"
+              >
+                🪙 {coins}
+              </button>
+
+              {/* Notifications */}
+              <button 
+                onClick={onShowNotifications} 
+                className="relative bg-yellow-500/10 text-yellow-400 border border-yellow-500/30 hover:border-yellow-500 hover:bg-yellow-500/20 p-2 md:px-4 md:py-2 rounded-xl transition-all flex items-center justify-center"
+              >
+                🔔
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] md:text-xs font-bold px-1.5 py-0.5 rounded-full animate-bounce">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Menu Container */}
+              <div className="relative" ref={menuRef}>
+                <button 
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  className="bg-purple-500/10 text-purple-400 border border-purple-500/30 hover:border-purple-500 hover:bg-purple-500/20 p-2 md:px-4 md:py-2 rounded-xl transition-all flex items-center gap-2"
+                >
+                  <span className="hidden md:block font-bold">MENU</span>
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
+
+                {/* Dropdown Menu */}
+                {isMenuOpen && (
+                  <div className="absolute right-0 mt-3 w-64 bg-glass-heavy border border-orange-500/30 rounded-2xl shadow-2xl overflow-hidden flex flex-col z-50">
+                    <div className="p-3 border-b border-orange-500/20 bg-gradient-to-r from-orange-500/10 to-transparent">
+                      <p className="text-white font-bold truncate text-sm">👤 {user.email || 'Player'}</p>
+                      {isAdmin && (
+                        <p className={`text-xs mt-1 font-bold ${isSuperAdmin ? "text-green-400" : "text-purple-400"}`}>
+                          {isSuperAdmin ? "⭐ SUPER ADMIN" : "🛡️ STAFF"}
+                        </p>
+                      )}
+                    </div>
+                    
+                    <div className="p-2 flex flex-col gap-1 max-h-[60vh] overflow-y-auto no-scrollbar">
+                      {!window.Capacitor && apkUrl && (
+                        <a href={apkUrl} target="_blank" rel="noopener noreferrer" className="w-full text-left p-2.5 rounded-xl text-sm font-bold bg-blue-500/20 text-blue-300 hover:bg-blue-500/40 transition-colors flex items-center gap-2">
+                          📲 Download App
+                        </a>
+                      )}
+                      <button onClick={() => { onShowProfile(); setIsMenuOpen(false); }} className="w-full text-left p-2.5 rounded-xl text-sm font-bold text-gray-300 hover:bg-white/10 transition-colors">
+                        👤 My Profile
+                      </button>
+                      <button onClick={() => { onShowHistory(); setIsMenuOpen(false); }} className="w-full text-left p-2.5 rounded-xl text-sm font-bold text-gray-300 hover:bg-white/10 transition-colors">
+                        🏆 Matches History
+                      </button>
+                      <button onClick={() => { onShowPerKillHistory(); setIsMenuOpen(false); }} className="w-full text-left p-2.5 rounded-xl text-sm font-bold text-gray-300 hover:bg-white/10 transition-colors">
+                        ⚔️ Per Kill History
+                      </button>
+                      <button onClick={() => { onShowReferral(); setIsMenuOpen(false); }} className="w-full text-left p-2.5 rounded-xl text-sm font-bold text-orange-400 hover:bg-orange-500/20 transition-colors">
+                        🎁 Refer & Earn
+                      </button>
+                      <button onClick={() => { onShowLoyal(); setIsMenuOpen(false); }} className="w-full text-left p-2.5 rounded-xl text-sm font-bold text-yellow-400 hover:bg-yellow-500/20 transition-colors">
+                        🔥 Top 10 Players
+                      </button>
+                      <button onClick={() => { onShowBonusWinners(); setIsMenuOpen(false); }} className="w-full text-left p-2.5 rounded-xl text-sm font-bold text-yellow-400 hover:bg-yellow-500/20 transition-colors">
+                        🎁 Bonus Winners
+                      </button>
+                      
+                      <div className="h-px bg-white/10 my-1"></div>
+                      
+                      <button onClick={() => { onShowTutorial(); setIsMenuOpen(false); }} className="w-full text-left p-2.5 rounded-xl text-sm font-bold text-gray-300 hover:bg-white/10 transition-colors">
+                        📺 Video Tutorial
+                      </button>
+                      <button onClick={() => { onShowContact(); setIsMenuOpen(false); }} className="w-full text-left p-2.5 rounded-xl text-sm font-bold text-gray-300 hover:bg-white/10 transition-colors">
+                        🎧 Contact Support
+                      </button>
+                      <button onClick={() => { toggleMute(); setIsMenuOpen(false); }} className="w-full text-left p-2.5 rounded-xl text-sm font-bold text-gray-300 hover:bg-white/10 transition-colors flex justify-between">
+                        <span>{isSoundMuted ? "🔇 Sounds Muted" : "🔊 Sounds On"}</span>
+                      </button>
+
+                      {isAdmin && (
+                        <>
+                          <div className="h-px bg-white/10 my-1"></div>
+                          <button onClick={() => { onShowBlocked(); setIsMenuOpen(false); }} className="w-full text-left p-2.5 rounded-xl text-sm font-bold text-red-400 hover:bg-red-500/20 transition-colors">
+                            🚫 Blocked Players
+                          </button>
+                        </>
+                      )}
+                    </div>
+                    
+                    <div className="p-2 border-t border-orange-500/20">
+                      <button onClick={() => { onLogout(); setIsMenuOpen(false); }} className="w-full bg-red-600/20 text-red-500 hover:bg-red-600 hover:text-white p-2.5 rounded-xl font-bold text-sm transition-all text-center">
+                        LOGOUT
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
               {!window.Capacitor && apkUrl && (
-                <a href={apkUrl} target="_blank" rel="noopener noreferrer" className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white border border-blue-500/30 hover:from-blue-400 hover:to-indigo-500 px-4 py-2 rounded-2xl font-bold transition-all flex items-center gap-1 shadow-md shadow-blue-500/20">
+                <a href={apkUrl} target="_blank" rel="noopener noreferrer" className="hidden md:flex bg-gradient-to-r from-blue-500 to-indigo-600 text-white border border-blue-500/30 hover:from-blue-400 hover:to-indigo-500 px-4 py-2 rounded-xl font-bold transition-all items-center gap-1 shadow-md text-sm">
                   📲 DOWNLOAD APP
                 </a>
               )}
-              <button onClick={onShowTutorial} className="bg-red-500/10 text-red-400 border border-red-500/20 hover:border-red-500/50 hover:bg-red-500/20 px-4 py-2 rounded-2xl font-bold transition-all">📺 TUTORIAL</button>
-              <button onClick={onShowWallet} className="bg-orange-500/10 text-orange-400 border border-orange-500/20 hover:border-orange-500/50 hover:bg-orange-500/20 px-4 py-2 rounded-2xl font-bold transition-all">🪙 {coins} WALLET</button>
-              <button onClick={onShowContact} className="bg-green-500/10 text-green-400 border border-green-500/20 hover:border-green-500/50 hover:bg-green-500/20 px-4 py-2 rounded-2xl font-bold transition-all">CONTACT</button>
-              <button onClick={onShowHistory} className="bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:border-blue-500/50 hover:bg-blue-500/20 px-4 py-2 rounded-2xl font-bold transition-all">MATCHES HISTORY</button>
-              <button onClick={onShowPerKillHistory} className="bg-red-500/10 text-red-400 border border-red-500/20 hover:border-red-500/50 hover:bg-red-500/20 px-4 py-2 rounded-2xl font-bold transition-all">⚔️ PER KILL HISTORY</button>
-              <button onClick={onShowReferral} className="bg-orange-500/10 text-orange-400 border border-orange-500/20 hover:border-orange-500/50 hover:bg-orange-500/20 px-4 py-2 rounded-2xl font-bold transition-all">🎁 REFER & EARN</button>
-              <button onClick={onShowLoyal} className="bg-orange-500/10 text-orange-400 border border-orange-500/20 hover:border-orange-500/50 hover:bg-orange-500/20 px-4 py-2 rounded-2xl font-bold transition-all">🔥 TOP 10 PLAYERS</button>
-              <button onClick={onShowBonusWinners} className="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 hover:border-yellow-500/50 hover:bg-yellow-500/20 px-4 py-2 rounded-2xl font-bold transition-all">🎁 BONUS WINNERS</button>
-              <button onClick={onShowBlocked} className="bg-red-500/10 text-red-400 border border-red-500/20 hover:border-red-500/50 hover:bg-red-500/20 px-4 py-2 rounded-2xl font-bold transition-all">🚫 BLOCKED</button>
-              <button onClick={onShowProfile} className="bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:border-purple-500/50 hover:bg-purple-500/20 px-4 py-2 rounded-2xl font-bold transition-all">PROFILE</button>
-              <button onClick={onShowNotifications} className="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 hover:border-yellow-500/50 hover:bg-yellow-500/20 px-4 py-2 rounded-2xl font-bold transition-all flex items-center">
-                🔔 <span className="ml-1 text-yellow-400 font-extrabold">{notifications.filter((item) => !item.seen).length}</span>
+              <button onClick={onShowLogin} className="border border-orange-500/30 text-orange-400 hover:bg-orange-500/10 px-4 py-2 rounded-xl font-bold text-sm transition-all">
+                LOGIN
               </button>
-              <button 
-                onClick={toggleMute} 
-                className={`border px-4 py-2 rounded-2xl font-bold transition-all flex items-center ${isSoundMuted ? 'bg-red-500/10 text-red-400 border-red-500/20 hover:border-red-500/50 hover:bg-red-500/20' : 'bg-green-500/10 text-green-400 border-green-500/20 hover:border-green-500/50 hover:bg-green-500/20'}`}
-                title={isSoundMuted ? "Unmute Sounds" : "Mute Sounds"}
-              >
-                {isSoundMuted ? "🔇" : "🔊"}
+              <button onClick={onShowRegister} className="bg-gradient-to-r from-orange-500 to-red-600 text-black hover:from-orange-600 hover:to-red-700 px-4 py-2 rounded-xl font-bold shadow-md text-sm transition-all">
+                REGISTER
               </button>
-              {isAdmin && <span className={`border px-4 py-2 rounded-full font-bold ${isSuperAdmin ? "bg-green-500/20 text-green-400 border-green-500/30" : "bg-purple-500/20 text-purple-400 border-purple-500/30"}`}>
-                {isSuperAdmin ? "ADMIN" : "STAFF"}
-              </span>}
-              <button onClick={onLogout} className="bg-gradient-to-r from-red-600 to-rose-700 text-white hover:from-red-500 hover:to-rose-600 px-5 py-2.5 rounded-2xl font-bold transition-all shadow-md">LOGOUT</button>
-            </div>
-
-            {/* Mobile View: Quick Action Buttons */}
-            <div className="flex md:hidden flex-col w-full gap-2 font-gaming text-xs">
-              {/* Row 1 */}
-              <div className="flex w-full gap-2">
-                <button onClick={onShowWallet} className="bg-orange-500/10 text-orange-400 border border-orange-500/20 py-2.5 rounded-xl font-bold flex-1 text-center truncate flex items-center justify-center gap-1">
-                  🪙 WALLET {coins}
-                </button>
-                <button onClick={onShowReferral} className="bg-orange-500/10 text-orange-400 border border-orange-500/20 py-2.5 rounded-xl font-bold flex-1 text-center truncate flex items-center justify-center gap-1">
-                  🎁 REFER & EARN
-                </button>
-                <button onClick={onShowNotifications} className="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-3 py-2.5 rounded-xl font-bold flex items-center justify-center flex-shrink-0">
-                  🔔 <span className="ml-1 text-yellow-400 font-extrabold">{notifications.filter((item) => !item.seen).length}</span>
-                </button>
-                <button 
-                  onClick={toggleMute} 
-                  className={`border px-3 py-2.5 rounded-xl font-bold flex items-center justify-center flex-shrink-0 ${isSoundMuted ? 'bg-red-500/10 text-red-400 border-red-500/20' : 'bg-green-500/10 text-green-400 border-green-500/20'}`}
-                >
-                  {isSoundMuted ? "🔇" : "🔊"}
-                </button>
-              </div>
-              {/* Row 2 */}
-              <div className="flex w-full gap-2">
-                <button onClick={onShowLoyal} className="bg-orange-500/10 text-orange-400 border border-orange-500/20 py-2.5 rounded-xl font-bold flex-1 text-center truncate flex items-center justify-center gap-1">
-                  🔥 TOP 10 PLAYERS
-                </button>
-                <button onClick={onShowBonusWinners} className="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 py-2.5 rounded-xl font-bold flex-1 text-center truncate flex items-center justify-center gap-1">
-                  🎁 BONUS WINNERS
-                </button>
-              </div>
-              {/* Row 3 */}
-              <div className="flex w-full gap-2">
-                <button onClick={onShowBlocked} className="bg-red-500/10 text-red-400 border border-red-500/20 py-2.5 rounded-xl font-bold flex-1 text-center truncate flex items-center justify-center gap-1">
-                  🚫 BLOCKED PLAYERS
-                </button>
-              </div>
-            </div>
-
-            {/* Mobile Dropdown Menu */}
-            {isMobileMenuOpen && (
-              <div className="md:hidden absolute top-full left-0 right-0 bg-black/95 backdrop-blur-xl border-b border-orange-500/30 p-4 flex flex-col gap-3 font-gaming text-sm shadow-2xl z-50">
-                {!window.Capacitor && apkUrl && (
-                  <a href={apkUrl} target="_blank" rel="noopener noreferrer" className="w-full text-center bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-3 rounded-xl font-bold">
-                    📲 DOWNLOAD APP (APK)
-                  </a>
-                )}
-                <button onClick={() => { onShowTutorial(); setIsMobileMenuOpen(false); }} className="w-full text-left bg-red-500/10 text-red-400 border border-red-500/20 p-3 rounded-xl font-bold">📺 TUTORIAL</button>
-                <button onClick={() => { onShowContact(); setIsMobileMenuOpen(false); }} className="w-full text-left bg-green-500/10 text-green-400 border border-green-500/20 p-3 rounded-xl font-bold">CONTACT</button>
-                <button onClick={() => { onShowHistory(); setIsMobileMenuOpen(false); }} className="w-full text-left bg-blue-500/10 text-blue-400 border border-blue-500/20 p-3 rounded-xl font-bold">MATCHES HISTORY</button>
-                <button onClick={() => { onShowPerKillHistory(); setIsMobileMenuOpen(false); }} className="w-full text-left bg-red-500/10 text-red-400 border border-red-500/20 p-3 rounded-xl font-bold">⚔️ PER KILL HISTORY</button>
-                <button onClick={() => { onShowProfile(); setIsMobileMenuOpen(false); }} className="w-full text-left bg-purple-500/10 text-purple-400 border border-purple-500/20 p-3 rounded-xl font-bold">PROFILE</button>
-                {isAdmin && <div className={`w-full text-center border p-3 rounded-xl font-bold ${isSuperAdmin ? "bg-green-500/20 text-green-400 border-green-500/30" : "bg-purple-500/20 text-purple-400 border-purple-500/30"}`}>
-                  {isSuperAdmin ? "ADMIN" : "STAFF"}
-                </div>}
-                <button onClick={() => { onLogout(); setIsMobileMenuOpen(false); }} className="w-full bg-gradient-to-r from-red-600 to-rose-700 text-white p-3 rounded-xl font-bold text-center mt-2">LOGOUT</button>
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="flex gap-3 md:gap-4 font-gaming items-center">
-            {!window.Capacitor && apkUrl && (
-              <a href={apkUrl} target="_blank" rel="noopener noreferrer" className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white border border-blue-500/30 hover:from-blue-400 hover:to-indigo-500 px-4 py-2 rounded-2xl font-bold transition-all flex items-center gap-1 shadow-md shadow-blue-500/20 text-sm md:text-base">
-                📲 DOWNLOAD APP
-              </a>
-            )}
-            <button onClick={onShowLogin} className="border border-orange-500/30 text-orange-400 px-4 py-2 md:px-6 md:py-2.5 rounded-xl md:rounded-2xl hover:bg-orange-500/10 font-semibold text-sm md:text-base transition-all">LOGIN</button>
-            <button onClick={onShowRegister} className="bg-gradient-to-r from-orange-500 to-red-600 text-black hover:from-orange-600 hover:to-red-700 px-4 py-2 md:px-6 md:py-2.5 rounded-xl md:rounded-2xl font-bold shadow-md text-sm md:text-base transition-all">REGISTER</button>
-          </div>
-        )}
+            </>
+          )}
+        </div>
       </div>
     </nav>
   );
