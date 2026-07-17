@@ -353,10 +353,11 @@ export default function UpcomingMatches({
                     {item.tournamentRules && (
                       <button
                         onClick={() => setExpandedRulesId(expandedRulesId === item.id ? null : item.id)}
-                        className={`px-3 bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 hover:bg-yellow-500/20 hover:border-yellow-500/40 rounded-[14px] font-bold duration-300 flex items-center justify-center hover:scale-[1.02] active:scale-[0.98] ${expandedRulesId === item.id ? "bg-yellow-500/30" : ""}`}
+                        className={`px-3 bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 hover:bg-yellow-500/20 hover:border-yellow-500/40 rounded-[14px] font-bold duration-300 flex items-center justify-center gap-1 hover:scale-[1.02] active:scale-[0.98] ${expandedRulesId === item.id ? "bg-yellow-500/30" : ""}`}
                         title="Match Rules"
                       >
                         <span className="text-sm">📜</span>
+                        <span className="text-[10px] uppercase tracking-wider">Rules</span>
                       </button>
                     )}
                     <button

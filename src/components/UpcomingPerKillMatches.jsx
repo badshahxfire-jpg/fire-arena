@@ -22,7 +22,6 @@ export default function UpcomingPerKillMatches({
   const [showPlayersPopup, setShowPlayersPopup] = useState(false);
   const [selectedViewTournament, setSelectedViewTournament] = useState(null);
   const [loadingAction, setLoadingAction] = useState(null);
-  const [showRulesPopup, setShowRulesPopup] = useState(false);
   const [expandedRulesId, setExpandedRulesId] = useState(null);
   const [leaderProfile, setLeaderProfile] = useState(null);
 
@@ -380,10 +379,11 @@ export default function UpcomingPerKillMatches({
                     {tournament.tournamentRules && (
                       <button
                         onClick={() => setExpandedRulesId(expandedRulesId === tournament.id ? null : tournament.id)}
-                        className={`px-3 bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 hover:bg-yellow-500/20 hover:border-yellow-500/40 rounded-xl font-bold duration-300 flex items-center justify-center hover:scale-[1.02] active:scale-[0.98] ${expandedRulesId === tournament.id ? "bg-yellow-500/30" : ""}`}
+                        className={`px-3 bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 hover:bg-yellow-500/20 hover:border-yellow-500/40 rounded-xl font-bold duration-300 flex items-center justify-center gap-1 hover:scale-[1.02] active:scale-[0.98] ${expandedRulesId === tournament.id ? "bg-yellow-500/30" : ""}`}
                         title="Match Rules"
                       >
                         <span className="text-sm">📜</span>
+                        <span className="text-[10px] uppercase tracking-wider">Rules</span>
                       </button>
                     )}
                     {alreadyJoined ? (
