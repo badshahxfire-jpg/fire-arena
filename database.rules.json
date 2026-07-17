@@ -107,6 +107,13 @@
     "slotLocks": {
       ".read": "auth != null",
       ".write": "auth != null && (auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1' || (root.child('adminData/staffEmails').val() != null && root.child('adminData/staffEmails').val().contains(auth.token.email)))"
+    },
+    "pollVotes": {
+      ".read": "auth != null",
+      ".write": "auth != null && (auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1' || (root.child('adminData/staffEmails').val() != null && root.child('adminData/staffEmails').val().contains(auth.token.email)))",
+      "$userId": {
+        ".write": "auth != null && auth.uid === $userId"
+      }
     }
   }
 }
