@@ -21,9 +21,16 @@ export default function AdminPromos({ liveTournaments = [], livePerKillTournamen
   const [editId, setEditId] = useState(null);
   const [linkedMatch, setLinkedMatch] = useState("");
 
+  const isUpcoming = (t) => {
+    if (!t.matchDate || !t.matchTime) return true;
+    const tournamentTime = new Date(`${t.matchDate}T${t.matchTime}`);
+    const diff = (tournamentTime - new Date()) / 1000 / 60;
+    return diff > 10;
+  };
+
   const upcomingMatches = [
-    ...liveTournaments.filter(t => t.status === "Upcoming").map(t => ({ ...t, _type: "classic" })),
-    ...livePerKillTournaments.filter(t => t.status === "Upcoming").map(t => ({ ...t, _type: "perkill" }))
+    ...liveTournaments.filter(isUpcoming).map(t => ({ ...t, _type: "classic" })),
+    ...livePerKillTournaments.filter(isUpcoming).map(t => ({ ...t, _type: "perkill" }))
   ];
 
   const handleMatchSelect = (e) => {
