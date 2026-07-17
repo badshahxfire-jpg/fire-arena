@@ -3,14 +3,18 @@ import WeeklyRegistrationCard from "./WeeklyRegistrationCard";
 import WeeklyLeaderboard from "./WeeklyLeaderboard";
 
 export default function WeeklyDashboard({ user, isAdmin, weeklyTournaments, joinWeeklyTournament, updateStatus }) {
-  const [pageView, setPageView] = useState("live"); // live, results
+  const [pageView, setPageView] = useState("upcoming"); // upcoming, live, results
   const [activeTab, setActiveTab] = useState("INFO"); // INFO, LEADERBOARD, REWARDS
   const [selectedTournamentId, setSelectedTournamentId] = useState("");
 
-  const activeTournaments = weeklyTournaments ? weeklyTournaments.filter(t => !(t.status === "COMPLETED" && t.rewardsDistributed)) : [];
-  const resultTournaments = weeklyTournaments ? weeklyTournaments.filter(t => t.status === "COMPLETED" && t.rewardsDistributed) : [];
+  const upcomingTournaments = weeklyTournaments ? weeklyTournaments.filter(t => t.status === "REGISTRATION" || !t.status) : [];
+  const liveTournaments = weeklyTournaments ? weeklyTournaments.filter(t => t.status === "ACTIVE" || (t.status !== "COMPLETED" && t.status !== "REGISTRATION" && t.status)) : [];
+  const resultTournaments = weeklyTournaments ? weeklyTournaments.filter(t => t.status === "COMPLETED") : [];
   
-  const displayTournaments = pageView === "live" ? activeTournaments : resultTournaments;
+  let displayTournaments = [];
+  if (pageView === "upcoming") displayTournaments = upcomingTournaments;
+  else if (pageView === "live") displayTournaments = liveTournaments;
+  else displayTournaments = resultTournaments;
 
   // Get the most recent tournament or the selected one
   let currentTournament = null;
@@ -103,14 +107,20 @@ export default function WeeklyDashboard({ user, isAdmin, weeklyTournaments, join
       <div className="max-w-7xl mx-auto px-4 md:px-6 mb-12">
         <div className="flex gap-4 mb-6 border-b border-white/10 pb-2">
           <button 
-            onClick={() => { setPageView("live"); setSelectedTournamentId(""); setActiveTab("INFO"); }}
-            className={`px-6 py-2 rounded-t-lg font-black text-lg transition-all ${pageView === "live" ? "text-orange-500 border-b-2 border-orange-500" : "text-gray-500 hover:text-white"}`}
+            onClick={() => { setPageView("upcoming"); setSelectedTournamentId(""); setActiveTab("INFO"); }}
+            className={`px-6 py-2 rounded-t-lg font-black text-lg transition-all ${pageView === "upcoming" ? "text-orange-500 border-b-2 border-orange-500" : "text-gray-500 hover:text-white"}`}
           >
-            🔴 LIVE MATCHES
+            🗓️ UPCOMING
+          </button>
+          <button 
+            onClick={() => { setPageView("live"); setSelectedTournamentId(""); setActiveTab("INFO"); }}
+            className={`px-6 py-2 rounded-t-lg font-black text-lg transition-all ${pageView === "live" ? "text-red-500 border-b-2 border-red-500" : "text-gray-500 hover:text-white"}`}
+          >
+            🔴 LIVE
           </button>
           <button 
             onClick={() => { setPageView("results"); setSelectedTournamentId(""); setActiveTab("LEADERBOARD"); }}
-            className={`px-6 py-2 rounded-t-lg font-black text-lg transition-all ${pageView === "results" ? "text-orange-500 border-b-2 border-orange-500" : "text-gray-500 hover:text-white"}`}
+            className={`px-6 py-2 rounded-t-lg font-black text-lg transition-all ${pageView === "results" ? "text-yellow-500 border-b-2 border-yellow-500" : "text-gray-500 hover:text-white"}`}
           >
             🏆 RESULTS
           </button>
@@ -118,7 +128,9 @@ export default function WeeklyDashboard({ user, isAdmin, weeklyTournaments, join
         <div className="text-center text-white py-16 bg-black/40 border border-orange-500/20 rounded-2xl backdrop-blur-sm">
           <h2 className="text-4xl font-black mb-4 text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-600 uppercase tracking-wider">Weekly Tournament</h2>
           <p className="text-gray-400 text-lg">
-            {pageView === "live" ? "No active weekly tournament right now. Stay tuned!" : "No tournament results available yet."}
+            {pageView === "upcoming" ? "No upcoming weekly tournament right now. Stay tuned!" : 
+             pageView === "live" ? "No active weekly tournament right now. Check upcoming!" : 
+             "No tournament results available yet."}
           </p>
         </div>
       </div>
@@ -130,14 +142,20 @@ export default function WeeklyDashboard({ user, isAdmin, weeklyTournaments, join
       {/* Live / Results Toggle */}
       <div className="flex gap-4 mb-6 border-b border-white/10 pb-2">
         <button 
-          onClick={() => { setPageView("live"); setSelectedTournamentId(""); setActiveTab("INFO"); }}
-          className={`px-6 py-2 rounded-t-lg font-black text-lg transition-all ${pageView === "live" ? "text-orange-500 border-b-2 border-orange-500" : "text-gray-500 hover:text-white"}`}
+          onClick={() => { setPageView("upcoming"); setSelectedTournamentId(""); setActiveTab("INFO"); }}
+          className={`px-6 py-2 rounded-t-lg font-black text-lg transition-all ${pageView === "upcoming" ? "text-orange-500 border-b-2 border-orange-500" : "text-gray-500 hover:text-white"}`}
         >
-          🔴 LIVE MATCHES
+          🗓️ UPCOMING
+        </button>
+        <button 
+          onClick={() => { setPageView("live"); setSelectedTournamentId(""); setActiveTab("INFO"); }}
+          className={`px-6 py-2 rounded-t-lg font-black text-lg transition-all ${pageView === "live" ? "text-red-500 border-b-2 border-red-500" : "text-gray-500 hover:text-white"}`}
+        >
+          🔴 LIVE
         </button>
         <button 
           onClick={() => { setPageView("results"); setSelectedTournamentId(""); setActiveTab("LEADERBOARD"); }}
-          className={`px-6 py-2 rounded-t-lg font-black text-lg transition-all ${pageView === "results" ? "text-orange-500 border-b-2 border-orange-500" : "text-gray-500 hover:text-white"}`}
+          className={`px-6 py-2 rounded-t-lg font-black text-lg transition-all ${pageView === "results" ? "text-yellow-500 border-b-2 border-yellow-500" : "text-gray-500 hover:text-white"}`}
         >
           🏆 RESULTS
         </button>
