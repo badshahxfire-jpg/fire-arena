@@ -13,6 +13,40 @@ export default function UserProfileCheck({ allUsers = [], onSearchUser, searched
   const [showCoinHistoryPopup, setShowCoinHistoryPopup] = useState(false);
   const [loadingAction, setLoadingAction] = useState(null);
   const [showWithdrawalDetails, setShowWithdrawalDetails] = useState(false);
+  const [adminNewPassword, setAdminNewPassword] = useState("");
+
+  const handleAdminResetPassword = async () => {
+    if (!displayUser || !displayUser.uid) return;
+    if (!adminNewPassword || adminNewPassword.trim().length < 6) {
+      alert("Please enter a new password of at least 6 characters!");
+      return;
+    }
+
+    setLoadingAction("resetPassword");
+    try {
+      const res = await secureFetch("/api/admin/reset-user-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          targetUid: displayUser.uid,
+          newPassword: adminNewPassword.trim()
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to update password");
+      }
+
+      alert(`✅ Password updated successfully for user ${displayUser.email || displayUser.name || displayUser.uid}!\n\nNew Password: ${adminNewPassword.trim()}`);
+      setAdminNewPassword("");
+    } catch (err) {
+      console.error("Error resetting password:", err);
+      alert("❌ Error updating password: " + err.message);
+    } finally {
+      setLoadingAction(null);
+    }
+  };
 
   const handleToggleUidLock = async () => {
     if (!displayUser) return;
@@ -621,6 +655,25 @@ export default function UserProfileCheck({ allUsers = [], onSearchUser, searched
                             {loadingAction === "add" ? "⌛ ..." : "➕ ADD COINS"}
                           </button>
                         </div>
+                      </div>
+
+                      {/* Password Reset Control */}
+                      <div className="bg-[#1a1a2e] rounded-xl p-4 border border-purple-500/20 mt-4">
+                        <h3 className="text-lg font-black text-purple-400 mb-3">🔑 CHANGE USER PASSWORD</h3>
+                        <input
+                          type="text"
+                          placeholder="Enter New Password (min 6 chars)"
+                          value={adminNewPassword}
+                          onChange={(e) => setAdminNewPassword(e.target.value)}
+                          className="w-full bg-black rounded-xl px-3 py-2 outline-none border border-purple-500/20 mb-3 text-white text-sm font-sans"
+                        />
+                        <button
+                          onClick={handleAdminResetPassword}
+                          disabled={loadingAction === "resetPassword"}
+                          className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-2.5 rounded-xl font-black text-xs hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-wait shadow-lg shadow-purple-900/30"
+                        >
+                          {loadingAction === "resetPassword" ? "⌛ UPDATING PASSWORD..." : "🔑 SET NEW PASSWORD NOW"}
+                        </button>
                       </div>
 
                       {/* Admin Actions */}

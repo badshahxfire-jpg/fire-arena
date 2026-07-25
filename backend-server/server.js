@@ -785,6 +785,40 @@ app.post("/api/send-personal-notification", verifyToken, async (req, res) => {
 });
 
 // -------------------------------------------------------------
+// Endpoint: Admin Reset User Password
+// -------------------------------------------------------------
+app.post("/api/admin/reset-user-password", verifyToken, async (req, res) => {
+  const { targetUid, newPassword } = req.body;
+
+  if (!targetUid || !newPassword) {
+    return res.status(400).json({ error: "Target User ID and new password are required" });
+  }
+
+  if (newPassword.trim().length < 6) {
+    return res.status(400).json({ error: "Password must be at least 6 characters long" });
+  }
+
+  try {
+    // Verify admin
+    const ADMIN_UID = "FAVc9zfAgoYs1d1BDr2EoDwSw0x1";
+    const userDoc = await db.collection("users").doc(req.user.uid).get();
+    const isAdmin = req.user.uid === ADMIN_UID || (userDoc.exists && userDoc.data().role === "admin");
+    if (!isAdmin) {
+      return res.status(403).json({ error: "Unauthorized. Admin only." });
+    }
+
+    // Update password in Firebase Auth using Admin SDK
+    await admin.auth().updateUser(targetUid, { password: newPassword.trim() });
+
+    console.log(`Password reset for user ${targetUid} by admin ${req.user.uid}`);
+    return res.json({ success: true, message: "Password updated successfully!" });
+  } catch (error) {
+    console.error("Error resetting user password:", error);
+    return res.status(500).json({ error: error.message || "Failed to update password" });
+  }
+});
+
+// -------------------------------------------------------------
 // Auto-Delete Old Match Results (Older than 7 days)
 // -------------------------------------------------------------
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
