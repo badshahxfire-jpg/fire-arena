@@ -121,7 +121,7 @@ export default function WalletPopup({ user, coins, winCoins, onClose, onTopup, o
                 <a href={paymentQR} download="FIRE-BAADSHAH-QR">
                   <img src={paymentQR} alt="QR" className="w-48 mx-auto rounded-3xl border border-orange-500/20 cursor-pointer hover:scale-105 transition-transform" />
                 </a>
-                <p className="text-center text-green-400 mt-4 font-bold text-sm">8085150673@fam</p>
+                <p className="text-center text-green-400 mt-4 font-bold text-sm">919131793234@waaxis</p>
 
                 <p className="text-gray-400 mt-5 mb-2 text-sm">ENTER UTR NUMBER</p>
                 <input
