@@ -16,7 +16,10 @@ export default function UserProfileCheck({ allUsers = [], onSearchUser, searched
   const [adminNewPassword, setAdminNewPassword] = useState("");
 
   const handleAdminResetPassword = async () => {
-    if (!displayUser || !displayUser.uid) return;
+    if (!displayUser || !displayUser.uid) {
+      alert("Please search or select a user first!");
+      return;
+    }
     if (!adminNewPassword || adminNewPassword.trim().length < 6) {
       alert("Please enter a new password of at least 6 characters!");
       return;
@@ -25,18 +28,9 @@ export default function UserProfileCheck({ allUsers = [], onSearchUser, searched
     setLoadingAction("resetPassword");
     try {
       const res = await secureFetch("/api/admin/reset-user-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          targetUid: displayUser.uid,
-          newPassword: adminNewPassword.trim()
-        })
+        targetUid: displayUser.uid,
+        newPassword: adminNewPassword.trim()
       });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to update password");
-      }
 
       alert(`✅ Password updated successfully for user ${displayUser.email || displayUser.name || displayUser.uid}!\n\nNew Password: ${adminNewPassword.trim()}`);
       setAdminNewPassword("");
