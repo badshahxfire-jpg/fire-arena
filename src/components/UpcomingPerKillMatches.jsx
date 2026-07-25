@@ -351,7 +351,7 @@ export default function UpcomingPerKillMatches({
                     )}
 
                     {joinedCount < 10 && (
-                      <div className="bg-rose-500/10 text-rose-400 border border-rose-500/20 p-2.5 rounded-xl text-[111px] font-bold text-center mt-2">
+                      <div className="bg-rose-500/10 text-rose-400 border border-rose-500/20 p-2.5 rounded-xl text-[11px] font-bold text-center mt-2">
                         ⚠️ Underpopulated: Less than 10 players joined. Place bonuses will be heavily scaled down!
                       </div>
                     )}
