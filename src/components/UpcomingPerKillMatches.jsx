@@ -249,6 +249,12 @@ export default function UpcomingPerKillMatches({
               const joinedCount = joinedPlayers.filter(p => p.tournamentId === tournament.id).length;
               const alreadyJoined = joinedPlayers.some(p => p.tournamentId === tournament.id && p.userId === user?.uid);
 
+              const totalSlots = Number(tournament.totalTeams) || 48;
+              const ratio = totalSlots > 0 ? Math.min(1, joinedCount / totalSlots) : 1;
+              const curBooyah = Math.floor((Number(tournament.booyahBonus) || 0) * ratio);
+              const curSecond = Math.floor((Number(tournament.secondBonus) || 0) * ratio);
+              const curThird = Math.floor((Number(tournament.thirdBonus) || 0) * ratio);
+
               return (
                 <div 
                   key={tournament.id}
@@ -312,20 +318,29 @@ export default function UpcomingPerKillMatches({
                       <span className="text-gray-400">⚔️ Kill Reward</span>
                       <span className="text-red-400 font-black">🪙 {tournament.perKillRate} per Kill</span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <span className="text-gray-400">🏆 Booyah</span>
-                      <span className="text-yellow-400 font-black">🪙 {tournament.booyahBonus} Bonus</span>
+                      <div className="text-right">
+                        <span className="text-yellow-400 font-black">🪙 {curBooyah}</span>
+                        <span className="text-gray-500 text-[10px] ml-1.5 font-bold">(Max 🪙{tournament.booyahBonus})</span>
+                      </div>
                     </div>
                     {Number(tournament.secondBonus || 0) > 0 && (
-                      <div className="flex justify-between">
+                      <div className="flex justify-between items-center">
                         <span className="text-gray-400">🥈 2nd</span>
-                        <span className="text-gray-300 font-black">🪙 {tournament.secondBonus} Bonus</span>
+                        <div className="text-right">
+                          <span className="text-gray-300 font-black">🪙 {curSecond}</span>
+                          <span className="text-gray-500 text-[10px] ml-1.5 font-bold">(Max 🪙{tournament.secondBonus})</span>
+                        </div>
                       </div>
                     )}
                     {Number(tournament.thirdBonus || 0) > 0 && (
-                      <div className="flex justify-between">
+                      <div className="flex justify-between items-center">
                         <span className="text-gray-400">🥉 3rd</span>
-                        <span className="text-orange-400 font-black">🪙 {tournament.thirdBonus} Bonus</span>
+                        <div className="text-right">
+                          <span className="text-orange-400 font-black">🪙 {curThird}</span>
+                          <span className="text-gray-500 text-[10px] ml-1.5 font-bold">(Max 🪙{tournament.thirdBonus})</span>
+                        </div>
                       </div>
                     )}
                     

@@ -100,20 +100,29 @@ export default function LivePerKillMatches({
                       <span className="text-gray-400">⚔️ Kill Reward</span>
                       <span className="text-red-400 font-black">🪙 {tournament.perKillRate} per Kill</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">🏆 Booyah Bonus (Scaled)</span>
-                      <span className="text-yellow-400 font-black">🪙 {scaledBooyah} Coins</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">🏆 Booyah Bonus</span>
+                      <div className="text-right">
+                        <span className="text-yellow-400 font-black">🪙 {scaledBooyah}</span>
+                        <span className="text-gray-500 text-[10px] ml-1.5 font-bold">(Max 🪙{tournament.booyahBonus})</span>
+                      </div>
                     </div>
                     {Number(tournament.secondBonus || 0) > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">🥈 2nd Place Bonus (Scaled)</span>
-                        <span className="text-gray-300 font-black">🪙 {scaledSecond} Coins</span>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-400">🥈 2nd Place Bonus</span>
+                        <div className="text-right">
+                          <span className="text-gray-300 font-black">🪙 {scaledSecond}</span>
+                          <span className="text-gray-500 text-[10px] ml-1.5 font-bold">(Max 🪙{tournament.secondBonus})</span>
+                        </div>
                       </div>
                     )}
                     {Number(tournament.thirdBonus || 0) > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">🥉 3rd Place Bonus (Scaled)</span>
-                        <span className="text-orange-400 font-black">🪙 {scaledThird} Coins</span>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-400">🥉 3rd Place Bonus</span>
+                        <div className="text-right">
+                          <span className="text-orange-400 font-black">🪙 {scaledThird}</span>
+                          <span className="text-gray-500 text-[10px] ml-1.5 font-bold">(Max 🪙{tournament.thirdBonus})</span>
+                        </div>
                       </div>
                     )}
                     <div className="flex justify-between border-t border-gray-800 pt-2.5">
