@@ -94,20 +94,38 @@ export default function UpcomingMatches({
     return totalTeams;
   };
 
-  // Get rewards using the same utility function
+  // Get rewards (both Max and Current Live)
   const getRewards = (tournament) => {
-    const totalPlayers = Number(tournament.totalTeams) || Number(tournament.joinedCount) || 0;
+    const totalSlots = Number(tournament.totalTeams) || 48;
     const entryFee = Number(tournament.entryFee) || 0;
     const tournamentType = tournament.tournamentType;
-    
-    const totalCollection = entryFee * totalPlayers;
-    const adminProfit = Math.floor(totalCollection * 0.10);
-    const dynamicPrizePool = totalCollection - adminProfit;
 
-    const prizePool = dynamicPrizePool > 0 ? dynamicPrizePool : (Number(tournament.totalPrizePool) || Number(tournament.currentPrizePool) || 0);
-    
-    const { rewards, winnerCount } = getPrizeDistribution(prizePool, totalPlayers, tournamentType, entryFee);
-    return { rewards, winnerCount };
+    const joinedCount = joinedPlayers.filter(p => p.tournamentId === tournament.id).length;
+    const ratio = totalSlots > 0 ? Math.min(1, joinedCount / totalSlots) : 1;
+
+    // Max Prize Pool when slots are 100% full
+    const maxCollection = entryFee * totalSlots;
+    const maxAdminProfit = Math.floor(maxCollection * 0.10);
+    const maxDynamicPool = maxCollection - maxAdminProfit;
+    const maxPrizePool = maxDynamicPool > 0 ? maxDynamicPool : (Number(tournament.totalPrizePool) || Number(tournament.currentPrizePool) || 0);
+
+    // Current Live Prize Pool based on actual joined players
+    const curPrizePool = Math.floor(maxPrizePool * ratio);
+
+    const { rewards: maxRewards, winnerCount } = getPrizeDistribution(maxPrizePool, totalSlots, tournamentType, entryFee);
+    const { rewards: curRewards } = getPrizeDistribution(curPrizePool, totalSlots, tournamentType, entryFee);
+
+    const rewards = maxRewards.map((maxR, idx) => {
+      const curR = curRewards[idx] || {};
+      return {
+        ...maxR,
+        curCoins: curR.coins || Math.floor((maxR.coins || 0) * ratio),
+        curPerTeam: curR.perTeam || Math.floor((maxR.perTeam || 0) * ratio),
+        curPerPlayer: curR.perPlayer || Math.floor((maxR.perPlayer || 0) * ratio)
+      };
+    });
+
+    return { rewards, winnerCount, maxPrizePool, curPrizePool };
   };
 
   // Get slot label for display
@@ -161,7 +179,7 @@ export default function UpcomingMatches({
             className="flex gap-4 md:gap-8 overflow-x-auto scroll-smooth pb-4 px-4 md:px-14 custom-scrollbar no-scrollbar snap-x snap-mandatory"
           >
             {upcomingTournaments.map((item) => {
-              const { rewards, winnerCount } = getRewards(item);
+              const { rewards, winnerCount, maxPrizePool, curPrizePool } = getRewards(item);
               const teamSize = getTeamSizeForType(item.tournamentType);
               const totalSlots = getTotalSlotsForType(item);
               const teamJoinedCount = getTeamJoinedCount(item);
@@ -235,16 +253,12 @@ export default function UpcomingMatches({
                       </div>
                     </div>
                     
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <span>🏆 Prize Pool</span>
-                      <span className="text-yellow-400 font-black cyber-prize">🪙 {(() => {
-                        const fee = Number(item.entryFee) || 0;
-                        const players = Number(item.totalTeams) || 0;
-                        const col = fee * players;
-                        const prof = Math.floor(col * 0.10);
-                        const dynPool = col - prof;
-                        return dynPool > 0 ? dynPool : (item.totalPrizePool || 0);
-                      })()}</span>
+                      <div className="text-right">
+                        <span className="text-yellow-400 font-black cyber-prize">🪙 {curPrizePool}</span>
+                        <span className="text-gray-500 text-[10px] ml-1.5 font-bold">(Max 🪙{maxPrizePool})</span>
+                      </div>
                     </div>
                   </div>
 
@@ -272,7 +286,10 @@ export default function UpcomingMatches({
                               <span className="text-xs">{reward.medal || (idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : "🏅")}</span>
                               {reward.label}
                             </span>
-                            <span className="text-yellow-400 font-black">🪙 {reward.coins}</span>
+                            <div className="text-right">
+                              <span className="text-yellow-400 font-black">🪙 {reward.curCoins}</span>
+                              <span className="text-gray-500 text-[9px] ml-1 font-bold">(Max 🪙{reward.coins})</span>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -293,11 +310,14 @@ export default function UpcomingMatches({
                                 <span className="text-sm">{reward.medal || (idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : "🏅")}</span>
                                 <span className="text-gray-300 font-bold text-[10px]">{reward.label}</span>
                               </div>
-                              <span className="text-yellow-400 font-black text-[10px]">🪙 {reward.perTeam}</span>
+                              <div className="text-right">
+                                <span className="text-yellow-400 font-black text-[10px]">🪙 {reward.curPerTeam}</span>
+                                <span className="text-gray-500 text-[9px] ml-1 font-bold">(Max 🪙{reward.perTeam})</span>
+                              </div>
                             </div>
                             <div className="flex justify-between items-center mt-0.5 pt-0.5 border-t border-gray-700/50">
                               <span className="text-gray-500 text-[9px]">💰 Per Player:</span>
-                              <span className="text-green-400 font-bold text-[9px]">🪙 {reward.perPlayer} Each</span>
+                              <span className="text-green-400 font-bold text-[9px]">🪙 {reward.curPerPlayer} Each <span className="text-gray-500 font-normal">(Max 🪙{reward.perPlayer})</span></span>
                             </div>
                           </div>
                         ))}
@@ -319,11 +339,14 @@ export default function UpcomingMatches({
                                 <span className="text-sm">{reward.medal || (idx === 0 ? "🥇" : idx === 1 ? "🥈" : "🥉")}</span>
                                 <span className="text-gray-300 font-bold text-[10px]">{reward.label}</span>
                               </div>
-                              <span className="text-yellow-400 font-black text-[10px]">🪙 {reward.perTeam}</span>
+                              <div className="text-right">
+                                <span className="text-yellow-400 font-black text-[10px]">🪙 {reward.curPerTeam}</span>
+                                <span className="text-gray-500 text-[9px] ml-1 font-bold">(Max 🪙{reward.perTeam})</span>
+                              </div>
                             </div>
                             <div className="flex justify-between items-center mt-0.5 pt-0.5 border-t border-gray-700/50">
                               <span className="text-gray-500 text-[9px]">💰 Per Player:</span>
-                              <span className="text-green-400 font-bold text-[9px]">🪙 {reward.perPlayer} Each</span>
+                              <span className="text-green-400 font-bold text-[9px]">🪙 {reward.curPerPlayer} Each <span className="text-gray-500 font-normal">(Max 🪙{reward.perPlayer})</span></span>
                             </div>
                           </div>
                         ))}
@@ -345,12 +368,15 @@ export default function UpcomingMatches({
                                 <span className="text-base">{reward.medal || "🏆"}</span>
                                 <span className="text-gray-300 font-bold text-xs">{reward.label}</span>
                               </div>
-                              <span className="text-yellow-400 font-black text-xs">🪙 {reward.perTeam || reward.coins}</span>
+                              <div className="text-right">
+                                <span className="text-yellow-400 font-black text-xs">🪙 {reward.curPerTeam || reward.curCoins}</span>
+                                <span className="text-gray-500 text-[9px] ml-1 font-bold">(Max 🪙{reward.perTeam || reward.coins})</span>
+                              </div>
                             </div>
                             {reward.perPlayer && reward.perPlayer !== reward.perTeam && (
                               <div className="flex justify-between items-center mt-1 pt-1 border-t border-gray-700/50">
                                 <span className="text-gray-500 text-[10px]">💰 Per Player:</span>
-                                <span className="text-green-400 font-bold text-[10px]">🪙 {reward.perPlayer} Each</span>
+                                <span className="text-green-400 font-bold text-[10px]">🪙 {reward.curPerPlayer} Each <span className="text-gray-500 font-normal">(Max 🪙{reward.perPlayer})</span></span>
                               </div>
                             )}
                           </div>
