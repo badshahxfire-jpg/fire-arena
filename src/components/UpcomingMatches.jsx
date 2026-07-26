@@ -94,34 +94,29 @@ export default function UpcomingMatches({
     return totalTeams;
   };
 
-  // Get rewards (both Max and Current Live)
+  // Get rewards using the same utility function
   const getRewards = (tournament) => {
-    const totalSlots = Number(tournament.totalTeams) || 48;
+    const totalPlayers = Number(tournament.totalTeams) || 48;
     const entryFee = Number(tournament.entryFee) || 0;
     const tournamentType = tournament.tournamentType;
-
+    
     const joinedCount = joinedPlayers.filter(p => p.tournamentId === tournament.id).length;
-    const ratio = totalSlots > 0 ? Math.min(1, joinedCount / totalSlots) : 1;
+    const ratio = totalPlayers > 0 ? Math.min(1, joinedCount / totalPlayers) : 1;
 
-    // Max Prize Pool when slots are 100% full
-    const maxCollection = entryFee * totalSlots;
-    const maxAdminProfit = Math.floor(maxCollection * 0.10);
-    const maxDynamicPool = maxCollection - maxAdminProfit;
-    const maxPrizePool = maxDynamicPool > 0 ? maxDynamicPool : (Number(tournament.totalPrizePool) || Number(tournament.currentPrizePool) || 0);
-
-    // Current Live Prize Pool based on actual joined players
+    const maxCollection = entryFee * totalPlayers;
+    const maxPrizePool = Math.max(0, maxCollection - Math.floor(maxCollection * 0.10)) || Number(tournament.totalPrizePool) || 0;
     const curPrizePool = Math.floor(maxPrizePool * ratio);
 
-    const { rewards: maxRewards, winnerCount } = getPrizeDistribution(maxPrizePool, totalSlots, tournamentType, entryFee);
-    const { rewards: curRewards } = getPrizeDistribution(curPrizePool, totalSlots, tournamentType, entryFee);
+    const { rewards: maxRewards, winnerCount } = getPrizeDistribution(maxPrizePool, totalPlayers, tournamentType, entryFee);
+    const { rewards: curRewards } = getPrizeDistribution(curPrizePool, totalPlayers, tournamentType, entryFee);
 
     const rewards = maxRewards.map((maxR, idx) => {
       const curR = curRewards[idx] || {};
       return {
         ...maxR,
-        curCoins: curR.coins || Math.floor((maxR.coins || 0) * ratio),
-        curPerTeam: curR.perTeam || Math.floor((maxR.perTeam || 0) * ratio),
-        curPerPlayer: curR.perPlayer || Math.floor((maxR.perPlayer || 0) * ratio)
+        curCoins: curR.coins !== undefined ? curR.coins : Math.floor((maxR.coins || 0) * ratio),
+        curPerTeam: curR.perTeam !== undefined ? curR.perTeam : Math.floor((maxR.perTeam || 0) * ratio),
+        curPerPlayer: curR.perPlayer !== undefined ? curR.perPlayer : Math.floor((maxR.perPlayer || 0) * ratio)
       };
     });
 
