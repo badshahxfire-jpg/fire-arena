@@ -7,6 +7,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.get("/", (req, res) => {
+  res.send("🔥 Fire Arena Backend is LIVE and Running!");
+});
+
 // Initialize Firebase Admin SDK
 // You can pass the credentials either via serviceAccountKey.json or a FIREBASE_SERVICE_ACCOUNT env variable
 const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT 

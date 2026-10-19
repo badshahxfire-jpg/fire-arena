@@ -2,7 +2,7 @@ import { auth } from "../firebase";
 
 export const BACKEND_URL = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") && !window.Capacitor
   ? "http://localhost:5000"
-  : "https://fire-baadshah-arena-backend.onrender.com";
+  : "https://fire-arena-s1ii.onrender.com";
 
 /**
  * Fetch helper to call backend secure API with Auth token
