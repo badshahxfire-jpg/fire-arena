@@ -2,54 +2,131 @@
   "rules": {
     ".read": false,
     ".write": false,
-    "liveTournaments": {
-      ".read": "auth != null",
-      ".write": "auth != null"
-    },
+
     "adminData": {
       ".read": "auth != null",
-      ".write": "auth != null && auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1'"
+      ".write": "auth != null && (auth.token.email === 'alisohrab348@gmail.com' || auth.token.email === 'badshahxfire@gmail.com' || auth.uid === 'kTUardeKQAUjuKKyGplwUBe1seI3')"
     },
+
+    "tournaments": {
+      ".read": "auth != null",
+      ".write": "auth != null && (auth.token.email === 'alisohrab348@gmail.com' || auth.token.email === 'badshahxfire@gmail.com' || auth.uid === 'kTUardeKQAUjuKKyGplwUBe1seI3' || (root.child('adminData/staffEmails').val() != null && root.child('adminData/staffEmails').val().contains(auth.token.email)))"
+    },
+
+    "liveTournaments": {
+      ".read": "auth != null",
+      ".write": "auth != null && (auth.token.email === 'alisohrab348@gmail.com' || auth.token.email === 'badshahxfire@gmail.com' || auth.uid === 'kTUardeKQAUjuKKyGplwUBe1seI3' || (root.child('adminData/staffEmails').val() != null && root.child('adminData/staffEmails').val().contains(auth.token.email)))"
+    },
+
+    "perKillTournaments": {
+      ".read": "auth != null",
+      ".write": "auth != null && (auth.token.email === 'alisohrab348@gmail.com' || auth.token.email === 'badshahxfire@gmail.com' || auth.uid === 'kTUardeKQAUjuKKyGplwUBe1seI3' || (root.child('adminData/staffEmails').val() != null && root.child('adminData/staffEmails').val().contains(auth.token.email)))"
+    },
+
+    "weeklyTournaments": {
+      ".read": "auth != null",
+      ".write": "auth != null && (auth.token.email === 'alisohrab348@gmail.com' || auth.token.email === 'badshahxfire@gmail.com' || auth.uid === 'kTUardeKQAUjuKKyGplwUBe1seI3' || (root.child('adminData/staffEmails').val() != null && root.child('adminData/staffEmails').val().contains(auth.token.email)))"
+    },
+
     "joinedPlayers": {
       ".read": "auth != null",
-      ".write": "auth != null && (auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1' || (root.child('adminData/staffEmails').val() != null && root.child('adminData/staffEmails').val().contains(auth.token.email)) || (!data.exists() || newData.exists()))",
-      ".indexOn": ["tournamentId"]
+      ".indexOn": ["tournamentId"],
+      "$playerId": {
+        // Only Admin/Staff or the player themselves joining
+        ".write": "auth != null && (auth.token.email === 'alisohrab348@gmail.com' || auth.token.email === 'badshahxfire@gmail.com' || auth.uid === 'kTUardeKQAUjuKKyGplwUBe1seI3' || (root.child('adminData/staffEmails').val() != null && root.child('adminData/staffEmails').val().contains(auth.token.email)) || (newData.child('userId').val() === auth.uid) || (data.child('userId').val() === auth.uid))"
+      }
     },
+
+    "joinedPerKillPlayers": {
+      ".read": "auth != null",
+      ".indexOn": ["tournamentId"],
+      "$playerId": {
+        ".write": "auth != null && (auth.token.email === 'alisohrab348@gmail.com' || auth.token.email === 'badshahxfire@gmail.com' || auth.uid === 'kTUardeKQAUjuKKyGplwUBe1seI3' || (root.child('adminData/staffEmails').val() != null && root.child('adminData/staffEmails').val().contains(auth.token.email)) || (newData.child('userId').val() === auth.uid) || (data.child('userId').val() === auth.uid))"
+      }
+    },
+
     "withdrawRequests": {
       ".read": "auth != null",
       "$requestId": {
-        ".write": "auth != null && (auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1' || (!data.exists() && newData.child('userId').val() === auth.uid))"
+        // A user can ONLY create their own request. THEY CANNOT APPROVE OR EDIT EXISTING REQUESTS.
+        // Only Admin can update/approve/reject requests.
+        ".write": "auth != null && (auth.token.email === 'alisohrab348@gmail.com' || auth.token.email === 'badshahxfire@gmail.com' || auth.uid === 'kTUardeKQAUjuKKyGplwUBe1seI3' || (root.child('adminData/staffEmails').val() != null && root.child('adminData/staffEmails').val().contains(auth.token.email)) || (!data.exists() && newData.child('userId').val() === auth.uid))"
       }
     },
+
     "paymentRequests": {
       ".read": "auth != null",
       "$requestId": {
-        ".write": "auth != null && (auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1' || (!data.exists() && newData.child('userId').val() === auth.uid))"
+        // A user can ONLY create their own deposit request. THEY CANNOT APPROVE OR CREDIT THEMSELVES.
+        // Only Admin can approve or update requests.
+        ".write": "auth != null && (auth.token.email === 'alisohrab348@gmail.com' || auth.token.email === 'badshahxfire@gmail.com' || auth.uid === 'kTUardeKQAUjuKKyGplwUBe1seI3' || (root.child('adminData/staffEmails').val() != null && root.child('adminData/staffEmails').val().contains(auth.token.email)) || (!data.exists() && newData.child('userId').val() === auth.uid))"
       }
     },
+
+    "matchResults": {
+      ".read": "auth != null",
+      ".write": "auth != null && (auth.token.email === 'alisohrab348@gmail.com' || auth.token.email === 'badshahxfire@gmail.com' || auth.uid === 'kTUardeKQAUjuKKyGplwUBe1seI3' || (root.child('adminData/staffEmails').val() != null && root.child('adminData/staffEmails').val().contains(auth.token.email)))"
+    },
+
+    "perKillResults": {
+      ".read": "auth != null",
+      ".write": "auth != null && (auth.token.email === 'alisohrab348@gmail.com' || auth.token.email === 'badshahxfire@gmail.com' || auth.uid === 'kTUardeKQAUjuKKyGplwUBe1seI3' || (root.child('adminData/staffEmails').val() != null && root.child('adminData/staffEmails').val().contains(auth.token.email)))"
+    },
+
+    "playerResults": {
+      ".read": "auth != null",
+      ".write": "auth != null && (auth.token.email === 'alisohrab348@gmail.com' || auth.token.email === 'badshahxfire@gmail.com' || auth.uid === 'kTUardeKQAUjuKKyGplwUBe1seI3' || (root.child('adminData/staffEmails').val() != null && root.child('adminData/staffEmails').val().contains(auth.token.email)))"
+    },
+
+    "announcements": {
+      ".read": "auth != null",
+      ".write": "auth != null && (auth.token.email === 'alisohrab348@gmail.com' || auth.token.email === 'badshahxfire@gmail.com' || auth.uid === 'kTUardeKQAUjuKKyGplwUBe1seI3' || (root.child('adminData/staffEmails').val() != null && root.child('adminData/staffEmails').val().contains(auth.token.email)))"
+    },
+
+    "settings": {
+      ".read": "auth != null",
+      ".write": "auth != null && (auth.token.email === 'alisohrab348@gmail.com' || auth.token.email === 'badshahxfire@gmail.com' || auth.uid === 'kTUardeKQAUjuKKyGplwUBe1seI3' || (root.child('adminData/staffEmails').val() != null && root.child('adminData/staffEmails').val().contains(auth.token.email)))"
+    },
+
+    "slotLocks": {
+      ".read": "auth != null",
+      ".write": "auth != null && (auth.token.email === 'alisohrab348@gmail.com' || auth.token.email === 'badshahxfire@gmail.com' || auth.uid === 'kTUardeKQAUjuKKyGplwUBe1seI3' || (root.child('adminData/staffEmails').val() != null && root.child('adminData/staffEmails').val().contains(auth.token.email)))"
+    },
+
+    "pollVotes": {
+      ".read": "auth != null",
+      "$userId": {
+        ".write": "auth != null && auth.uid === $userId"
+      }
+    },
+
     "notifications": {
       "$userId": {
-        ".read": "auth != null && (auth.uid === $userId || auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1')",
+        ".read": "auth != null && (auth.uid === $userId || auth.token.email === 'badshahxfire@gmail.com' || auth.uid === 'kTUardeKQAUjuKKyGplwUBe1seI3')",
         ".write": "auth != null"
       }
     },
+
     "coinHistory": {
       "$userId": {
-        ".read": "auth != null && (auth.uid === $userId || auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1')",
-        ".write": "auth != null"
+        ".read": "auth != null && (auth.uid === $userId || auth.token.email === 'badshahxfire@gmail.com' || auth.uid === 'kTUardeKQAUjuKKyGplwUBe1seI3')",
+        ".write": "auth != null && (auth.token.email === 'alisohrab348@gmail.com' || auth.token.email === 'badshahxfire@gmail.com' || auth.uid === 'kTUardeKQAUjuKKyGplwUBe1seI3' || (!data.exists() && newData.exists()))"
       }
     },
+
     "referrals": {
       ".read": "auth != null",
       ".write": "auth != null"
     },
+
     "deviceRegistrations": {
-      ".read": "auth != null",
+      ".read": true,
       ".write": "auth != null",
       "$deviceId": {
         ".validate": "newData.hasChildren(['userId', 'email', 'registeredAt'])"
       }
     },
+
     "userDevices": {
       ".read": "auth != null",
       ".write": "auth != null",
@@ -57,64 +134,17 @@
         ".validate": "newData.hasChildren(['deviceId'])"
       }
     },
-    "matchResults": {
-      ".read": "auth != null",
-      ".write": "auth != null && (auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1' || (root.child('adminData/staffEmails').val() != null && root.child('adminData/staffEmails').val().contains(auth.token.email)))"
-    },
-    "playerResults": {
-      ".read": "auth != null",
-      ".write": "auth != null"
-    },
-    "settings": {
-      ".read": "auth != null",
-      ".write": "auth != null && (auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1' || (root.child('adminData/staffEmails').val() != null && root.child('adminData/staffEmails').val().contains(auth.token.email)))"
-    },
-    "tournaments": {
-      ".read": "auth != null",
-      ".write": "auth != null && (auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1' || (root.child('adminData/staffEmails').val() != null && root.child('adminData/staffEmails').val().contains(auth.token.email)))"
-    },
-    "perKillTournaments": {
-      ".read": "auth != null",
-      ".write": "auth != null && (auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1' || (root.child('adminData/staffEmails').val() != null && root.child('adminData/staffEmails').val().contains(auth.token.email)))"
-    },
-    "joinedPerKillPlayers": {
-      ".read": "auth != null",
-      ".write": "auth != null",
-      ".indexOn": ["tournamentId"]
-    },
-    "perKillResults": {
-      ".read": "auth != null",
-      ".write": "auth != null && (auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1' || (root.child('adminData/staffEmails').val() != null && root.child('adminData/staffEmails').val().contains(auth.token.email)))"
-    },
-    "announcements": {
-      ".read": "auth != null",
-      ".write": "auth != null && (auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1' || (root.child('adminData/staffEmails').val() != null && root.child('adminData/staffEmails').val().contains(auth.token.email)))"
-    },
+
     "users": {
       "$userId": {
-        ".read": "auth != null && (auth.uid === $userId || auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1')",
-        ".write": "auth != null && (auth.uid === $userId || auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1')"
+        ".read": "auth != null && (auth.uid === $userId || auth.token.email === 'badshahxfire@gmail.com' || auth.uid === 'kTUardeKQAUjuKKyGplwUBe1seI3')",
+        ".write": "auth != null && (auth.uid === $userId || auth.token.email === 'badshahxfire@gmail.com' || auth.uid === 'kTUardeKQAUjuKKyGplwUBe1seI3')"
       }
     },
+
     "loyalBonuses": {
       ".read": "auth != null",
-      ".write": "auth != null && (auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1' || (root.child('adminData/staffEmails').val() != null && root.child('adminData/staffEmails').val().contains(auth.token.email)))"
-    },
-    "weeklyTournaments": {
-      ".read": "auth != null",
-      ".write": "auth != null"
-    },
-    "slotLocks": {
-      ".read": "auth != null",
-      ".write": "auth != null && (auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1' || (root.child('adminData/staffEmails').val() != null && root.child('adminData/staffEmails').val().contains(auth.token.email)))"
-    },
-    "pollVotes": {
-      ".read": "auth != null",
-      ".write": "auth != null && (auth.uid === 'FAVc9zfAgoYs1d1BDr2EoDwSw0x1' || (root.child('adminData/staffEmails').val() != null && root.child('adminData/staffEmails').val().contains(auth.token.email)))",
-      "$userId": {
-        ".write": "auth != null && auth.uid === $userId"
-      }
+      ".write": "auth != null && (auth.token.email === 'alisohrab348@gmail.com' || auth.token.email === 'badshahxfire@gmail.com' || auth.uid === 'kTUardeKQAUjuKKyGplwUBe1seI3' || (root.child('adminData/staffEmails').val() != null && root.child('adminData/staffEmails').val().contains(auth.token.email)))"
     }
   }
 }
-

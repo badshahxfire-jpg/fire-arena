@@ -108,7 +108,7 @@ export default function Leaderboard() {
     const leaderboardData = [];
 
     for (const [uid, userData] of Object.entries(users)) {
-      if (uid === "FAVc9zfAgoYs1d1BDr2EoDwSw0x1") continue; // Exclude Admin
+      if (uid === "kTUardeKQAUjuKKyGplwUBe1seI3") continue; // Exclude Admin
 
       const stats = matchWinningsMap.get(uid) || { totalWinnings: 0, tournamentsWon: [] };
       
@@ -184,7 +184,7 @@ export default function Leaderboard() {
 
     const leaderboardData = [];
     for (const [uid, userData] of Object.entries(users)) {
-      if (uid === "FAVc9zfAgoYs1d1BDr2EoDwSw0x1") continue; // Exclude Admin
+      if (uid === "kTUardeKQAUjuKKyGplwUBe1seI3") continue; // Exclude Admin
 
       const stats = statsMap.get(uid) || { totalWinnings: 0, totalKills: 0, matchesPlayed: 0, tournamentsWon: [] };
       if (stats.totalWinnings === 0 && stats.totalKills === 0) continue;

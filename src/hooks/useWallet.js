@@ -199,6 +199,21 @@ export function useWallet(user) {
         alert("Duplicate UTR Detected ❌");
         return false;
       }
+
+      // Try Instant Auto-Verification via PhonePe Business Webhook Backend
+      try {
+        const verifyRes = await secureFetch("/api/verify-topup", {
+          utr: utrNumber,
+          amount: topupAmount
+        });
+
+        if (verifyRes && verifyRes.status === "COMPLETED") {
+          alert(`⚡ Payment Verified Automatically!\n🪙 ${verifyRes.coinsAdded || topupAmount} Coins added to your wallet!`);
+          return true;
+        }
+      } catch (verifyErr) {
+        console.warn("Auto-verification server check skipped or pending:", verifyErr.message);
+      }
       
       const requestRef = await push(ref(database, "paymentRequests"), {
         email: user.email,

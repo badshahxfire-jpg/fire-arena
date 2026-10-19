@@ -12,13 +12,14 @@ import { getStorage } from "firebase/storage";
 import { getMessaging, isSupported } from "firebase/messaging";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBhElj_3kG-8X09JsQS5t0IJR9I_mzYQJc",
-  authDomain: "fire-baadshah-arena.firebaseapp.com",
-  projectId: "fire-baadshah-arena",
-  storageBucket: "fire-baadshah-arena.firebasestorage.app",
-  messagingSenderId: "501695322845",
-  appId: "1:501695322845:web:45747610276974719d5934",
-  measurementId: "G-H336VWVB2M",
+  apiKey: "AIzaSyABF_3h9jvRvg38l7BAhmZrigZBuNCgyKA",
+  authDomain: "fire-arena-cf3d0.firebaseapp.com",
+  projectId: "fire-arena-cf3d0",
+  storageBucket: "fire-arena-cf3d0.firebasestorage.app",
+  messagingSenderId: "95348298908",
+  appId: "1:95348298908:web:36b2a140ec73c5e115c959",
+  measurementId: "G-KCRTS08MM6",
+  databaseURL: "https://fire-arena-cf3d0-default-rtdb.firebaseio.com"
 };
 
 const app = initializeApp(firebaseConfig);

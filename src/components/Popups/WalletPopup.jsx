@@ -1,11 +1,72 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import paymentQR from "../../assets/paymentQR.png";
+import { secureFetch } from "../../utils/backendApi";
 
 export default function WalletPopup({ user, coins, winCoins, onClose, onTopup, onShowWithdraw, onShowCoinHistory, paymentRequests, buttonLoading, transferCoins, verifyRecipient }) {
   const [topupAmount, setTopupAmount] = useState("");
   const [utrNumber, setUtrNumber] = useState("");
   const [paymentScreenshot, setPaymentScreenshot] = useState(null);
   const [addCoinStep, setAddCoinStep] = useState(1);
+
+  // Zero-UTR Live Auto-Detection States
+  const [isAutoChecking, setIsAutoChecking] = useState(false);
+  const [autoCheckSeconds, setAutoCheckSeconds] = useState(45);
+  const [autoSuccessMsg, setAutoSuccessMsg] = useState("");
+  const [showManualUtr, setShowManualUtr] = useState(false);
+  const pollTimerRef = useRef(null);
+  const countdownTimerRef = useRef(null);
+
+  const startAutoCheck = (startTime = Date.now()) => {
+    setIsAutoChecking(true);
+    setAutoCheckSeconds(45);
+    setAutoSuccessMsg("");
+
+    if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+    if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
+
+    countdownTimerRef.current = setInterval(() => {
+      setAutoCheckSeconds((prev) => {
+        if (prev <= 1) {
+          clearInterval(countdownTimerRef.current);
+          clearInterval(pollTimerRef.current);
+          setIsAutoChecking(false);
+          setShowManualUtr(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    pollTimerRef.current = setInterval(async () => {
+      try {
+        const res = await secureFetch("/api/check-incoming-payment", {
+          amount: Number(topupAmount),
+          startTime: startTime
+        });
+
+        if (res && res.status === "SUCCESS") {
+          clearInterval(pollTimerRef.current);
+          clearInterval(countdownTimerRef.current);
+          setIsAutoChecking(false);
+          setAutoSuccessMsg(res.message || `Payment Verified! 🪙 ${res.amount} Coins Added!`);
+          setTimeout(() => {
+            setAddCoinStep(1);
+            setTopupAmount("");
+            setAutoSuccessMsg("");
+          }, 3500);
+        }
+      } catch (e) {
+        console.warn("Polling error:", e.message);
+      }
+    }, 2500);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+      if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
+    };
+  }, []);
 
   // Transfer Coins States
   const [recipient, setRecipient] = useState("");
@@ -111,45 +172,142 @@ export default function WalletPopup({ user, coins, winCoins, onClose, onTopup, o
             {addCoinStep === 2 && (
               <div className="animate-fade-in">
                 <div className="flex justify-between items-center mb-4">
-                  <button onClick={() => setAddCoinStep(1)} className="text-gray-400 hover:text-white text-sm font-bold flex items-center gap-1">
+                  <button onClick={() => {
+                    if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+                    if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
+                    setIsAutoChecking(false);
+                    setAddCoinStep(1);
+                  }} className="text-gray-400 hover:text-white text-sm font-bold flex items-center gap-1">
                     ◀ BACK
                   </button>
                   <p className="text-orange-400 font-black">🪙 {topupAmount} COINS</p>
                 </div>
 
-                <p className="text-center text-orange-400 font-bold mb-4">SCAN QR & PAY {topupAmount} RUPEES</p>
-                <a href={paymentQR} download="FIRE-BAADSHAH-QR">
-                  <img src={paymentQR} alt="QR" className="w-48 mx-auto rounded-3xl border border-orange-500/20 cursor-pointer hover:scale-105 transition-transform" />
-                </a>
-                <p className="text-center text-green-400 mt-4 font-bold text-sm">919131793234@waaxis</p>
+                {/* 1. SUCCESS CELEBRATION CARD */}
+                {autoSuccessMsg ? (
+                  <div className="bg-emerald-950/80 border-2 border-emerald-500 rounded-3xl p-8 text-center my-6 animate-scale-in shadow-[0_0_30px_rgba(16,185,129,0.3)]">
+                    <div className="text-6xl mb-3 animate-bounce">🎉</div>
+                    <h3 className="text-2xl md:text-3xl font-extrabold text-emerald-400">PAYMENT VERIFIED!</h3>
+                    <p className="text-white mt-3 font-bold text-lg">{autoSuccessMsg}</p>
+                    <p className="text-emerald-300/80 text-sm mt-3">Coins credited to your wallet automatically!</p>
+                  </div>
+                ) : isAutoChecking ? (
+                  /* 2. LIVE AUTO-DETECT RADAR / SPINNER */
+                  <div className="bg-[#0c0c14]/90 border border-orange-500/40 rounded-3xl p-6 text-center my-4 shadow-lg shadow-orange-500/10">
+                    <div className="relative w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                      <div className="absolute inset-0 rounded-full border-4 border-orange-500/20 border-t-orange-500 animate-spin"></div>
+                      <span className="text-3xl animate-pulse">⚡</span>
+                    </div>
+                    <h4 className="text-xl font-black text-orange-400 tracking-wide">DETECTING YOUR PAYMENT...</h4>
+                    <p className="text-gray-300 text-xs mt-2">Listening to PhonePe Business for <span className="text-orange-400 font-bold">₹{topupAmount}</span></p>
+                    <div className="text-4xl font-mono font-extrabold text-white my-3 tracking-widest">{autoCheckSeconds}s</div>
+                    <p className="text-gray-400 text-xs">Please complete the payment in PhonePe or UPI app</p>
 
-                <p className="text-gray-400 mt-5 mb-2 text-sm">ENTER UTR NUMBER</p>
-                <input
-                  type="text"
-                  placeholder="12-digit UTR Number"
-                  value={utrNumber}
-                  onChange={(e) => setUtrNumber(e.target.value)}
-                  className="w-full bg-[#111] text-white rounded-2xl px-5 py-3.5 outline-none mb-4 border border-white/10 focus:border-orange-500/50 transition-all font-sans"
-                />
+                    <div className="mt-6 pt-4 border-t border-white/10 flex flex-col items-center gap-2">
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+                          if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
+                          setIsAutoChecking(false);
+                          setShowManualUtr(true);
+                        }}
+                        className="text-xs text-orange-400 hover:text-orange-300 underline font-sans font-bold transition-colors"
+                      >
+                        Taking longer? Enter 12-Digit UTR manually
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* 3. NORMAL PAYMENT SCREEN */
+                  <div>
+                    <p className="text-center text-orange-400 font-bold mb-4">SCAN QR & PAY {topupAmount} RUPEES</p>
+                    <div className="relative group max-w-[220px] mx-auto">
+                      <a href={paymentQR} download="FIRE-ARENA-QR">
+                        <img src={paymentQR} alt="PhonePe Business QR" className="w-52 mx-auto rounded-3xl border-2 border-orange-500/40 shadow-lg shadow-orange-500/20 cursor-pointer hover:scale-105 transition-transform bg-white p-2" />
+                      </a>
+                    </div>
 
-                <p className="text-gray-400 mb-2 text-sm">UPLOAD SCREENSHOT</p>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setPaymentScreenshot(e.target.files[0])}
-                  className="w-full bg-[#111] text-gray-400 rounded-2xl px-4 py-3 outline-none mb-2 border border-white/10 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-orange-500/20 file:text-orange-400 hover:file:bg-orange-500/30 transition-all font-sans"
-                />
-                {paymentScreenshot && <p className="text-green-400 mt-1 text-xs">{paymentScreenshot.name}</p>}
+                    <div className="flex items-center justify-center gap-2 mt-4 bg-white/5 py-2 px-4 rounded-xl border border-white/10 max-w-sm mx-auto">
+                      <p className="text-green-400 font-mono font-bold text-sm tracking-wide">Q105526409@ybl</p>
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText("Q105526409@ybl");
+                          alert("UPI ID Copied: Q105526409@ybl");
+                        }}
+                        className="bg-orange-500/20 hover:bg-orange-500/40 text-orange-400 text-xs px-2.5 py-1 rounded-lg border border-orange-500/30 transition-all font-sans font-bold"
+                      >
+                        📋 COPY
+                      </button>
+                    </div>
+                    <p className="text-center text-gray-400 text-xs mt-1">Merchant: <span className="text-orange-400 font-bold">Fire arena</span></p>
 
-                <button
-                  onClick={handleTopup}
-                  disabled={buttonLoading}
-                  className={`w-full mt-6 bg-gradient-to-r from-orange-600 to-red-600 text-white py-3.5 rounded-2xl font-black shadow-md shadow-orange-900/20 cyber-btn transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] ${
-                    buttonLoading ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-                >
-                  {buttonLoading ? "PROCESSING..." : "SUBMIT PAYMENT"}
-                </button>
+                    {/* Instant Mobile UPI Intent Link & Auto-Detect Trigger */}
+                    <div className="mt-5 space-y-2.5">
+                      <a 
+                        href={`upi://pay?pa=Q105526409@ybl&pn=Fire%20arena&am=${topupAmount}&cu=INR&tn=CoinTopup_${user?.uid?.slice(0, 5) || "User"}`}
+                        onClick={() => {
+                          startAutoCheck();
+                        }}
+                        className="flex items-center justify-center gap-2 w-full bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-black py-3.5 rounded-2xl shadow-lg shadow-purple-900/30 hover:scale-[1.02] active:scale-[0.98] transition-all text-sm md:text-base border border-purple-400/30 font-sans"
+                      >
+                        <span>⚡</span> PAY VIA PHONEPE / GPAY / PAYTM
+                      </a>
+
+                      <button
+                        type="button"
+                        onClick={() => startAutoCheck()}
+                        className="w-full bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 py-3 rounded-2xl font-bold transition-all text-sm flex items-center justify-center gap-2"
+                      >
+                        <span>🔄</span> I HAVE PAID — CHECK AUTOMATICALLY
+                      </button>
+                    </div>
+
+                    {/* Manual Fallback Toggle */}
+                    <div className="mt-6 pt-4 border-t border-white/10 text-center">
+                      <button
+                        type="button"
+                        onClick={() => setShowManualUtr(!showManualUtr)}
+                        className="text-xs text-gray-400 hover:text-white font-sans transition-colors"
+                      >
+                        {showManualUtr ? "▲ Hide Manual UTR Option" : "▼ Paid via another device or PC? Enter UTR manually"}
+                      </button>
+                    </div>
+
+                    {showManualUtr && (
+                      <div className="mt-4 animate-fade-in bg-black/40 p-4 rounded-2xl border border-white/10">
+                        <p className="text-gray-400 mb-2 text-xs font-bold uppercase">Enter 12-Digit UTR / UPI Ref / Transaction ID</p>
+                        <input
+                          type="text"
+                          placeholder="12-digit UTR (e.g. 428912345678)"
+                          value={utrNumber}
+                          onChange={(e) => setUtrNumber(e.target.value)}
+                          className="w-full bg-[#111] text-white rounded-2xl px-5 py-3 outline-none mb-3 border border-white/10 focus:border-orange-500/50 transition-all font-sans text-sm"
+                        />
+
+                        <p className="text-gray-400 mb-2 text-xs font-bold uppercase">Screenshot (Optional)</p>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => setPaymentScreenshot(e.target.files[0])}
+                          className="w-full bg-[#111] text-gray-400 rounded-2xl px-4 py-2.5 outline-none mb-2 border border-white/10 file:mr-4 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-orange-500/20 file:text-orange-400 hover:file:bg-orange-500/30 transition-all font-sans text-xs"
+                        />
+                        {paymentScreenshot && <p className="text-green-400 mt-1 text-xs">{paymentScreenshot.name}</p>}
+
+                        <button
+                          onClick={handleTopup}
+                          disabled={buttonLoading}
+                          className={`w-full mt-4 bg-orange-600 hover:bg-orange-500 text-white py-3 rounded-2xl font-black cyber-btn transition-all ${
+                            buttonLoading ? "opacity-50 cursor-not-allowed" : ""
+                          }`}
+                        >
+                          {buttonLoading ? "VERIFYING..." : "SUBMIT UTR"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 

@@ -86,7 +86,7 @@ import WeeklyDashboard from "./components/Weekly/WeeklyDashboard";
 import AdminWeeklyDashboard from "./components/Admin/Weekly/AdminWeeklyDashboard";
 import CalculatorWidget from "./components/Admin/CalculatorWidget";
 
-const ADMIN_UID = "FAVc9zfAgoYs1d1BDr2EoDwSw0x1";
+const ADMIN_UID = "kTUardeKQAUjuKKyGplwUBe1seI3";
 
 
 export default function FireBaadshahArena() {

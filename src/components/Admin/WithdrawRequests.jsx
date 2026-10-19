@@ -97,13 +97,35 @@ export default function WithdrawRequests({ withdrawRequests, onApproveWithdraw, 
                 <p>Mobile Number: <span className="text-white font-bold">{item.number || "N/A"}</span></p>
                 <p>UPI ID: <span className="text-blue-400 font-bold">{item.upi || "N/A"}</span></p>
                 <p className="text-blue-400 break-all">UID: {item.userUid}</p>
-                <p className="text-blue-400">Date: {item.createdAt}</p>
                 <p className={`font-bold mt-2 ${
                   item.status === "PENDING" ? "text-yellow-400" :
                   item.status === "COMPLETED" ? "text-green-400" : "text-red-400"
                 }`}>
                   Status: {item.status}
                 </p>
+
+                {/* ⚡ 1-Click Pay via PhonePe / GPay */}
+                {item.status === "PENDING" && item.upi && (
+                  <div className="flex flex-wrap items-center gap-3 my-4 p-3 bg-purple-950/30 rounded-2xl border border-purple-500/30">
+                    <a
+                      href={`upi://pay?pa=${item.upi}&pn=${encodeURIComponent(item.name || 'Player')}&am=${item.amount}&cu=INR&tn=FireArena_W_${item.requestId || 'Payout'}`}
+                      className="bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white px-5 py-3 rounded-xl font-black text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-purple-900/30 hover:scale-105 active:scale-95 transition-all cyber-btn"
+                    >
+                      <span>⚡</span> PAY ₹{item.amount} VIA PHONEPE / GPAY
+                    </a>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(item.upi);
+                        alert(`UPI Copied: ${item.upi}`);
+                      }}
+                      className="bg-gray-800 hover:bg-gray-700 text-gray-200 px-4 py-3 rounded-xl font-bold text-xs flex items-center gap-1 border border-gray-600 transition-colors"
+                    >
+                      <span>📋</span> COPY UPI
+                    </button>
+                  </div>
+                )}
 
                 <div className="flex gap-3 mt-4">
                   <button

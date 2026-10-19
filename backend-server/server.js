@@ -365,12 +365,14 @@ app.post("/api/withdraw-coins", verifyToken, async (req, res) => {
     // Trigger Telegram Notification
     try {
       const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+      const payLink = `upi://pay?pa=${withdrawUpi}&pn=${encodeURIComponent(withdrawName || 'Player')}&am=${withdrawAmount}&cu=INR&tn=FireArena_W_${requestKey}`;
       const response = await fetch(`https://dawn-firefly-d1ba.sohrabk502.workers.dev/bot8992852974:AAGlM5_2VojBzr8gRmQ9H3MYMz5-pffbTN8/sendMessage`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           chat_id: "5948674075",
-          text: `💸 NEW WITHDRAW REQUEST\n\n👤 User: ${req.user.email}\n🏷️ Name: ${withdrawName}\n📞 Phone: ${withdrawNumber}\n💰 Amount: ${withdrawAmount}\n🏦 UPI: ${withdrawUpi}`,
+          text: `💸 *NEW WITHDRAW REQUEST*\n\n👤 *User:* ${req.user.email}\n🏷️ *Name:* ${withdrawName}\n📞 *Phone:* ${withdrawNumber}\n💰 *Amount:* ₹${withdrawAmount}\n🏦 *UPI ID:* \`${withdrawUpi}\`\n\n⚡ *1-Click Pay Link:*\n\`${payLink}\``,
+          parse_mode: "Markdown"
         }),
       });
       const resData = await response.json();
@@ -874,6 +876,330 @@ async function cleanupOldMatches() {
   }
 }
 
+// =============================================================
+// PHONEPE BUSINESS WEBHOOK & AUTO-VERIFICATION SYSTEM
+// =============================================================
+const WEBHOOK_SECRET = process.env.PAYMENT_WEBHOOK_SECRET || "fire_arena_secure_webhook_2026";
+
+// Helper to notify Telegram
+async function sendTelegramAlert(message) {
+  try {
+    const url = "https://dawn-firefly-d1ba.sohrabk502.workers.dev/bot8992852974:AAGlM5_2VojBzr8gRmQ9H3MYMz5-pffbTN8/sendMessage";
+    await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: "5948674075",
+        text: message
+      })
+    });
+  } catch (err) {
+    console.error("Telegram notification error:", err.message);
+  }
+}
+
+// -------------------------------------------------------------
+// Endpoint 1: Incoming PhonePe Business Webhook
+// Triggered by PhonePe notification listener on merchant's phone
+// -------------------------------------------------------------
+app.post("/api/phonepe-business-webhook", async (req, res) => {
+  try {
+    const secret = req.headers["x-webhook-secret"] || req.body.secret || req.query.secret;
+    if (secret !== WEBHOOK_SECRET) {
+      return res.status(403).json({ error: "Forbidden: Invalid webhook secret" });
+    }
+
+    let { utr, amount, sender, message, text, title } = req.body || {};
+
+    // Combine all notification text fields sent by NotifyHook or any forwarder
+    const combinedText = `${message || ""} ${title || ""} ${text || ""} ${JSON.stringify(req.body || {})}`;
+
+    if (!amount) {
+      const amtMatch = combinedText.match(/(?:₹|Rs\.?|INR)\s*([\d,]+(?:\.\d{1,2})?)/i) || 
+                       combinedText.match(/(?:received|credited)\s*(?:₹|Rs\.?|INR)?\s*([\d,]+(?:\.\d{1,2})?)/i);
+      if (amtMatch) {
+        amount = parseFloat(amtMatch[1].replace(/,/g, ""));
+      }
+    }
+
+    if (!utr) {
+      const utrMatch = combinedText.match(/(?:UTR|Ref(?:\s*No)?|Txn(?:\s*ID)?|UPI Ref)\s*[:\-]?\s*(\d{10,14})/i) ||
+                       combinedText.match(/\b(\d{12})\b/);
+      if (utrMatch) {
+        utr = utrMatch[1];
+      }
+    }
+
+    if (!utr || !amount) {
+      return res.status(400).json({ error: "Missing or unparseable UTR or Amount", received: { utr, amount, message } });
+    }
+
+    const cleanUtr = String(utr).trim();
+    const cleanAmount = Number(amount);
+
+    console.log(`[PhonePe Webhook] Received payment: ₹${cleanAmount}, UTR: ${cleanUtr}, Sender: ${sender || "Unknown"}`);
+
+    // Check if this UTR was already processed
+    const creditDocRef = db.collection("verifiedCredits").doc(cleanUtr);
+    const creditSnap = await creditDocRef.get();
+
+    if (creditSnap.exists && creditSnap.data().claimed) {
+      console.log(`[PhonePe Webhook] UTR ${cleanUtr} already claimed by user ${creditSnap.data().claimedBy}`);
+      return res.json({ success: true, message: "UTR already processed and claimed", utr: cleanUtr });
+    }
+
+    // Check Realtime Database for any PENDING payment request with this UTR
+    const pendingSnap = await rtdb.ref("paymentRequests").orderByChild("utr").equalTo(cleanUtr).once("value");
+    const pendingData = pendingSnap.val();
+
+    let matchedUserId = null;
+    let matchedReqKey = null;
+
+    if (pendingData) {
+      for (const [key, reqObj] of Object.entries(pendingData)) {
+        if (reqObj.status === "PENDING") {
+          matchedReqKey = key;
+          matchedUserId = reqObj.userId || reqObj.userUid;
+          break;
+        }
+      }
+    }
+
+    if (matchedUserId && matchedReqKey) {
+      // 1. Instantly credit coins to user in Firestore
+      await db.collection("users").doc(matchedUserId).update({
+        coins: admin.firestore.FieldValue.increment(cleanAmount)
+      });
+
+      // 2. Log in Coin History
+      await logCoinTransaction(
+        matchedUserId,
+        cleanAmount,
+        "TOPUP",
+        `PhonePe Business Auto-Credit (UTR: ${cleanUtr})`,
+        true
+      );
+
+      // 3. Mark payment request as COMPLETED in RTDB
+      await rtdb.ref(`paymentRequests/${matchedReqKey}`).update({
+        status: "COMPLETED",
+        completedTime: new Date().toLocaleString(),
+        verifiedBy: "AUTO_PHONEPE_WEBHOOK",
+        actualAmount: cleanAmount
+      });
+
+      // 4. Send in-app notification to user
+      await rtdb.ref(`notifications/${matchedUserId}`).push({
+        title: "Coins Added!",
+        message: `Your payment of Rs ${cleanAmount} (UTR: ${cleanUtr}) was auto-verified! Coins added to your wallet.`,
+        type: "PAYMENT_APPROVED",
+        timestamp: Date.now()
+      });
+
+      // 5. Store verified credit as claimed
+      await creditDocRef.set({
+        utr: cleanUtr,
+        amount: cleanAmount,
+        sender: sender || "PhonePe User",
+        claimed: true,
+        claimedBy: matchedUserId,
+        claimedAt: admin.firestore.FieldValue.serverTimestamp(),
+        processedAt: new Date().toISOString()
+      });
+
+      sendTelegramAlert(`⚡ AUTO-VERIFIED PAYMENT!\n💰 Amount: Rs ${cleanAmount}\n🧾 UTR: ${cleanUtr}\n👤 User: ${matchedUserId}\n🪙 Coins Credited Automatically!`);
+
+      return res.json({
+        success: true,
+        action: "AUTO_CREDITED",
+        userId: matchedUserId,
+        amount: cleanAmount,
+        utr: cleanUtr
+      });
+    } else {
+      // Player hasn't submitted UTR on website yet. Store it in verifiedCredits!
+      await creditDocRef.set({
+        utr: cleanUtr,
+        amount: cleanAmount,
+        sender: sender || "PhonePe User",
+        claimed: false,
+        claimedBy: null,
+        receivedAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdAt: new Date().toISOString()
+      });
+
+      console.log(`[PhonePe Webhook] Stored verified credit for UTR ${cleanUtr}. Waiting for player to claim in app.`);
+      return res.json({
+        success: true,
+        action: "STORED_FOR_CLAIM",
+        amount: cleanAmount,
+        utr: cleanUtr
+      });
+    }
+  } catch (error) {
+    console.error("[PhonePe Webhook Error]:", error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// -------------------------------------------------------------
+// Endpoint 2: Instant Verify Topup (Called from Client App)
+// -------------------------------------------------------------
+app.post("/api/verify-topup", verifyToken, async (req, res) => {
+  const uid = req.user.uid;
+  const { utr, amount } = req.body;
+
+  if (!utr || !amount) {
+    return res.status(400).json({ error: "Missing UTR or amount" });
+  }
+
+  const cleanUtr = String(utr).trim();
+  const cleanAmount = Number(amount);
+
+  try {
+    // 1. Check if this UTR has already been claimed by anyone
+    const creditDocRef = db.collection("verifiedCredits").doc(cleanUtr);
+    const creditSnap = await creditDocRef.get();
+
+    if (creditSnap.exists) {
+      const credit = creditSnap.data();
+
+      if (credit.claimed) {
+        return res.status(400).json({ error: "This UTR / Transaction ID has already been claimed!" });
+      }
+
+      // Found matching incoming credit! Instantly credit user!
+      const creditAmount = credit.amount || cleanAmount;
+
+      await db.collection("users").doc(uid).update({
+        coins: admin.firestore.FieldValue.increment(creditAmount)
+      });
+
+      await logCoinTransaction(
+        uid,
+        creditAmount,
+        "TOPUP",
+        `PhonePe Business Instant Credit (UTR: ${cleanUtr})`,
+        true
+      );
+
+      await creditDocRef.update({
+        claimed: true,
+        claimedBy: uid,
+        claimedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+
+      // Also record in paymentRequests as COMPLETED
+      await rtdb.ref("paymentRequests").push({
+        userId: uid,
+        userUid: uid,
+        email: req.user.email || "user@firearena.com",
+        amount: creditAmount,
+        utr: cleanUtr,
+        status: "COMPLETED",
+        completedTime: new Date().toLocaleString(),
+        verifiedBy: "INSTANT_AUTO_MATCH",
+        createdAt: new Date().toLocaleString()
+      });
+
+      sendTelegramAlert(`⚡ INSTANT CLAIMED PAYMENT!\n💰 Amount: Rs ${creditAmount}\n🧾 UTR: ${cleanUtr}\n👤 User: ${req.user.email || uid}\n🪙 Coins Credited Instantly!`);
+
+      return res.json({
+        success: true,
+        status: "COMPLETED",
+        coinsAdded: creditAmount,
+        message: `Payment Verified! 🪙 ${creditAmount} Coins added to your wallet instantly!`
+      });
+    }
+
+    // 2. If not yet in verifiedCredits, return PENDING
+    return res.json({
+      success: true,
+      status: "PENDING",
+      message: "Payment submitted. Verifying with PhonePe Business..."
+    });
+  } catch (error) {
+    console.error("[Verify Topup Error]:", error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// -------------------------------------------------------------
+// Endpoint 3: Live Auto-Detect Polling (Zero Manual UTR)
+// Checks if payment was received without user typing UTR
+// -------------------------------------------------------------
+app.post("/api/check-incoming-payment", verifyToken, async (req, res) => {
+  const uid = req.user.uid;
+  const { amount, startTime } = req.body;
+
+  if (!amount) {
+    return res.status(400).json({ error: "Amount required" });
+  }
+
+  const targetAmount = Number(amount);
+
+  try {
+    // Query verifiedCredits for unclaimed payments with matching amount
+    const creditsSnap = await db.collection("verifiedCredits")
+      .where("claimed", "==", false)
+      .where("amount", "==", targetAmount)
+      .limit(1)
+      .get();
+
+    if (!creditsSnap.empty) {
+      const creditDoc = creditsSnap.docs[0];
+      const creditData = creditDoc.data();
+      const cleanUtr = creditData.utr;
+
+      // Found unclaimed payment! Claim and credit coins to user!
+      await db.collection("users").doc(uid).update({
+        coins: admin.firestore.FieldValue.increment(targetAmount)
+      });
+
+      await logCoinTransaction(
+        uid,
+        targetAmount,
+        "TOPUP",
+        `PhonePe Business Zero-UTR Auto-Credit (UTR: ${cleanUtr})`,
+        true
+      );
+
+      await creditDoc.ref.update({
+        claimed: true,
+        claimedBy: uid,
+        claimedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+
+      // Record in RTDB as COMPLETED
+      await rtdb.ref("paymentRequests").push({
+        userId: uid,
+        userUid: uid,
+        email: req.user.email || "user@firearena.com",
+        amount: targetAmount,
+        utr: cleanUtr,
+        status: "COMPLETED",
+        completedTime: new Date().toLocaleString(),
+        verifiedBy: "ZERO_UTR_AUTO_DETECT",
+        createdAt: new Date().toLocaleString()
+      });
+
+      sendTelegramAlert(`⚡ ZERO-UTR AUTO-MATCHED PAYMENT!\n💰 Amount: Rs ${targetAmount}\n🧾 UTR: ${cleanUtr}\n👤 User: ${req.user.email || uid}\n🪙 Coins Credited Automatically without manual UTR!`);
+
+      return res.json({
+        status: "SUCCESS",
+        amount: targetAmount,
+        utr: cleanUtr,
+        message: `Payment Verified! 🪙 ${targetAmount} Coins added to your wallet!`
+      });
+    }
+
+    return res.json({ status: "WAITING" });
+  } catch (error) {
+    console.error("[Auto-Detect Error]:", error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
 // Run cleanup immediately on start, and then every 12 hours
 cleanupOldMatches();
 setInterval(cleanupOldMatches, 12 * 60 * 60 * 1000);
@@ -881,3 +1207,4 @@ setInterval(cleanupOldMatches, 12 * 60 * 60 * 1000);
 // Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
