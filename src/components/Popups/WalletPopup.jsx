@@ -14,8 +14,10 @@ export default function WalletPopup({ user, coins, winCoins, onClose, onTopup, o
 
   const upiIntentUrl = useMemo(() => {
     const amt = Number(topupAmount) || 0;
-    return `upi://pay?pa=Q105526409@ybl&pn=Fire%20arena&am=${amt}&cu=INR&tn=CoinTopup_${user?.uid?.slice(0, 5) || "User"}`;
-  }, [topupAmount, user]);
+    const formattedAmt = amt.toFixed(2); // e.g. "1.00", "10.00"
+    const tr = `FA${Date.now()}`;
+    return `upi://pay?pa=Q105526409@ybl&pn=Fire%20arena&mc=0000&mode=02&purpose=00&am=${formattedAmt}&cu=INR&tr=${tr}&tn=Topup_${amt}Coins`;
+  }, [topupAmount]);
 
   useEffect(() => {
     if (topupAmount && Number(topupAmount) > 0) {
