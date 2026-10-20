@@ -915,13 +915,15 @@ app.post("/api/phonepe-business-webhook", async (req, res) => {
 
     let { utr, amount, sender, message, text, title } = req.body || {};
 
-    // Combine all notification text fields sent by NotifyHook or any forwarder
-    const combinedText = `${message || ""} ${title || ""} ${text || ""} ${JSON.stringify(req.body || {})}`;
+    // Combine all notification text fields and normalize mathematical bold digits (e.g. 𝟭) and keycaps (1️⃣) to ASCII digits
+    const rawText = `${message || ""} ${title || ""} ${text || ""} ${JSON.stringify(req.body || {})}`;
+    const combinedText = rawText.normalize("NFKD").replace(/([0-9])[\uFE0F\u20E3]+/g, "$1");
 
     // Log raw webhook call in Firestore for debugging & visibility
     try {
       await db.collection("webhookLogs").add({
         body: req.body || {},
+        normalized: combinedText.substring(0, 300),
         headers: req.headers || {},
         query: req.query || {},
         timestamp: admin.firestore.FieldValue.serverTimestamp(),
@@ -937,6 +939,13 @@ app.post("/api/phonepe-business-webhook", async (req, res) => {
                        combinedText.match(/([\d,]+(?:\.\d{1,2})?)\s*(?:₹|Rs\.?|INR)/i);
       if (amtMatch) {
         amount = parseFloat(amtMatch[1].replace(/,/g, ""));
+      }
+    }
+
+    if (!sender) {
+      const senderMatch = combinedText.match(/from\s+([A-Za-z\s]+?)\s+via/i);
+      if (senderMatch) {
+        sender = senderMatch[1].trim();
       }
     }
 
