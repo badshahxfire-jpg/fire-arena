@@ -918,24 +918,49 @@ app.post("/api/phonepe-business-webhook", async (req, res) => {
     // Combine all notification text fields sent by NotifyHook or any forwarder
     const combinedText = `${message || ""} ${title || ""} ${text || ""} ${JSON.stringify(req.body || {})}`;
 
+    // Log raw webhook call in Firestore for debugging & visibility
+    try {
+      await db.collection("webhookLogs").add({
+        body: req.body || {},
+        headers: req.headers || {},
+        query: req.query || {},
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        timeStr: new Date().toLocaleString()
+      });
+    } catch (logErr) {
+      console.warn("Could not log webhook to Firestore:", logErr.message);
+    }
+
     if (!amount) {
       const amtMatch = combinedText.match(/(?:₹|Rs\.?|INR)\s*([\d,]+(?:\.\d{1,2})?)/i) || 
-                       combinedText.match(/(?:received|credited)\s*(?:₹|Rs\.?|INR)?\s*([\d,]+(?:\.\d{1,2})?)/i);
+                       combinedText.match(/(?:received|credited)\s*(?:₹|Rs\.?|INR)?\s*([\d,]+(?:\.\d{1,2})?)/i) ||
+                       combinedText.match(/([\d,]+(?:\.\d{1,2})?)\s*(?:₹|Rs\.?|INR)/i);
       if (amtMatch) {
         amount = parseFloat(amtMatch[1].replace(/,/g, ""));
       }
     }
 
-    if (!utr) {
-      const utrMatch = combinedText.match(/(?:UTR|Ref(?:\s*No)?|Txn(?:\s*ID)?|UPI Ref)\s*[:\-]?\s*(\d{10,14})/i) ||
-                       combinedText.match(/\b(\d{12})\b/);
-      if (utrMatch) {
-        utr = utrMatch[1];
-      }
+    // If there is no payment amount, this is a non-payment notification (e.g. daily summary, system alert, ping)
+    // Return 200 OK so NotifyHook shows SUCCESS instead of red error
+    if (!amount) {
+      console.log("[PhonePe Webhook] Non-payment notification ignored:", combinedText.substring(0, 150));
+      return res.status(200).json({ 
+        success: true, 
+        ignored: true, 
+        reason: "Non-payment notification (no amount detected)" 
+      });
     }
 
-    if (!utr || !amount) {
-      return res.status(400).json({ error: "Missing or unparseable UTR or Amount", received: { utr, amount, message } });
+    if (!utr) {
+      const utrMatch = combinedText.match(/(?:UTR|Ref(?:\s*No)?|Txn(?:\s*ID)?|UPI Ref)\s*[:\-]?\s*([A-Za-z0-9]{10,22})/i) ||
+                       combinedText.match(/\b(\d{12})\b/) ||
+                       combinedText.match(/\b(T\d{18,24})\b/i);
+      if (utrMatch) {
+        utr = utrMatch[1];
+      } else {
+        // If PhonePe notification has amount but no explicit UTR, create unique time ref
+        utr = `AUTO_${Date.now()}`;
+      }
     }
 
     const cleanUtr = String(utr).trim();
