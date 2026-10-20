@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import QRCode from "qrcode";
 import paymentQR from "../../assets/paymentQR.png";
 import { secureFetch } from "../../utils/backendApi";
 
@@ -7,6 +8,34 @@ export default function WalletPopup({ user, coins, winCoins, onClose, onTopup, o
   const [utrNumber, setUtrNumber] = useState("");
   const [paymentScreenshot, setPaymentScreenshot] = useState(null);
   const [addCoinStep, setAddCoinStep] = useState(1);
+
+  // Dynamic Amount Prefilled QR Code & UPI Link
+  const [dynamicQrUrl, setDynamicQrUrl] = useState("");
+
+  const upiIntentUrl = useMemo(() => {
+    const amt = Number(topupAmount) || 0;
+    return `upi://pay?pa=Q105526409@ybl&pn=Fire%20arena&am=${amt}&cu=INR&tn=CoinTopup_${user?.uid?.slice(0, 5) || "User"}`;
+  }, [topupAmount, user]);
+
+  useEffect(() => {
+    if (topupAmount && Number(topupAmount) > 0) {
+      QRCode.toDataURL(upiIntentUrl, {
+        width: 300,
+        margin: 2,
+        color: {
+          dark: "#000000",
+          light: "#ffffff"
+        }
+      })
+      .then(url => setDynamicQrUrl(url))
+      .catch(err => {
+        console.error("QR generation error:", err);
+        setDynamicQrUrl(paymentQR);
+      });
+    } else {
+      setDynamicQrUrl(paymentQR);
+    }
+  }, [topupAmount, upiIntentUrl]);
 
   // Zero-UTR Live Auto-Detection States (5 Minutes = 300 Seconds)
   const [isAutoChecking, setIsAutoChecking] = useState(false);
@@ -213,14 +242,17 @@ export default function WalletPopup({ user, coins, winCoins, onClose, onTopup, o
 
                     {/* QR Code always visible for scanning / screenshot */}
                     <div className="relative group max-w-[210px] mx-auto">
-                      <a href={paymentQR} download="FIRE-ARENA-PAYMENT-QR">
+                      <div className="bg-emerald-500/20 text-emerald-400 text-[10px] font-black px-2.5 py-0.5 rounded-full mb-1.5 border border-emerald-500/30 inline-flex items-center gap-1">
+                        <span>✨</span> ₹{topupAmount} PRE-FILLED (ऑटो भरा हुआ)
+                      </div>
+                      <a href={dynamicQrUrl || paymentQR} download={`FIRE-ARENA-QR-${topupAmount}`}>
                         <img 
-                          src={paymentQR} 
+                          src={dynamicQrUrl || paymentQR} 
                           alt="PhonePe Business QR" 
                           className="w-48 mx-auto rounded-2xl border-2 border-orange-500/40 shadow-lg shadow-orange-500/20 cursor-pointer hover:scale-105 transition-transform bg-white p-2" 
                         />
                       </a>
-                      <p className="text-[10px] text-gray-400 mt-1 font-bold">📸 Scan or Screenshot QR to Pay</p>
+                      <p className="text-[10px] text-gray-400 mt-1 font-bold">📸 Scan or Screenshot QR — ₹{topupAmount} auto-filled!</p>
                     </div>
 
                     {/* UPI ID & Copy */}
@@ -240,7 +272,7 @@ export default function WalletPopup({ user, coins, winCoins, onClose, onTopup, o
 
                     {/* Mobile 1-Tap Pay Link */}
                     <a 
-                      href={`upi://pay?pa=Q105526409@ybl&pn=Fire%20arena&am=${topupAmount}&cu=INR&tn=CoinTopup_${user?.uid?.slice(0, 5) || "User"}`}
+                      href={upiIntentUrl}
                       className="flex items-center justify-center gap-2 w-full bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-black py-3 rounded-xl shadow-lg shadow-purple-900/30 hover:scale-[1.01] active:scale-[0.99] transition-all text-xs md:text-sm border border-purple-400/30 font-sans"
                     >
                       <span>⚡</span> OPEN PHONEPE / GPAY TO PAY ₹{topupAmount}
@@ -277,9 +309,13 @@ export default function WalletPopup({ user, coins, winCoins, onClose, onTopup, o
                   <div>
                     <p className="text-center text-orange-400 font-bold mb-4">SCAN QR & PAY {topupAmount} RUPEES</p>
                     <div className="relative group max-w-[220px] mx-auto">
-                      <a href={paymentQR} download="FIRE-ARENA-QR">
-                        <img src={paymentQR} alt="PhonePe Business QR" className="w-52 mx-auto rounded-3xl border-2 border-orange-500/40 shadow-lg shadow-orange-500/20 cursor-pointer hover:scale-105 transition-transform bg-white p-2" />
+                      <div className="bg-emerald-500/20 text-emerald-400 text-[11px] font-black px-3 py-1 rounded-full mb-2 border border-emerald-500/30 inline-flex items-center gap-1">
+                        <span>✨</span> ₹{topupAmount} PRE-FILLED (ऑटो भरा हुआ)
+                      </div>
+                      <a href={dynamicQrUrl || paymentQR} download={`FIRE-ARENA-QR-${topupAmount}`}>
+                        <img src={dynamicQrUrl || paymentQR} alt="PhonePe Business QR" className="w-52 mx-auto rounded-3xl border-2 border-orange-500/40 shadow-lg shadow-orange-500/20 cursor-pointer hover:scale-105 transition-transform bg-white p-2" />
                       </a>
+                      <p className="text-[10px] text-gray-400 mt-1 font-bold">📸 Scan with PhonePe / GPay — ₹{topupAmount} auto-filled!</p>
                     </div>
 
                     <div className="flex items-center justify-center gap-2 mt-4 bg-white/5 py-2 px-4 rounded-xl border border-white/10 max-w-sm mx-auto">
@@ -300,7 +336,7 @@ export default function WalletPopup({ user, coins, winCoins, onClose, onTopup, o
                     {/* Instant Mobile UPI Intent Link & Auto-Detect Trigger */}
                     <div className="mt-5 space-y-2.5">
                       <a 
-                        href={`upi://pay?pa=Q105526409@ybl&pn=Fire%20arena&am=${topupAmount}&cu=INR&tn=CoinTopup_${user?.uid?.slice(0, 5) || "User"}`}
+                        href={upiIntentUrl}
                         onClick={() => {
                           startAutoCheck();
                         }}
