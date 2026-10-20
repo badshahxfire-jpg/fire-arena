@@ -1053,6 +1053,7 @@ app.post("/api/phonepe-business-webhook", async (req, res) => {
         sender: sender || "PhonePe User",
         claimed: false,
         claimedBy: null,
+        receivedTimestamp: Date.now(),
         receivedAt: admin.firestore.FieldValue.serverTimestamp(),
         createdAt: new Date().toISOString()
       });
@@ -1168,15 +1169,28 @@ app.post("/api/check-incoming-payment", verifyToken, async (req, res) => {
   const targetAmount = Number(amount);
 
   try {
+    // Strict time-window: Only match payments received within the last 75 seconds during active payment window
+    const minTimestamp = startTime ? (Number(startTime) - 15000) : (Date.now() - 75000);
+
     // Query verifiedCredits for unclaimed payments with matching amount
     const creditsSnap = await db.collection("verifiedCredits")
       .where("claimed", "==", false)
       .where("amount", "==", targetAmount)
-      .limit(1)
       .get();
 
-    if (!creditsSnap.empty) {
-      const creditDoc = creditsSnap.docs[0];
+    // Filter by strict time window to protect outside/personal payments
+    const validDoc = creditsSnap.docs.find(doc => {
+      const data = doc.data();
+      const t = data.receivedTimestamp || 
+                (data.receivedAt && typeof data.receivedAt.toMillis === "function" ? data.receivedAt.toMillis() : 0) || 
+                (data.createdAt ? new Date(data.createdAt).getTime() : 0);
+      const isRecent = (Date.now() - t) <= 75000;
+      const isAfterStart = t >= minTimestamp;
+      return isRecent && isAfterStart;
+    });
+
+    if (validDoc) {
+      const creditDoc = validDoc;
       const creditData = creditDoc.data();
       const cleanUtr = creditData.utr;
 
