@@ -373,11 +373,11 @@ export default function WalletPopup({ user, coins, winCoins, onClose, onTopup, o
                   <p className="text-orange-400 font-black">🪙 {item.amount} Coins</p>
                   <p className={`font-black mt-2 ${
                     item.status === "PENDING" ? "text-yellow-400"
-                    : item.status === "APPROVED" ? "text-green-400"
+                    : (item.status === "APPROVED" || item.status === "COMPLETED") ? "text-green-400"
                     : "text-red-400"
                   }`}>
                     {item.status === "PENDING" ? "⏳ ADD COINS PENDING"
-                    : item.status === "APPROVED" ? "✅ ADD COINS COMPLETED"
+                    : (item.status === "APPROVED" || item.status === "COMPLETED") ? "✅ ADD COINS COMPLETED"
                     : "❌ ADD COINS REJECTED"}
                   </p>
                   <p className="text-gray-500 text-sm mt-2">🕒 {item.createdAt}</p>
