@@ -192,20 +192,61 @@ export default function WalletPopup({ user, coins, winCoins, onClose, onTopup, o
                     <p className="text-emerald-300/80 text-sm mt-3">Coins credited to your wallet automatically!</p>
                   </div>
                 ) : isAutoChecking ? (
-                  /* 2. LIVE AUTO-DETECT RADAR / SPINNER */
-                  <div className="bg-[#0c0c14]/90 border border-orange-500/40 rounded-3xl p-6 text-center my-4 shadow-lg shadow-orange-500/10">
-                    <div className="relative w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-                      <div className="absolute inset-0 rounded-full border-4 border-orange-500/20 border-t-orange-500 animate-spin"></div>
-                      <span className="text-3xl animate-pulse">⚡</span>
+                  /* 2. LIVE AUTO-DETECT RADAR + QR CODE TOGETHER */
+                  <div className="bg-[#0c0c14]/90 border border-orange-500/40 rounded-3xl p-5 text-center my-3 shadow-lg shadow-orange-500/10 space-y-4">
+                    {/* Live Listening Header */}
+                    <div className="bg-orange-950/40 border border-orange-500/30 rounded-2xl p-3 flex items-center justify-between px-4">
+                      <div className="flex items-center gap-3 text-left">
+                        <div className="relative w-9 h-9 flex items-center justify-center shrink-0">
+                          <div className="absolute inset-0 rounded-full border-2 border-orange-500/30 border-t-orange-400 animate-spin"></div>
+                          <span className="text-sm animate-pulse">⚡</span>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-black text-orange-400 tracking-wide">DETECTING ₹{topupAmount} PAYMENT...</h4>
+                          <p className="text-gray-400 text-[11px]">Scan QR or pay via UPI — coins credit automatically</p>
+                        </div>
+                      </div>
+                      <div className="text-2xl md:text-3xl font-mono font-black text-white tracking-widest bg-black/60 px-3 py-1 rounded-xl border border-white/10 shrink-0">
+                        {String(Math.floor(autoCheckSeconds / 60)).padStart(2, '0')}:{String(autoCheckSeconds % 60).padStart(2, '0')}
+                      </div>
                     </div>
-                    <h4 className="text-xl font-black text-orange-400 tracking-wide">DETECTING YOUR PAYMENT...</h4>
-                    <p className="text-gray-300 text-xs mt-2">Listening to PhonePe Business for <span className="text-orange-400 font-bold">₹{topupAmount}</span></p>
-                    <div className="text-4xl font-mono font-extrabold text-white my-3 tracking-widest">
-                      {String(Math.floor(autoCheckSeconds / 60)).padStart(2, '0')}:{String(autoCheckSeconds % 60).padStart(2, '0')}
-                    </div>
-                    <p className="text-gray-400 text-xs">Please complete the payment in PhonePe or UPI app</p>
 
-                    <div className="mt-6 pt-4 border-t border-white/10 flex flex-col items-center gap-2">
+                    {/* QR Code always visible for scanning / screenshot */}
+                    <div className="relative group max-w-[210px] mx-auto">
+                      <a href={paymentQR} download="FIRE-ARENA-PAYMENT-QR">
+                        <img 
+                          src={paymentQR} 
+                          alt="PhonePe Business QR" 
+                          className="w-48 mx-auto rounded-2xl border-2 border-orange-500/40 shadow-lg shadow-orange-500/20 cursor-pointer hover:scale-105 transition-transform bg-white p-2" 
+                        />
+                      </a>
+                      <p className="text-[10px] text-gray-400 mt-1 font-bold">📸 Scan or Screenshot QR to Pay</p>
+                    </div>
+
+                    {/* UPI ID & Copy */}
+                    <div className="flex items-center justify-center gap-2 bg-white/5 py-1.5 px-3 rounded-xl border border-white/10 max-w-xs mx-auto">
+                      <p className="text-green-400 font-mono font-bold text-xs tracking-wide">Q105526409@ybl</p>
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText("Q105526409@ybl");
+                          alert("UPI ID Copied: Q105526409@ybl");
+                        }}
+                        className="bg-orange-500/20 hover:bg-orange-500/40 text-orange-400 text-[11px] px-2 py-0.5 rounded border border-orange-500/30 transition-all font-bold"
+                      >
+                        📋 COPY
+                      </button>
+                    </div>
+
+                    {/* Mobile 1-Tap Pay Link */}
+                    <a 
+                      href={`upi://pay?pa=Q105526409@ybl&pn=Fire%20arena&am=${topupAmount}&cu=INR&tn=CoinTopup_${user?.uid?.slice(0, 5) || "User"}`}
+                      className="flex items-center justify-center gap-2 w-full bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-black py-3 rounded-xl shadow-lg shadow-purple-900/30 hover:scale-[1.01] active:scale-[0.99] transition-all text-xs md:text-sm border border-purple-400/30 font-sans"
+                    >
+                      <span>⚡</span> OPEN PHONEPE / GPAY TO PAY ₹{topupAmount}
+                    </a>
+
+                    <div className="pt-2 border-t border-white/10 flex items-center justify-between text-xs px-2">
                       <button 
                         type="button"
                         onClick={() => {
@@ -214,9 +255,20 @@ export default function WalletPopup({ user, coins, winCoins, onClose, onTopup, o
                           setIsAutoChecking(false);
                           setShowManualUtr(true);
                         }}
-                        className="text-xs text-orange-400 hover:text-orange-300 underline font-sans font-bold transition-colors"
+                        className="text-orange-400 hover:text-orange-300 underline font-bold transition-colors"
                       >
-                        Taking longer? Enter 12-Digit UTR manually
+                        Enter 12-Digit UTR manually
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+                          if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
+                          setIsAutoChecking(false);
+                        }}
+                        className="text-gray-400 hover:text-white transition-colors"
+                      >
+                        ✕ Stop Radar
                       </button>
                     </div>
                   </div>
