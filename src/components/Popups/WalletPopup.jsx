@@ -8,9 +8,9 @@ export default function WalletPopup({ user, coins, winCoins, onClose, onTopup, o
   const [paymentScreenshot, setPaymentScreenshot] = useState(null);
   const [addCoinStep, setAddCoinStep] = useState(1);
 
-  // Zero-UTR Live Auto-Detection States
+  // Zero-UTR Live Auto-Detection States (5 Minutes = 300 Seconds)
   const [isAutoChecking, setIsAutoChecking] = useState(false);
-  const [autoCheckSeconds, setAutoCheckSeconds] = useState(45);
+  const [autoCheckSeconds, setAutoCheckSeconds] = useState(300);
   const [autoSuccessMsg, setAutoSuccessMsg] = useState("");
   const [showManualUtr, setShowManualUtr] = useState(false);
   const pollTimerRef = useRef(null);
@@ -18,7 +18,7 @@ export default function WalletPopup({ user, coins, winCoins, onClose, onTopup, o
 
   const startAutoCheck = (startTime = Date.now()) => {
     setIsAutoChecking(true);
-    setAutoCheckSeconds(45);
+    setAutoCheckSeconds(300);
     setAutoSuccessMsg("");
 
     if (pollTimerRef.current) clearInterval(pollTimerRef.current);
@@ -200,7 +200,9 @@ export default function WalletPopup({ user, coins, winCoins, onClose, onTopup, o
                     </div>
                     <h4 className="text-xl font-black text-orange-400 tracking-wide">DETECTING YOUR PAYMENT...</h4>
                     <p className="text-gray-300 text-xs mt-2">Listening to PhonePe Business for <span className="text-orange-400 font-bold">₹{topupAmount}</span></p>
-                    <div className="text-4xl font-mono font-extrabold text-white my-3 tracking-widest">{autoCheckSeconds}s</div>
+                    <div className="text-4xl font-mono font-extrabold text-white my-3 tracking-widest">
+                      {String(Math.floor(autoCheckSeconds / 60)).padStart(2, '0')}:{String(autoCheckSeconds % 60).padStart(2, '0')}
+                    </div>
                     <p className="text-gray-400 text-xs">Please complete the payment in PhonePe or UPI app</p>
 
                     <div className="mt-6 pt-4 border-t border-white/10 flex flex-col items-center gap-2">

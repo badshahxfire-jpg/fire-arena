@@ -1169,8 +1169,8 @@ app.post("/api/check-incoming-payment", verifyToken, async (req, res) => {
   const targetAmount = Number(amount);
 
   try {
-    // Strict time-window: Only match payments received within the last 75 seconds during active payment window
-    const minTimestamp = startTime ? (Number(startTime) - 15000) : (Date.now() - 75000);
+    // Strict time-window: Match payments received within 5.5 minutes (330 seconds) during active payment window
+    const minTimestamp = startTime ? (Number(startTime) - 30000) : (Date.now() - 330000);
 
     // Query verifiedCredits for unclaimed payments with matching amount
     const creditsSnap = await db.collection("verifiedCredits")
@@ -1178,13 +1178,13 @@ app.post("/api/check-incoming-payment", verifyToken, async (req, res) => {
       .where("amount", "==", targetAmount)
       .get();
 
-    // Filter by strict time window to protect outside/personal payments
+    // Filter by 5.5-minute window so slow networks are supported while outside payments stay safe
     const validDoc = creditsSnap.docs.find(doc => {
       const data = doc.data();
       const t = data.receivedTimestamp || 
                 (data.receivedAt && typeof data.receivedAt.toMillis === "function" ? data.receivedAt.toMillis() : 0) || 
                 (data.createdAt ? new Date(data.createdAt).getTime() : 0);
-      const isRecent = (Date.now() - t) <= 75000;
+      const isRecent = (Date.now() - t) <= 330000;
       const isAfterStart = t >= minTimestamp;
       return isRecent && isAfterStart;
     });
